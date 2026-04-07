@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In - ATS RESUME ANALYZER</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    {% include "_theme.css" %}
+
+    .password-field {
+      position: relative;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      padding: 0.2rem 0.3rem;
+    }
+
+    .password-toggle:hover {
+      color: var(--ink);
+    }
+
+    .password-input {
+      padding-right: 4rem;
+    }
+
+    .captcha-box {
+      border: 1.5px solid var(--border);
+      border-radius: 0.9rem;
+      padding: 0.75rem 0.9rem;
+      background: var(--surface-strong);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      box-shadow: 0 8px 20px rgba(17, 17, 16, 0.05);
+    }
+
+    .captcha-left {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.92rem;
+      color: var(--ink);
+    }
+
+    .captcha-check {
+      width: 1.2rem;
+      height: 1.2rem;
+      border: 2px solid var(--border-strong);
+      border-radius: 0.2rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      position: relative;
+    }
+
+    .captcha-check input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .captcha-check::after {
+      content: "";
+      width: 0.55rem;
+      height: 0.3rem;
+      border-left: 2px solid #fff;
+      border-bottom: 2px solid #fff;
+      transform: rotate(-45deg);
+      opacity: 0;
+    }
+
+    .captcha-check:has(input:checked) {
+      background: var(--red);
+      border-color: var(--red);
+    }
+
+    .captcha-check:has(input:checked)::after {
+      opacity: 1;
+    }
+
+    .captcha-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: "DM Mono", monospace;
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .captcha-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid rgba(217, 43, 43, 0.6);
+      border-top-color: transparent;
+      border-right-color: transparent;
+      display: inline-block;
+      transform: rotate(45deg);
+    }
+
+    .auth-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+      gap: 2rem;
+      align-items: stretch;
+    }
+
+    .auth-center {
+      min-height: calc(100vh - 9rem);
+      display: flex;
+      align-items: center;
+    }
+
+    .auth-shell {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      gap: 2rem;
+      align-items: stretch;
+      padding: clamp(2rem, 4vw, 3rem);
+    }
+
+    .auth-hero {
+      position: relative;
+      overflow: hidden;
+      min-height: 100%;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 2.8rem 2.4rem;
+    }
+
+    .auth-hero .hero-brow {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      justify-content: center;
+      font-family: "DM Mono", monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .auth-hero .hero-brow::before,
+    .auth-hero .hero-brow::after {
+      content: "";
+      display: block;
+      width: 2.2rem;
+      height: 1px;
+      background: var(--muted);
+    }
+
+    .auth-hero-title {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(4rem, 8vw, 7.5rem);
+      letter-spacing: 0.06em;
+      line-height: 0.9;
+      margin: 1.2rem 0 0.4rem;
+      color: var(--ink);
+    }
+
+    .auth-hero-title span {
+      color: var(--red);
+    }
+
+    .auth-hero-sub {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(1.4rem, 3.8vw, 2.8rem);
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-top: 0.6rem;
+    }
+
+    .auth-hero-dot,
+    .auth-hero-ring {
+      position: absolute;
+      border-radius: 999px;
+      pointer-events: none;
+    }
+
+    .auth-hero-dot {
+      width: 16px;
+      height: 16px;
+      background: var(--red);
+      left: 12%;
+      top: 20%;
+    }
+
+    .auth-hero-ring {
+      width: 140px;
+      height: 140px;
+      border: 2px solid rgba(217, 43, 43, 0.55);
+      right: 12%;
+      top: -5%;
+    }
+
+    @media (max-width: 980px) {
+      .auth-grid,
+      .auth-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .auth-hero {
+        order: -1;
+      }
+    }
+
+  </style>
+</head>
+<body class="app-shell">
+  <header class="app-topbar">
+    <div class="app-topbar__inner">
+      <div class="app-topbar__left">
+        <div class="app-logo">IQ</div>
+        <span class="brand-title text-lg font-bold">ATS RESUME ANALYZER</span>
+      </div>
+      <div class="app-topbar__center">
+        <a href="/">ATS RESUME ANALYZER</a>
+        <a href="/about">About</a>
+        <a href="/login" class="is-active">Sign In</a>
+        <a href="/register">Sign Up</a>
+        <a href="/hr/login" class="{% if hr_mode %}is-active{% endif %}">Org / HR Login</a>
+      </div>
+      <div class="app-topbar__right">
+        <span class="app-hello">HELLO</span>
+        <a class="app-cta" href="/">Analyze Now</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-wrap max-w-6xl page-wrap--content auth-center">
+    <div class="glass-panel auth-shell">
+      <div>
+        <div class="mb-6">
+          <p class="text-xs uppercase tracking-[0.25em] text-muted font-mono">{{ 'Organization' if hr_mode else 'Individual' }} Login</p>
+          <h1 class="brand-title text-3xl font-bold">
+            {{ 'HR / Organization Sign In' if hr_mode else 'Welcome Back' }}
+          </h1>
+          <p class="text-muted mt-2">
+            {{ 'HRs can manage jobs, bulk uploads, and rankings for their org.' if hr_mode else 'Sign in to analyze resumes and view your history.' }}
+          </p>
+        </div>
+
+        {% if message %}
+        <div class="notice notice-success mb-4">
+          {{ message }}
+        </div>
+        {% endif %}
+
+        {% if error %}
+        <div class="notice notice-error mb-4">
+          {{ error }}
+        </div>
+        {% endif %}
+
+        {% set form_action = '/hr/login' if hr_mode else '/login' %}
+        <form method="POST" action="{{ form_action }}" class="space-y-4">
+          {% if hr_mode %}
+          <input type="hidden" name="hr" value="1">
+          {% endif %}
+          <div>
+            <label class="mb-2 block text-sm font-semibold">Email</label>
+            <input
+              name="email"
+              value="{{ email or '' }}"
+              placeholder="you@example.com"
+              class="input-field"
+              required
+            >
+          </div>
+          <div>
+            <label class="mb-2 block text-sm font-semibold">Password</label>
+            <div class="password-field">
+              <input
+                type="password"
+                id="login-password"
+                name="password"
+                placeholder="Enter password"
+                class="input-field password-input"
+                required
+              >
+              <button type="button" id="toggle-password" class="password-toggle" aria-label="Show password">Show</button>
+            </div>
+          </div>
+        <label class="text-muted flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="remember_me"
+            class="h-4 w-4 rounded border-white/20 bg-white/10"
+            {% if remember_me %}checked{% endif %}
+          >
+          Keep me signed in
+        </label>
+        <div class="captcha-box">
+          <label class="captcha-left">
+            <span class="captcha-check">
+              <input type="checkbox" name="captcha" required>
+            </span>
+            I'm not a robot
+          </label>
+          <span class="captcha-badge"><span class="captcha-icon"></span>captcha</span>
+        </div>
+        <button type="submit" class="btn-primary w-full">Sign In</button>
+      </form>
+      <p class="text-xs text-muted mt-2">After login we will request your permission to access and update your uploaded resumes.</p>
+
+        <div class="text-muted mt-5 text-sm space-y-2">
+          <p>
+            New user?
+            <a href="/register" class="font-semibold text-cyan-200 hover:text-white">Create an account</a>
+          </p>
+          {% if not hr_mode %}
+          <p>
+            Organization / HR?
+            <a href="/hr/login" class="font-semibold text-red-300 hover:text-white">Use HR Login</a>
+          </p>
+          {% else %}
+          <p>
+            Back to individual login?
+            <a href="/login" class="font-semibold text-cyan-200 hover:text-white">Standard Sign In</a>
+          </p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="auth-hero">
+        <span class="auth-hero-ring"></span>
+        <span class="auth-hero-dot"></span>
+        <div>
+          <div class="hero-brow">AI-POWERED · PYTHON · ATS RESUME ANALYZER</div>
+          <div class="auth-hero-title">
+            {{ 'ORGANIZE' if hr_mode else 'BEAT' }}<br>THE <span>ATS</span>
+          </div>
+          <div class="auth-hero-sub">
+            {{ 'Manage hiring with bulk uploads & ranking' if hr_mode else 'LAND YOUR INTERVIEW' }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const passwordInput = document.getElementById("login-password");
+      const toggleButton = document.getElementById("toggle-password");
+      if (!passwordInput || !toggleButton) return;
+
+      toggleButton.addEventListener("click", function () {
+        const shouldShow = passwordInput.type === "password";
+        passwordInput.type = shouldShow ? "text" : "password";
+        toggleButton.textContent = shouldShow ? "Hide" : "Show";
+        toggleButton.setAttribute("aria-label", shouldShow ? "Hide password" : "Show password");
+      });
+    })();
+  </script>
+{% include "_cookie.html" %}
+</body>
+</html>
+
+
+

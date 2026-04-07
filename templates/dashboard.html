@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>History - ATS RESUME ANALYZER</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>{% include "_theme.css" %}</style>
+</head>
+<body class="app-shell">
+  <header class="app-topbar">
+    <div class="app-topbar__inner">
+      <div class="app-topbar__left">
+        <div class="app-logo">IQ</div>
+        <span class="brand-title text-lg font-bold">ATS RESUME ANALYZER</span>
+        <span class="badge-pill">Resume History</span>
+      </div>
+      <div class="app-topbar__center">
+        <a href="/">ATS RESUME ANALYZER</a>
+        <a href="/dataset">Dataset</a>
+        <a href="/about">About</a>
+        <a href="/profile">Profile</a>
+        {% if is_admin %}<a href="/admin/dashboard">Admin</a>{% endif %}
+        <a href="/logout" class="text-danger">Logout</a>
+      </div>
+      <div class="app-topbar__right">
+        <span class="app-hello">HELLO {{ (request.session.get("user_name") or "USER") | upper }}</span>
+        <a class="app-cta" href="/">Analyze Now</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-wrap page-wrap--content">
+    <div class="glass-panel p-6 md:p-10">
+      <div class="mb-5">
+        <h1 class="brand-title text-3xl font-bold">Saved Analyses</h1>
+        <p class="text-muted mt-2">Open any previous record to review score details and optimized bullets.</p>
+      </div>
+
+      <div class="panel-soft overflow-x-auto p-4 md:p-5">
+        <table class="table-shell min-w-[700px]">
+          <thead>
+            <tr>
+              <th>File Name</th>
+              <th>Format</th>
+              <th>ATS Score</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in history %}
+            <tr>
+              <td>
+                <a href="/history/{{ r.id }}" class="font-semibold text-cyan-200 hover:text-white hover:underline">
+                  {{ r.filename or "-" }}
+                </a>
+              </td>
+              <td class="text-blue-200">{{ r.filetype or "-" }}</td>
+              <td class="font-bold text-emerald-300">{{ r.score }}</td>
+              <td class="text-muted">{{ r.date }}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="4" class="text-muted py-8 text-center">No resume history yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-6 flex flex-wrap gap-3">
+        <a href="/" class="btn-secondary">&larr; Back to Analyzer</a>
+      </div>
+    </div>
+  </div>
+{% include "_cookie.html" %}
+</body>
+</html>
+
+
+

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ATS RESUME ANALYZER - ATS Analyzer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>{% include "theme.css" %}</style>
+</head>
+<body>
+  <div class="scroll-bar" id="scrollBar"></div>
+  <div class="floaters" id="floaters"></div>
+
+  <nav id="nav">
+    <div class="nav-logo"><div class="logo-mark">IQ</div><div class="logo-text">ATS RESUME ANALYZER</div></div>
+    <div class="nav-center">
+      <span>ATS RESUME ANALYZER</span>
+      {% if dataset_available %}<a class="nav-link" href="/dataset">Dataset</a>{% endif %}
+      <a class="nav-link" href="/about">About</a>
+      <a class="nav-link" href="/profile">Profile</a>
+      {% if is_admin %}<a class="nav-link" href="/admin/dashboard">Admin</a>{% endif %}
+      <a class="nav-link" href="/logout">Logout</a>
+    </div>
+    <div class="nav-actions">
+      <span class="micro">{{ request.session.get("user_name") or "User" }}</span>
+      <button class="nav-pill" type="button" onclick="scrollToAnalyzer()">Analyze Now</button>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-brow">AI-Powered · Python · ATS RESUME ANALYZER</div>
+    <h1 class="hero-title">BEAT<br>THE <span>ATS</span></h1>
+    <div class="hero-sub">Land Your Interview</div>
+    <p class="hero-desc">This home page now uses your ATS RESUME ANALYZER style while keeping the real app workflow: paste the job description, upload one resume or a full folder, and continue into the existing result page.</p>
+    <div class="hero-status">{% if genai_enabled %}Gen AI active · {{ genai_status_message }}{% else %}Gen AI unavailable · {{ genai_status_message }}{% endif %}</div>
+    <div class="hero-cta">
+      <button class="btn dark" type="button" onclick="scrollToAnalyzer()"><span>Start Analyzing</span><span>→</span></button>
+      <a class="btn outline" href="/profile">View Profile</a>
+    </div>
+  </section>
+
+  <div class="marquee"><div class="marquee-track" id="marquee"></div></div>
+
+  <form id="resume-form" method="POST" action="/result" enctype="multipart/form-data">
+    <section class="section" id="analyzer">
+      <div class="section-title">01 - INPUT</div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="head"><div class="panel-title">Job Description</div><div class="pill">01</div></div>
+          <div class="template-wrap">
+            <div class="template-label">Target Role Template</div>
+            <select class="template-select" id="job-template-select" aria-label="Select a job description template">
+              <option value="">Select a template</option>
+              <option value="auto_detect">Auto Detect</option>
+              <option value="healthcare_ba">Healthcare Business Analyst (Medicaid)</option>
+              <option value="dotnet_dev">C# / .NET Developer</option>
+              <option value="rust_dev">Rust Developer (Frontend / Full Stack)</option>
+              <option value="py_java_eng">Software Engineer (Python + Java)</option>
+              <option value="data_engineer">Data Engineer</option>
+              <option value="data_analyst">Data Analyst</option>
+              <option value="frontend_react">Frontend Developer (React)</option>
+              <option value="backend_java">Backend Developer (Java)</option>
+            </select>
+            <div class="template-note" id="templateNote">Pick a template to auto-fill the job description text area.</div>
+            <div class="template-chips" id="templateChips">
+              <button type="button" class="template-chip" data-template="healthcare_ba">Healthcare Business Analyst (Medicaid)</button>
+              <button type="button" class="template-chip" data-template="dotnet_dev">C# / .NET Developer</button>
+              <button type="button" class="template-chip" data-template="rust_dev">Rust Developer</button>
+              <button type="button" class="template-chip" data-template="py_java_eng">Python + Java Engineer</button>
+              <button type="button" class="template-chip" data-template="data_engineer">Data Engineer</button>
+              <button type="button" class="template-chip" data-template="data_analyst">Data Analyst</button>
+              <button type="button" class="template-chip" data-template="frontend_react">Frontend Developer (React)</button>
+              <button type="button" class="template-chip" data-template="backend_java">Backend Developer (Java)</button>
+            </div>
+          </div>
+          <textarea id="job-description-input" name="job" aria-label="Job description" placeholder="Paste the full job description here - role, responsibilities, required skills, qualifications, and keywords." oninput="updateCount('job-description-input','jdCount')" required></textarea>
+          <div class="line"><span class="micro" id="jdCount">0 chars</span><span class="micro">required</span></div>
+        </div>
+
+        <div class="card">
+          <div class="head"><div class="panel-title">Your Resume</div><div class="pill">02</div></div>
+          <p class="copy">Mixed with the present app: this keeps the real upload flow, including single resume mode, bulk folder mode, and PDF, DOCX, TXT support.</p>
+          <div class="tabs" role="tablist" aria-label="Upload mode">
+            <button type="button" class="tab active" data-mode="single" aria-pressed="true">Single Resume</button>
+            <button type="button" class="tab" data-mode="bulk" aria-pressed="false">Bulk Folder</button>
+          </div>
+          <div class="drop-zone" id="dropZone" tabindex="0" role="button" aria-describedby="uploadHelp" aria-label="Upload resume files">
+            <input id="upload-mode-input" type="hidden" name="upload_mode" value="single">
+            <input id="folder-name-input" type="hidden" name="folder_name" value="">
+            <input id="resume-input" type="file" name="resume" accept=".pdf,.docx,.txt" aria-label="Resume file upload">
+            <input id="folder-input" type="file" name="resumes" accept=".pdf,.docx,.txt" webkitdirectory directory multiple class="hidden" aria-label="Folder resume upload">
+            <div class="drop-icon" id="uploadIcon">↑</div>
+            <div class="drop-title" id="uploadTitle">Drop a resume file here</div>
+            <div class="drop-sub" id="uploadHelp">Click to browse or drag one supported file.</div>
+          </div>
+          <div class="file-pill" id="filePill"><span>✓</span><span id="fileName">No file selected</span></div>
+          <div class="line"><span class="micro" id="selectionSummary">Waiting for upload</span><span class="micro">PDF · DOCX · TXT</span></div>
+        </div>
+      </div>
+
+      <div class="error" id="errBar" role="alert">Please paste a job description and choose at least one resume file.</div>
+
+      <div class="analyze">
+        <button class="analyze-btn" id="analyzeBtn" type="submit"><div class="spinner" id="btnSpinner"></div><span id="btnText">ANALYZE RESUME</span></button>
+        <div class="hint">Powered by the current FastAPI backend</div>
+        <div class="status" id="loadingNote" role="status" aria-live="polite">Preparing analysis...</div>
+        <div class="progress" id="loadingBar"><div class="progress-bar" id="loadingProgressBar"></div></div>
+      </div>
+
+      <div class="loading" id="loading">
+        <div class="loading-title">ANALYZING...</div>
+        <div class="steps" id="loadingTrack"></div>
+      </div>
+
+      <div class="subgrid">
+        <div class="card">
+          <div class="head"><div class="panel-title">Live Job Preview</div><div class="pill">JD</div></div>
+          <div class="micro muted" style="margin-bottom:12px">Real-time mirror of your pasted job description.</div>
+          <pre class="preview" id="jdLivePreview">Start typing or paste a job description to preview it here.</pre>
+        </div>
+        <div class="card">
+          <div class="head"><div class="panel-title">Recent Analyses</div><div class="pill">{{ recent_history|length if recent_history else 0 }}</div></div>
+          {% if recent_history %}
+          <ul class="history">
+            {% for row in recent_history %}
+            <li><a href="/history/{{ row.id }}">{{ row.filename }}</a><span class="history-score">{{ row.score }}%</span></li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <ul class="list"><li><span class="accent">NEW</span><span>No history yet. Your first analysis will appear here after submission.</span></li></ul>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+  </form>
+
+  <footer>
+    <div class="footer">ATS RESUME ANALYZER © 2026 - ATS RESUME ANALYZER</div>
+    <div class="footer"><div class="footer-dot"></div>LIVE · FASTAPI + AI RESUME WORKFLOW</div>
+  </footer>
+
+  <script>
+    window.addEventListener("scroll",()=>{const full=document.body.scrollHeight-window.innerHeight,progress=full>0?window.scrollY/full*100:0;document.getElementById("scrollBar").style.width=progress+"%";document.getElementById("nav").classList.toggle("scrolled",window.scrollY>40)});
+    (function(){const c=document.getElementById("floaters"),p=[[8,18],[88,12],[14,65],[92,55],[45,80],[72,30],[25,90],[60,10],[80,75],[35,45]];p.forEach(([x,y],i)=>{const el=document.createElement("div");el.className="floater";const s=[8,6,10,5,12,4,8,6,10,5][i];el.style.cssText=`left:${x}%;top:${y}%;width:${s}px;height:${s}px;animation-duration:${4+i*.7}s;animation-delay:${i*-.8}s;`;c.appendChild(el)})})();
+    ["ATS SCORING","KEYWORD ANALYSIS","SINGLE RESUME MODE","BULK FOLDER MODE","PDF DOCX TXT","FASTAPI BACKEND","RECENT HISTORY","INSTANT RESULTS"].concat(["ATS SCORING","KEYWORD ANALYSIS","SINGLE RESUME MODE","BULK FOLDER MODE","PDF DOCX TXT","FASTAPI BACKEND","RECENT HISTORY","INSTANT RESULTS"]).forEach(item=>{document.getElementById("marquee").innerHTML+=`<div class="marquee-item"><span class="dot"></span>${item}</div>`});
+    function scrollToAnalyzer(){document.getElementById("analyzer").scrollIntoView({behavior:"smooth"})}
+    function updateCount(id,out){const el=document.getElementById(id);document.getElementById(out).textContent=el.value.length+" chars"}
+    (function(){
+      const form=document.getElementById("resume-form"),dropZone=document.getElementById("dropZone"),resumeInput=document.getElementById("resume-input"),folderInput=document.getElementById("folder-input"),uploadModeInput=document.getElementById("upload-mode-input"),folderNameInput=document.getElementById("folder-name-input"),uploadTitle=document.getElementById("uploadTitle"),uploadHelp=document.getElementById("uploadHelp"),uploadIcon=document.getElementById("uploadIcon"),filePill=document.getElementById("filePill"),fileName=document.getElementById("fileName"),selectionSummary=document.getElementById("selectionSummary"),tabs=[...document.querySelectorAll(".tab")],jobInput=document.getElementById("job-description-input"),jobTemplateSelect=document.getElementById("job-template-select"),templateNote=document.getElementById("templateNote"),templateChips=[...document.querySelectorAll(".template-chip")],jdLivePreview=document.getElementById("jdLivePreview"),errBar=document.getElementById("errBar"),analyzeBtn=document.getElementById("analyzeBtn"),btnText=document.getElementById("btnText"),btnSpinner=document.getElementById("btnSpinner"),loading=document.getElementById("loading"),loadingTrack=document.getElementById("loadingTrack"),loadingNote=document.getElementById("loadingNote"),loadingBar=document.getElementById("loadingBar"),loadingProgressBar=document.getElementById("loadingProgressBar");
+      const steps=[["1","Parsing uploaded resume content"],["2","Extracting job-description keywords"],["3","Running ATS scoring logic"],["4","Preparing the result view"]],exts=[".pdf",".docx",".txt"];let mode="single",timer=null;
+      const ROLE_TEMPLATES={
+        auto_detect:"Auto Detect is enabled. Use this template as a starter if you do not have a full job description.\\n\\nTarget Role: Open\\nSummary: We are hiring for a role that aligns to common ATS keywords in your resume.\\nResponsibilities:\\n- Deliver measurable results and collaborate with cross-functional teams.\\n- Own projects end-to-end and document decisions.\\n- Improve quality, reliability, and performance.\\nRequired Skills:\\n- Communication, problem-solving, and ownership.\\n- Experience with relevant tools in the resume.\\nNice to Have:\\n- Leadership, mentoring, and process improvements.",
+        healthcare_ba:"Role: Healthcare Business Analyst (Medicaid)\\nSummary: Analyze Medicaid business processes, capture requirements, and drive improvements across claims, eligibility, and provider workflows.\\nResponsibilities:\\n- Gather and document business requirements from stakeholders.\\n- Translate policy changes into system and process updates.\\n- Map current vs. future state workflows and validate gaps.\\n- Support UAT, defect triage, and release readiness.\\nRequired Skills:\\n- Medicaid domain knowledge, claims, eligibility, or provider systems.\\n- Requirements documentation, user stories, and BRDs.\\n- SQL or data analysis for validation.\\n- Stakeholder management and communication.\\nNice to Have:\\n- HIPAA/PHI awareness, EDI, or MMIS experience.",
+        dotnet_dev:"Role: C# / .NET Developer\\nSummary: Build and maintain .NET applications with clean architecture, APIs, and SQL data access.\\nResponsibilities:\\n- Design, develop, and test C#/.NET services.\\n- Build REST APIs and integrate with SQL databases.\\n- Improve performance, logging, and monitoring.\\n- Collaborate with QA and product on releases.\\nRequired Skills:\\n- C#, .NET (Core), ASP.NET, REST APIs.\\n- SQL Server, EF Core, or similar ORM.\\n- Unit testing and CI/CD basics.\\nNice to Have:\\n- Azure, microservices, or Docker.",
+        rust_dev:"Role: Rust Developer (Frontend / Full Stack)\\nSummary: Build performant, reliable services and UI components using Rust and modern web tooling.\\nResponsibilities:\\n- Develop Rust services and APIs with strong reliability.\\n- Build UI or WASM components for the frontend.\\n- Profile and optimize performance and memory usage.\\n- Write tests and maintain documentation.\\nRequired Skills:\\n- Rust, async programming, and ownership model.\\n- REST or gRPC APIs.\\n- Web tooling (WASM, JS/TS) or frontend frameworks.\\nNice to Have:\\n- Kubernetes, CI/CD, observability.",
+        py_java_eng:"Role: Software Engineer (Python + Java)\\nSummary: Develop backend services and integrations in Python and Java.\\nResponsibilities:\\n- Build and maintain services in Python and Java.\\n- Design scalable APIs and data models.\\n- Improve reliability, testing, and deployment automation.\\n- Collaborate with product, QA, and DevOps.\\nRequired Skills:\\n- Python, Java, REST APIs.\\n- SQL, data modeling, and performance tuning.\\n- Unit/integration testing and CI.\\nNice to Have:\\n- Cloud services, messaging, or microservices.",
+        data_engineer:"Role: Data Engineer\\nSummary: Build data pipelines, data models, and analytics-ready datasets.\\nResponsibilities:\\n- Design and maintain ETL/ELT pipelines.\\n- Build data models and optimize warehouse performance.\\n- Ensure data quality, lineage, and monitoring.\\n- Partner with analysts and stakeholders.\\nRequired Skills:\\n- SQL, data modeling, and pipeline orchestration.\\n- Python and data frameworks.\\n- Warehouses (Snowflake/BigQuery/Redshift).\\nNice to Have:\\n- Streaming, dbt, or Spark.",
+        data_analyst:"Role: Data Analyst\\nSummary: Analyze business data, produce insights, and build dashboards.\\nResponsibilities:\\n- Build dashboards and KPI reporting.\\n- Perform ad-hoc analysis and experimentation.\\n- Translate business questions into data queries.\\n- Present insights to stakeholders.\\nRequired Skills:\\n- SQL, data visualization, and analysis.\\n- Excel or spreadsheets and statistical thinking.\\n- Clear communication and storytelling.\\nNice to Have:\\n- Python/R or BI tools (Tableau/Power BI).",
+        frontend_react:"Role: Frontend Developer (React)\\nSummary: Build responsive UI and performant web experiences.\\nResponsibilities:\\n- Develop React components and UI flows.\\n- Integrate APIs and manage state.\\n- Improve performance, accessibility, and testing.\\n- Collaborate with design and backend teams.\\nRequired Skills:\\n- React, JavaScript/TypeScript, HTML/CSS.\\n- Modern tooling and build systems.\\n- UI testing and accessibility.\\nNice to Have:\\n- Next.js, design systems, or animations.",
+        backend_java:"Role: Backend Developer (Java)\\nSummary: Build scalable backend services and APIs in Java.\\nResponsibilities:\\n- Design and implement APIs and services.\\n- Optimize performance and reliability.\\n- Write tests and support deployments.\\n- Work with databases and caching.\\nRequired Skills:\\n- Java, Spring, REST APIs.\\n- SQL databases and data modeling.\\n- Testing and CI/CD fundamentals.\\nNice to Have:\\n- Microservices, messaging, or cloud infrastructure."
+      };
+      const supported=file=>exts.some(ext=>String(file&&file.name||"").toLowerCase().endsWith(ext)),files=list=>Array.from(list||[]).filter(supported),sort=list=>Array.from(list||[]).sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),undefined,{sensitivity:"base"}));
+      function setFiles(input,list){try{const dt=new DataTransfer();list.forEach(f=>dt.items.add(f));input.files=dt.files;return true}catch(_){return false}}
+      function folderName(list){const map={};Array.from(list||[]).forEach(file=>{const rel=String(file&&file.webkitRelativePath||"").replace(/\\/g,"/");if(!rel||rel.indexOf("/")<0)return;const root=rel.split("/").filter(Boolean)[0];if(root)map[root]=(map[root]||0)+1});return Object.keys(map).sort((a,b)=>(map[b]-map[a])||a.localeCompare(b))[0]||""}
+      function refreshPreview(){const value=String(jobInput.value||"").trim();jdLivePreview.textContent=value||"Start typing or paste a job description to preview it here."}
+      function setJobText(text){jobInput.value=text||"";updateCount("job-description-input","jdCount");refreshPreview()}
+      function applyTemplate(key){
+        if(!key||!ROLE_TEMPLATES[key]){templateNote.textContent="Pick a template to auto-fill the job description text area.";return}
+        setJobText(ROLE_TEMPLATES[key]);
+        templateNote.textContent="Template loaded. Edit the text to match the real job description.";
+      }
+      function stop(){if(timer){window.clearInterval(timer);timer=null}}
+      function refreshSelection(){if(mode==="bulk"){const list=folderInput.files?[...folderInput.files]:[];if(list.length){filePill.classList.add("show");fileName.textContent=list.length+" files selected";selectionSummary.textContent=(folderNameInput.value||"Folder upload")+" · "+list.length+" resume files"}else{filePill.classList.remove("show");selectionSummary.textContent="Waiting for folder upload"}return}const file=resumeInput.files&&resumeInput.files[0];if(file){filePill.classList.add("show");fileName.textContent=file.name;selectionSummary.textContent="Single resume ready"}else{filePill.classList.remove("show");selectionSummary.textContent="Waiting for upload"}}
+      function setMode(next){mode=next==="bulk"?"bulk":"single";uploadModeInput.value=mode;tabs.forEach(tab=>{const active=tab.dataset.mode===mode;tab.classList.toggle("active",active);tab.setAttribute("aria-pressed",active?"true":"false")});if(mode==="bulk"){uploadTitle.textContent="Drop a folder or multiple resumes here";uploadHelp.textContent="Bulk mode analyzes every supported file in the selected folder.";uploadIcon.textContent="⇅"}else{uploadTitle.textContent="Drop a resume file here";uploadHelp.textContent="Click to browse or drag one supported file.";uploadIcon.textContent="↑";folderNameInput.value=""}refreshSelection()}
+      function showLoading(){loading.style.display="flex";loadingTrack.innerHTML="";steps.forEach(([icon,text],i)=>{const el=document.createElement("div");el.className="step";el.innerHTML=`<span>${icon}</span><span>${text}</span>`;loadingTrack.appendChild(el);setTimeout(()=>el.classList.add("visible","active"),i*220);setTimeout(()=>{el.classList.remove("active");el.classList.add("done");el.firstChild.textContent="✓"},i*220+520)})}
+      function startProgress(total){let n=0;stop();timer=window.setInterval(()=>{n=Math.min(94,n+(mode==="bulk"?12:18));loadingProgressBar.style.width=n+"%";loadingNote.textContent=mode==="bulk"?"Processing folder upload · "+total+" resumes detected":"Processing single resume upload...";if(n>=94)stop()},320)}
+      tabs.forEach(tab=>tab.addEventListener("click",()=>setMode(tab.dataset.mode)));
+      dropZone.addEventListener("click",()=>mode==="bulk"?folderInput.click():resumeInput.click());
+      dropZone.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();mode==="bulk"?folderInput.click():resumeInput.click()}});
+      resumeInput.addEventListener("change",()=>{const list=files(resumeInput.files);list.length?setFiles(resumeInput,[list[0]]):resumeInput.value="";folderInput.value="";setMode("single")});
+      folderInput.addEventListener("change",()=>{const list=sort(files(folderInput.files));if(list.length){setFiles(folderInput,list);folderNameInput.value=folderName(list)}else{folderInput.value="";folderNameInput.value=""}resumeInput.value="";setMode("bulk")});
+      ["dragenter","dragover"].forEach(name=>dropZone.addEventListener(name,e=>{e.preventDefault();e.stopPropagation();dropZone.classList.add("drag-over")}));
+      ["dragleave","drop"].forEach(name=>dropZone.addEventListener(name,e=>{e.preventDefault();e.stopPropagation();dropZone.classList.remove("drag-over")}));
+      dropZone.addEventListener("drop",e=>{const list=sort(files(e.dataTransfer&&e.dataTransfer.files));if(!list.length)return;const items=Array.from(e.dataTransfer&&e.dataTransfer.items||[]),hasDir=items.some(item=>typeof item.webkitGetAsEntry==="function"&&item.webkitGetAsEntry()&&item.webkitGetAsEntry().isDirectory);if(hasDir||list.length>1||mode==="bulk"){setMode("bulk");setFiles(folderInput,list);folderNameInput.value=folderName(list);resumeInput.value=""}else{setMode("single");setFiles(resumeInput,[list[0]]);folderInput.value="";folderNameInput.value=""}refreshSelection()});
+      if(jobTemplateSelect){
+        jobTemplateSelect.addEventListener("change",e=>applyTemplate(String(e.target.value||"")));
+      }
+      templateChips.forEach(chip=>chip.addEventListener("click",()=>{const key=chip.getAttribute("data-template")||"";if(jobTemplateSelect)jobTemplateSelect.value=key;applyTemplate(key)}));
+      jobInput.addEventListener("input",refreshPreview);refreshPreview();setMode("single");
+      form.addEventListener("submit",e=>{const job=String(jobInput.value||"").trim(),single=files(resumeInput.files),bulk=sort(files(folderInput.files)),hasFiles=mode==="bulk"?bulk.length>0:single.length>0;if(!job||!hasFiles){e.preventDefault();errBar.textContent=!job?"Please paste the job description before analyzing.":mode==="bulk"?"Please choose a folder with at least one supported resume file.":"Please choose one supported resume file before analyzing.";errBar.classList.add("show");return}errBar.classList.remove("show");if(mode==="single"){setFiles(resumeInput,[single[0]]);folderInput.value=""}else{setFiles(folderInput,bulk);resumeInput.value="";if(!folderNameInput.value)folderNameInput.value=folderName(bulk)}analyzeBtn.disabled=true;btnSpinner.style.display="block";btnText.textContent=mode==="bulk"?"ANALYZING FOLDER":"ANALYZING RESUME";loadingNote.style.display="block";loadingBar.style.display="block";loadingProgressBar.style.width=mode==="bulk"?"10%":"18%";showLoading();startProgress(mode==="bulk"?bulk.length:1)});
+    })();
+  </script>
+{% include "_cookie.html" %}
+</body>
+</html>
+
+
+
+

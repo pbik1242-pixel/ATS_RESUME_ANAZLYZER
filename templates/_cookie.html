@@ -1,0 +1,102 @@
+<div class="cookie-scrim" id="cookie-scrim" aria-hidden="true">
+  <div
+    id="cookie-banner"
+    class="cookie-banner"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="cookie-banner-title"
+    aria-describedby="cookie-banner-text"
+  >
+    <div class="cookie-banner__content">
+      <div class="cookie-banner__header">
+        <div class="cookie-banner__badge">CO</div>
+        <div>
+          <h2 id="cookie-banner-title" class="cookie-banner__title">We use cookies</h2>
+          <p id="cookie-banner-text" class="cookie-banner__text">
+            We rely on essential cookies to run the site and optional cookies to learn how it’s used.
+            Choose what works for you.
+          </p>
+        </div>
+      </div>
+
+      <button type="button" class="cookie-close" data-cookie-action="reject" aria-label="Close cookie banner">×</button>
+
+      <div class="cookie-banner__actions">
+        <button type="button" class="btn-secondary" data-cookie-action="reject">
+          Reject optional cookies
+        </button>
+        <button type="button" class="btn-primary" data-cookie-action="accept">
+          Accept optional cookies
+        </button>
+      </div>
+
+      <div class="cookie-banner__fineprint">
+        We store your choice for 90 days. Read our
+        <a class="cookie-link" href="/about#privacy">Privacy</a>.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var KEY = "cookie_consent";
+    var EXPIRY_DAYS = 90;
+    var scrim = document.getElementById("cookie-scrim");
+    var banner = document.getElementById("cookie-banner");
+    if (!banner || !scrim) return;
+
+    function getConsent() {
+      try {
+        var saved = localStorage.getItem(KEY);
+        if (!saved) return null;
+        var parsed = JSON.parse(saved);
+        if (!parsed.value) return null;
+        if (parsed.expires && Date.now() > parsed.expires) {
+          localStorage.removeItem(KEY);
+          return null;
+        }
+        return parsed.value;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function setConsent(value) {
+      try {
+        var expires = Date.now() + EXPIRY_DAYS * 24 * 60 * 60 * 1000;
+        localStorage.setItem(KEY, JSON.stringify({ value: value, expires: expires }));
+      } catch (error) {
+      }
+    }
+
+    function hideBanner() {
+      banner.classList.remove("is-visible");
+      scrim.classList.remove("is-visible");
+      setTimeout(function () {
+        scrim.style.display = "none";
+      }, 260);
+    }
+
+    function handleAction(action) {
+      if (action !== "accept" && action !== "reject") return;
+      setConsent(action === "accept" ? "accepted" : "rejected");
+      hideBanner();
+    }
+
+    var saved = getConsent();
+    if (saved === "accepted" || saved === "rejected") {
+      hideBanner();
+      return;
+    }
+
+    scrim.classList.add("is-visible");
+    banner.classList.add("is-visible");
+
+    banner.addEventListener("click", function (event) {
+      var button = event.target.closest("[data-cookie-action]");
+      if (!button) return;
+      handleAction(button.dataset.cookieAction);
+    });
+  })();
+</script>

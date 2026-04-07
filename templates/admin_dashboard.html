@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - ATS RESUME ANALYZER</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>{% include "_theme.css" %}</style>
+</head>
+<body class="app-shell">
+  <header class="app-topbar">
+    <div class="app-topbar__inner">
+      <div class="app-topbar__left">
+        <div class="app-logo">IQ</div>
+        <span class="brand-title text-lg font-bold">ATS RESUME ANALYZER</span>
+        <span class="badge-pill">Admin Dashboard</span>
+      </div>
+      <div class="app-topbar__center">
+        <a href="/">ATS RESUME ANALYZER</a>
+        <a href="/dataset">Dataset</a>
+        <a href="/about">About</a>
+        <a href="/profile">Profile</a>
+        <a href="/admin/dashboard" class="is-active">Admin</a>
+        <a href="/logout" class="text-danger">Logout</a>
+      </div>
+      <div class="app-topbar__right">
+        <span class="app-hello">HELLO {{ (request.session.get("user_name") or "USER") | upper }}</span>
+        <a class="app-cta" href="/">Analyze Now</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-wrap page-wrap--content page-wrap--admin">
+    <div class="glass-panel p-6 md:p-10">
+      <div class="grid gap-4 md:grid-cols-3">
+        <div class="panel-soft p-4">
+          <p class="text-muted text-xs uppercase tracking-wide">Total Users</p>
+          <p class="metric-value mt-2 text-3xl font-bold">{{ total_users }}</p>
+        </div>
+        <div class="panel-soft p-4">
+          <p class="text-muted text-xs uppercase tracking-wide">Total Login Events</p>
+          <p class="metric-value mt-2 text-3xl font-bold">{{ total_login_events }}</p>
+        </div>
+        <div class="panel-soft p-4">
+          <p class="text-muted text-xs uppercase tracking-wide">Today Logins</p>
+          <p class="metric-value mt-2 text-3xl font-bold">{{ today_logins }}</p>
+        </div>
+      </div>
+
+      <div class="panel-soft mt-6 p-4 md:p-5">
+        <h2 class="mb-3 text-xl font-semibold">Users</h2>
+        <div>
+          <table class="table-shell table-shell--fit">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Created</th>
+                <th>Total Logins</th>
+                <th>Last Login</th>
+                <th>Resume Uploads</th>
+                <th>Avg ATS</th>
+                <th>Last Resume</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for u in users %}
+              <tr>
+                <td>{{ u.id }}</td>
+                <td>{{ u.name or "-" }}</td>
+                <td>{{ u.email or "-" }}</td>
+                <td class="text-muted">{{ u.created_at or "-" }}</td>
+                <td class="font-semibold text-cyan-200">{{ u.total_logins }}</td>
+                <td class="text-muted">{{ u.last_login_time or "-" }}</td>
+                <td>{{ u.resume_count }}</td>
+                <td>{{ u.avg_score }}</td>
+                <td class="text-muted">{{ u.last_resume_time or "-" }}</td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="9" class="py-5 text-center text-muted">No users found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel-soft mt-6 p-4 md:p-5">
+        <h2 class="mb-3 text-xl font-semibold">Recent Login Activity</h2>
+        <div>
+          <table class="table-shell table-shell--fit">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>User</th>
+                <th>Email</th>
+                <th>IP Address</th>
+                <th>User Agent</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for event in recent_logins %}
+              <tr>
+                <td>{{ event.login_time or "-" }}</td>
+                <td>{{ event.name or "-" }}</td>
+                <td>{{ event.email or "-" }}</td>
+                <td>{{ event.ip_address or "-" }}</td>
+                <td class="break-all text-muted">{{ event.user_agent or "-" }}</td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="5" class="py-5 text-center text-muted">No login activity yet.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+{% include "_cookie.html" %}
+</body>
+</html>
+
+
+

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile - ATS RESUME ANALYZER</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>{% include "_theme.css" %}</style>
+</head>
+<body class="app-shell">
+  <header class="app-topbar">
+    <div class="app-topbar__inner">
+      <div class="app-topbar__left">
+        <div class="app-logo">IQ</div>
+        <span class="brand-title text-lg font-bold">ATS RESUME ANALYZER</span>
+        <span class="badge-pill">My Profile</span>
+      </div>
+      <div class="app-topbar__center">
+        <a href="/">ATS RESUME ANALYZER</a>
+        <a href="/dataset">Dataset</a>
+        <a href="/about">About</a>
+        <a href="/profile" class="is-active">Profile</a>
+        {% if is_admin %}<a href="/admin/dashboard">Admin</a>{% endif %}
+        <a href="/logout" class="text-danger">Logout</a>
+      </div>
+      <div class="app-topbar__right">
+        <span class="app-hello">HELLO {{ (request.session.get("user_name") or "USER") | upper }}</span>
+        <a class="app-cta" href="/">Analyze Now</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-wrap page-wrap--content">
+    <div class="glass-panel p-6 md:p-10">
+      <div class="mb-6">
+        <h1 class="brand-title text-3xl font-bold">Account Overview</h1>
+        <p class="text-muted mt-2">Your account details and saved ATS analysis history are shown below.</p>
+      </div>
+
+      <div class="grid gap-6 md:grid-cols-2">
+        <div class="panel-soft p-5">
+          <h2 class="text-xl font-semibold">User Details</h2>
+          <dl class="mt-4 space-y-3 text-sm">
+            <div>
+              <dt class="text-muted">Name</dt>
+              <dd class="mt-1 font-semibold">{{ user_name }}</dd>
+            </div>
+            <div>
+              <dt class="text-muted">Email</dt>
+              <dd class="mt-1 break-all">{{ user_email }}</dd>
+            </div>
+            <div>
+              <dt class="text-muted">Joined</dt>
+              <dd class="mt-1">{{ user_created_at }}</dd>
+            </div>
+          </dl>
+        </div>
+        <div class="panel-soft p-5">
+          <h2 class="text-xl font-semibold">History Summary</h2>
+          <div class="mt-4 grid gap-3 sm:grid-cols-3">
+            <div class="panel-soft p-3">
+              <p class="text-muted text-xs uppercase tracking-wide">Analyses</p>
+              <p class="metric-value mt-2 text-2xl font-bold">{{ analysis_count }}</p>
+            </div>
+            <div class="panel-soft p-3">
+              <p class="text-muted text-xs uppercase tracking-wide">Avg Score</p>
+              <p class="metric-value mt-2 text-2xl font-bold">{{ avg_score }}</p>
+            </div>
+            <div class="panel-soft p-3">
+              <p class="text-muted text-xs uppercase tracking-wide">Last Analysis</p>
+              <p class="mt-2 text-sm">{{ last_analysis }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8">
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <h2 class="text-2xl font-semibold">Resume History</h2>
+          {% if history_groups %}
+          <a
+            href="/profile?delete_all=1"
+            onclick="return confirm('Delete all history records? This cannot be undone.');"
+            class="rounded-lg border border-rose-300/40 bg-rose-500/10 px-3 py-2 text-sm font-semibold text-rose-100 transition hover:bg-rose-500/20"
+          >
+            Delete All
+          </a>
+          {% endif %}
+        </div>
+        {% if history_notice %}
+        <p class="mb-4 {{ 'notice notice-error' if history_notice_tone == 'error' else 'notice notice-success' }}">{{ history_notice }}</p>
+        {% endif %}
+        <p class="text-muted mb-4 text-sm">Open a saved record to review full match details and rewritten bullets.</p>
+        <div class="space-y-4">
+          {% if history_groups %}
+          {% for group in history_groups %}
+          <div class="panel-soft p-4 md:p-5">
+            <div class="mb-3 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p class="text-muted text-xs uppercase tracking-wide">
+                  {{ "Folder Batch" if group.group_type == "folder" else "Single Analysis" }}
+                </p>
+                <h3 class="mt-1 text-lg font-semibold">{{ group.title }}</h3>
+              </div>
+              <div class="text-right text-sm">
+                <p class="font-semibold text-cyan-100">{{ group.count }} file{{ "" if group.count == 1 else "s" }}</p>
+                <p class="text-muted">{{ group.latest_date }}</p>
+              </div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="table-shell min-w-[760px]">
+                <thead>
+                  <tr>
+                    <th>File Name</th>
+                    <th>Format</th>
+                    <th>ATS Score</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for r in group["items"] %}
+                  <tr>
+                    <td>
+                      <a href="/history/{{ r.id }}" class="font-semibold text-cyan-200 hover:text-white hover:underline">
+                        {{ r.filename or "-" }}
+                      </a>
+                    </td>
+                    <td class="text-blue-200">{{ r.filetype or "-" }}</td>
+                    <td class="font-bold text-emerald-300">{{ r.score }}</td>
+                    <td class="text-muted">{{ r.date }}</td>
+                    <td>
+                      <a
+                        href="/profile?delete_id={{ r.id }}"
+                        onclick="return confirm('Delete this history record?');"
+                        class="rounded-md border border-rose-300/40 bg-rose-500/10 px-3 py-1 text-xs font-semibold text-rose-100 transition hover:bg-rose-500/20"
+                      >
+                        Delete
+                      </a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          {% endfor %}
+          {% else %}
+          <div class="panel-soft p-6 text-center text-muted">No resume history yet.</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="mt-6 flex flex-wrap gap-3">
+        <a href="/" class="btn-secondary">&larr; Back to Analyzer</a>
+      </div>
+    </div>
+  </div>
+{% include "_cookie.html" %}
+</body>
+</html>
+
+
+

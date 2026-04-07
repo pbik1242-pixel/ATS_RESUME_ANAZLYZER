@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up - ATS RESUME ANALYZER</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>{% include "_theme.css" %}</style>
+  <style>
+    .auth-center {
+      min-height: calc(100vh - 9rem);
+      display: flex;
+      align-items: center;
+    }
+  </style>
+</head>
+<body class="app-shell">
+  <header class="app-topbar">
+    <div class="app-topbar__inner">
+      <div class="app-topbar__left">
+        <div class="app-logo">IQ</div>
+        <span class="brand-title text-lg font-bold">ATS RESUME ANALYZER</span>
+      </div>
+      <div class="app-topbar__center">
+        <a href="/">ATS RESUME ANALYZER</a>
+        <a href="/about">About</a>
+        <a href="/login" {% if not hr_mode %}{% else %}{% endif %}>Sign In</a>
+        <a href="/register" class="{% if not hr_mode %}is-active{% endif %}">Sign Up</a>
+        <a href="/hr/login" class="{% if hr_mode %}is-active{% endif %}">Org / HR Login</a>
+      </div>
+      <div class="app-topbar__right">
+        <span class="app-hello">HELLO</span>
+        <a class="app-cta" href="/">Analyze Now</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-wrap max-w-xl page-wrap--content auth-center">
+    <div class="glass-panel p-6 md:p-10">
+      <div class="mb-6">
+        <p class="text-xs uppercase tracking-[0.25em] text-muted font-mono">{{ 'Organization' if hr_mode else 'Individual' }} Sign Up</p>
+        <h1 class="brand-title text-3xl font-bold">{{ 'Create HR Account' if hr_mode else 'Create Account' }}</h1>
+        <p class="text-muted mt-2">
+          {{ 'Register as HR to create jobs, upload resumes in bulk, and rank candidates.' if hr_mode else 'Register to start tracking resume performance and AI suggestions.' }}
+        </p>
+      </div>
+
+      {% if error %}
+      <div class="notice notice-error mb-4">
+        {{ error }}
+      </div>
+      {% endif %}
+
+      {% set form_action = '/hr/register' if hr_mode else '/register' %}
+      <form method="POST" action="{{ form_action }}" class="space-y-4">
+        {% if hr_mode %}
+        <input type="hidden" name="role" value="hr">
+        {% endif %}
+        <div>
+          <label class="mb-2 block text-sm font-semibold">Full Name</label>
+          <input
+            name="name"
+            value="{{ name or '' }}"
+            placeholder="Your name"
+            class="input-field"
+            required
+          >
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-semibold">Email</label>
+          <input
+            name="email"
+            value="{{ email or '' }}"
+            placeholder="you@example.com"
+            class="input-field"
+            required
+          >
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-semibold">Password</label>
+          <input
+            type="password"
+            name="password"
+            placeholder="Create a password"
+            class="input-field"
+            minlength="8"
+            required
+          >
+          <p class="text-muted mt-2 text-xs">Password must be at least 8 characters.</p>
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-semibold">Confirm Password</label>
+          <input
+            type="password"
+            name="confirm_password"
+            placeholder="Re-enter your password"
+            class="input-field"
+            minlength="8"
+            required
+          >
+        </div>
+        <button type="submit" class="btn-primary w-full">Sign Up</button>
+      </form>
+
+      <p class="text-muted mt-5 text-sm">
+        Already have an account?
+        <a href="{{ '/hr/login' if hr_mode else '/login' }}" class="font-semibold text-cyan-200 hover:text-white">Sign in</a>
+        {% if hr_mode %}
+        <br>
+        Prefer a personal account? <a href="/register" class="font-semibold text-red-300 hover:text-white">Standard Sign Up</a>
+        {% else %}
+        <br>
+        Organization user? <a href="/hr/register" class="font-semibold text-red-300 hover:text-white">Create HR Account</a>
+        {% endif %}
+      </p>
+    </div>
+  </div>
+{% include "_cookie.html" %}
+</body>
+</html>
+
+
+

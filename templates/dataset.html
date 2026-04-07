@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resume Dataset - ATS RESUME ANALYZER</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>{% include "_theme.css" %}</style>
+</head>
+<body class="app-shell">
+  <header class="app-topbar">
+    <div class="app-topbar__inner">
+      <div class="app-topbar__left">
+        <div class="app-logo">IQ</div>
+        <span class="brand-title text-lg font-bold">ATS RESUME ANALYZER</span>
+        <span class="badge-pill">Dataset</span>
+      </div>
+      <div class="app-topbar__center">
+        <a href="/">ATS RESUME ANALYZER</a>
+        <a href="/dataset" class="is-active">Dataset</a>
+        <a href="/about">About</a>
+        <a href="/profile">Profile</a>
+        {% if is_admin %}<a href="/admin/dashboard">Admin</a>{% endif %}
+        <a href="/logout" class="text-danger">Logout</a>
+      </div>
+      <div class="app-topbar__right">
+        <span class="app-hello">HELLO {{ (request.session.get("user_name") or "USER") | upper }}</span>
+        <a class="app-cta" href="/">Analyze Now</a>
+      </div>
+    </div>
+  </header>
+  <div class="analyzer-wrap">
+    <section class="glass-panel analyzer-shell analyzer-shell--with-sidebar">
+      <div class="analyzer-shell-body">
+        <aside class="dashboard-sidebar analyzer-sidebar panel-soft">
+          <div class="dashboard-brand">
+            <span class="brand-title text-2xl font-bold">ATS RESUME ANALYZER</span>
+            <span class="badge-pill">Dataset</span>
+          </div>
+          <nav class="dashboard-nav">
+            <a href="/">Home</a>
+            <a href="/dataset" class="is-active">Dataset</a>
+            <a href="/about">About</a>
+            <a href="/profile">Profile</a>
+            {% if is_admin %}
+            <a href="/admin/dashboard">Admin</a>
+            {% endif %}
+            <a href="/logout" class="text-danger">Logout</a>
+          </nav>
+          <div class="dashboard-user panel-soft">
+            <p class="text-muted text-xs uppercase tracking-wide">Signed In As</p>
+            <p class="mt-2 text-lg font-semibold text-slate-100">{{ request.session.get("user_name") or "User" }}</p>
+            <p class="text-muted mt-1 text-sm">{{ request.session.get("user_email") or "-" }}</p>
+          </div>
+        </aside>
+
+        <section class="dataset-browser">
+          <div class="panel-soft dataset-hero">
+            <div>
+              <h1 class="brand-title text-3xl font-bold md:text-4xl">Resume Dataset Browser</h1>
+              <p class="text-muted mt-3 max-w-3xl text-sm md:text-base">
+                Explore resumes, filter by category, and search inside the extracted resume text.
+              </p>
+            </div>
+            <div class="dataset-stats">
+              <div class="panel-soft dataset-stat-card">
+                <p class="text-muted text-xs uppercase tracking-wide">Dataset Rows</p>
+                <p class="metric-value mt-2 text-3xl font-bold text-cyan-200">{{ dataset_total }}</p>
+              </div>
+              <div class="panel-soft dataset-stat-card">
+                <p class="text-muted text-xs uppercase tracking-wide">Filtered Results</p>
+                <p class="metric-value mt-2 text-3xl font-bold text-emerald-300">{{ total_results }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-soft dataset-search-panel">
+            <form method="GET" action="/dataset" class="dataset-filter-form">
+              <div>
+                <label for="dataset-category" class="mb-2 block text-sm font-semibold field-label">Category</label>
+                <select id="dataset-category" name="category" class="input-field">
+                  <option value="">All categories</option>
+                  {% for item in dataset_categories %}
+                  <option value="{{ item.name }}" {% if selected_category == item.name %}selected{% endif %}>
+                    {{ item.name }} ({{ item.count }})
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div>
+                <label for="dataset-search" class="mb-2 block text-sm font-semibold field-label">Search</label>
+                <input
+                  id="dataset-search"
+                  type="text"
+                  name="q"
+                  value="{{ search_query }}"
+                  class="input-field"
+                  placeholder="Search by ID, category, or resume text"
+                >
+              </div>
+              <div class="dataset-filter-actions">
+                <button type="submit" class="btn-primary">Apply Filters</button>
+                {% if has_filters %}
+                <a href="/dataset" class="btn-secondary">Clear</a>
+                {% endif %}
+              </div>
+            </form>
+          </div>
+
+          {% if dataset_categories %}
+          <div class="panel-soft dataset-chip-panel">
+            <div class="dataset-chip-row">
+              <a href="/dataset" class="dataset-chip {% if not selected_category %}is-active{% endif %}">All</a>
+              {% for item in dataset_categories[:14] %}
+              <a
+                href="/dataset?category={{ item.name | urlencode }}{% if search_query %}&q={{ search_query | urlencode }}{% endif %}"
+                class="dataset-chip {% if selected_category == item.name %}is-active{% endif %}"
+              >
+                {{ item.name }} <span>{{ item.count }}</span>
+              </a>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
+          <div class="dataset-results-head">
+            <h2 class="text-xl font-semibold">Matching Resumes</h2>
+            <p class="text-muted text-sm">
+              Page {{ current_page }} of {{ total_pages }}
+              {% if selected_category %} . Category: {{ selected_category }}{% endif %}
+              {% if search_query %} . Search: "{{ search_query }}"{% endif %}
+            </p>
+          </div>
+
+          {% if results %}
+          <div class="dataset-card-grid">
+            {% for row in results %}
+            <article class="panel-soft dataset-card">
+              <div class="dataset-card__top">
+                <div>
+                  <p class="dataset-card__id">ID {{ row.id }}</p>
+                  <h3 class="dataset-card__category">{{ row.category }}</h3>
+                  
+                </div>
+                <span class="dataset-card__meta">{{ row.char_count }} chars</span>
+              </div>
+              <pre class="dataset-card__preview">{{ row.preview }}</pre>
+            </article>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="panel-soft p-6">
+            <p class="text-muted text-sm">No resumes matched your current filters.</p>
+          </div>
+          {% endif %}
+
+          {% if total_pages > 1 %}
+          <div class="dataset-pagination">
+            {% if current_page > 1 %}
+            <a href="/dataset?page={{ current_page - 1 }}{% if selected_category %}&category={{ selected_category | urlencode }}{% endif %}{% if search_query %}&q={{ search_query | urlencode }}{% endif %}" class="btn-secondary">Previous</a>
+            {% endif %}
+
+            {% for page_no in visible_pages %}
+            <a
+              href="/dataset?page={{ page_no }}{% if selectednotnot_category %}&category={{ selected_category | urlencode }}{% endif %}{% if search_query %}&q={{ search_query | urlencode }}{% endif %}"
+              class="dataset-page-link {% if current_page == page_no %}is-active{% endif %}"
+            >
+              {{ page_no }}
+            </a>
+            {% endfor %}
+
+            {% if current_page < total_pages %}
+            <a href="/dataset?page={{ current_page + 1 }}{% if selected_category %}&category={{ selected_category | urlencode }}{% endif %}{% if search_query %}&q={{ search_query | urlencode }}{% endif %}" class="btn-secondary">Next</a>
+            {% endif %}
+          </div>
+          {% endif %}
+        </section>
+      </div>
+    </section>
+  </div>
+{% include "_cookie.html" %}
+</body>
+</html>
+
+
+

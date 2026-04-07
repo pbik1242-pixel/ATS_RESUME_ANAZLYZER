@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Token - ATS RESUME ANALYZER</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>{% include "_theme.css" %}</style>
+</head>
+<body class="app-shell">
+  <header class="app-topbar">
+    <div class="app-topbar__inner">
+      <div class="app-topbar__left">
+        <div class="app-logo">IQ</div>
+        <span class="brand-title text-lg font-bold">ATS RESUME ANALYZER</span>
+        <span class="badge-pill">API Token</span>
+      </div>
+      <div class="app-topbar__center">
+        <a href="/">ATS RESUME ANALYZER</a>
+        <a href="/dataset">Dataset</a>
+        <a href="/about">About</a>
+        <a href="/profile">Profile</a>
+        {% if is_admin %}<a href="/admin/dashboard">Admin</a>{% endif %}
+        <a href="/logout" class="text-danger">Logout</a>
+      </div>
+      <div class="app-topbar__right">
+        <span class="app-hello">HELLO {{ (request.session.get("user_name") or "USER") | upper }}</span>
+        <a class="app-cta" href="/">Analyze Now</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-wrap page-wrap--content">
+    <div class="glass-panel p-6 md:p-10">
+      <h1 class="brand-title text-3xl font-bold">Bearer Token</h1>
+      <p class="text-muted mt-2 mb-6">
+        Use this token for protected endpoints like <code>/api/me</code> and <code>/api/history</code>.
+        It expires in approximately {{ expires_minutes }} minutes.
+      </p>
+
+      <div class="panel-soft p-4">
+        <label class="mb-2 block text-sm font-semibold">Token</label>
+        <textarea id="token" readonly class="input-field h-36 font-mono text-xs">{{ token }}</textarea>
+
+        <div class="mt-4 flex flex-wrap gap-3">
+          <button type="button" class="btn-primary" onclick="copyToken()">Copy Token</button>
+          <a href="/api-token" class="btn-secondary">Refresh Token</a>
+          <a href="/docs" class="btn-secondary">Open Swagger</a>
+        </div>
+      </div>
+
+      <h2 class="mt-8 mb-3 text-xl font-semibold">Example (PowerShell)</h2>
+      <pre class="mono-block"><code>$token = "{{ token }}"
+Invoke-RestMethod "http://127.0.0.1:8000/api/me" -Headers @{ Authorization="Bearer $token" }
+Invoke-RestMethod "http://127.0.0.1:8000/api/history" -Headers @{ Authorization="Bearer $token" }</code></pre>
+
+      <h2 class="mt-8 mb-3 text-xl font-semibold">Try API Calls</h2>
+      <p class="text-muted mb-4 text-sm">
+        These actions include the <code>Authorization</code> header automatically.
+      </p>
+
+      <div class="mb-4 flex flex-wrap gap-3">
+        <button type="button" class="btn-primary" onclick="callApi('/api/me')">GET /api/me</button>
+        <button type="button" class="btn-primary" onclick="callApi('/api/history')">GET /api/history</button>
+      </div>
+
+      <pre class="mono-block"><code id="apiResult">Click a button to load JSON.</code></pre>
+    </div>
+  </div>
+
+  <script>
+    function copyToken() {
+      const tokenEl = document.getElementById("token");
+      const value = tokenEl.value || tokenEl.textContent || "";
+      if (!value) return;
+      tokenEl.focus();
+      tokenEl.select();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(value);
+      } else {
+        document.execCommand("copy");
+      }
+    }
+
+    async function callApi(path) {
+      const out = document.getElementById("apiResult");
+      const tokenEl = document.getElementById("token");
+      const token = (tokenEl.value || tokenEl.textContent || "").trim();
+
+      if (!token) {
+        out.textContent = "Token is empty.";
+        return;
+      }
+
+      out.textContent = "Loading...";
+
+      try {
+        const res = await fetch(path, {
+          method: "GET",
+          headers: {
+            "Accept": "application/json",
+            "Authorization": `Bearer ${token}`
+          }
+        });
+
+        const text = await res.text();
+        let body = text;
+        try {
+          body = JSON.stringify(JSON.parse(text), null, 2);
+        } catch (_) {}
+
+        out.textContent = `HTTP ${res.status}\n\n${body}`;
+      } catch (e) {
+        out.textContent = `Request failed: ${e}`;
+      }
+    }
+  </script>
+{% include "_cookie.html" %}
+</body>
+</html>
+
+
+

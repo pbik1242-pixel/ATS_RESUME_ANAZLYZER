@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About - ATS RESUME ANALYZER</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    {% include "_theme.css" %}
+
+    .tour-hero {
+      display: grid;
+      gap: 1.2rem;
+      text-align: center;
+      padding: 1.5rem 1rem 0.5rem;
+    }
+
+    .tour-grid {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .tour-card {
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      background: var(--surface-strong);
+      padding: 1.2rem 1.1rem;
+      box-shadow: var(--shadow-soft);
+      display: grid;
+      gap: 0.7rem;
+    }
+
+    .tour-kicker {
+      font-family: "DM Mono", monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .tour-title {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      letter-spacing: 0.06em;
+      color: var(--ink);
+    }
+
+    .tour-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      border: 1px solid rgba(217, 43, 43, 0.2);
+      border-radius: 999px;
+      padding: 0.35rem 0.75rem;
+      background: var(--red-pale);
+      color: var(--red);
+      font-family: "DM Mono", monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .tour-flow {
+      display: grid;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .tour-flow-step {
+      border-left: 3px solid var(--red);
+      padding: 0.9rem 1rem;
+      background: var(--surface);
+      border-radius: 0.9rem;
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 0.45s ease, transform 0.45s ease;
+    }
+
+    .reveal.in-view {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 900px) {
+      .tour-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (min-width: 900px) {
+      .tour-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+  </style>
+</head>
+<body class="app-shell">
+  <header class="app-topbar">
+    <div class="app-topbar__inner">
+      <div class="app-topbar__left">
+        <div class="app-logo">IQ</div>
+        <span class="brand-title text-lg font-bold">ATS RESUME ANALYZER</span>
+        <span class="badge-pill">How It Works</span>
+      </div>
+      <div class="app-topbar__center">
+        <a href="/">ATS RESUME ANALYZER</a>
+        {% if request.session.get("user_id") %}
+        <a href="/dataset">Dataset</a>
+        <a href="/about" class="is-active">About</a>
+        <a href="/profile">Profile</a>
+        {% if is_admin %}<a href="/admin/dashboard">Admin</a>{% endif %}
+        <a href="/logout" class="text-danger">Logout</a>
+        {% else %}
+        <a href="/about" class="is-active">About</a>
+        <a href="/login">Sign In</a>
+        <a href="/register">Sign Up</a>
+        {% endif %}
+      </div>
+      <div class="app-topbar__right">
+        <span class="app-hello">{% if request.session.get("user_name") %}HELLO {{ (request.session.get("user_name") or "USER") | upper }}{% else %}HELLO{% endif %}</span>
+        <a class="app-cta" href="/">Analyze Now</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-wrap page-wrap--content">
+    <div class="glass-panel p-6 md:p-10">
+      <div class="tour-hero reveal">
+        <span class="tour-kicker">Tutorial</span>
+        <h1 class="brand-title text-3xl font-bold md:text-4xl">How ATS RESUME ANALYZER Works</h1>
+        <p class="text-muted text-base leading-relaxed md:text-lg">
+          This walkthrough shows each component on the site, how it analyzes your resume, and what each score means.
+        </p>
+      </div>
+
+      <div class="tour-grid mt-10">
+        <div class="tour-card reveal">
+          <span class="tour-pill">01 · Job Description</span>
+          <div class="tour-title">Paste the Target Role</div>
+          <p class="text-muted text-sm leading-relaxed">
+            The analyzer extracts keywords, responsibilities, and required skills from the job description to build the target profile.
+          </p>
+        </div>
+        <div class="tour-card reveal">
+          <span class="tour-pill">02 · Resume Upload</span>
+          <div class="tour-title">Upload One or Many</div>
+          <p class="text-muted text-sm leading-relaxed">
+            Upload a single resume or an entire folder. The system parses PDF, DOCX, and TXT formats.
+          </p>
+        </div>
+        <div class="tour-card reveal">
+          <span class="tour-pill">03 · ATS Scoring</span>
+          <div class="tour-title">Get a Match Score</div>
+          <p class="text-muted text-sm leading-relaxed">
+            Your resume is scored using keyword alignment, formatting signals, and semantic similarity.
+          </p>
+        </div>
+      </div>
+
+      <div class="tour-grid mt-4">
+        <div class="tour-card reveal">
+          <span class="tour-pill">04 · Missing Skills</span>
+          <div class="tour-title">See What is Missing</div>
+          <p class="text-muted text-sm leading-relaxed">
+            We highlight missing skills and keywords so you can add them where they are true for you.
+          </p>
+        </div>
+        <div class="tour-card reveal">
+          <span class="tour-pill">05 · Bullet Rewrites</span>
+          <div class="tour-title">Strengthen Impact</div>
+          <p class="text-muted text-sm leading-relaxed">
+            Optional AI rewrites improve clarity and action verbs while keeping your original meaning.
+          </p>
+        </div>
+        <div class="tour-card reveal">
+          <span class="tour-pill">06 · History</span>
+          <div class="tour-title">Track Your Progress</div>
+          <p class="text-muted text-sm leading-relaxed">
+            Every analysis is saved so you can compare versions and export an updated resume later.
+          </p>
+        </div>
+      </div>
+
+      <div class="tour-flow">
+        <div class="tour-flow-step reveal">
+          <div class="tour-title">Step 1: Build the target template</div>
+          <p class="text-muted text-sm">Add a job description or use a preset to auto-fill a strong template.</p>
+        </div>
+        <div class="tour-flow-step reveal">
+          <div class="tour-title">Step 2: Analyze and review</div>
+          <p class="text-muted text-sm">Check ATS score, matched keywords, and missing terms with clear visibility.</p>
+        </div>
+        <div class="tour-flow-step reveal">
+          <div class="tour-title">Step 3: Improve and export</div>
+          <p class="text-muted text-sm">Apply bullet improvements, then export a clean ATS-ready resume.</p>
+        </div>
+      </div>
+
+      <div class="mt-8 text-center">
+        <a href="/" class="btn-secondary">&larr; Back to Analyzer</a>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const items = document.querySelectorAll(".reveal");
+      if (!("IntersectionObserver" in window) || !items.length) {
+        items.forEach(el => el.classList.add("in-view"));
+        return;
+      }
+      const io = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("in-view");
+            io.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.18 });
+      items.forEach(el => io.observe(el));
+    })();
+  </script>
+{% include "_cookie.html" %}
+</body>
+</html>
+
+
+
