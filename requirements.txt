@@ -1,0 +1,9 @@
+werkzeug
+requests
+pdfplumber
+python-docx
+sentence-transformers
+fastapi
+uvicorn
+python-multipart
+pytest
