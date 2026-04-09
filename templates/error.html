@@ -19,7 +19,6 @@
         <a href="/">ATS RESUME ANALYZER</a>
         <a href="/about">About</a>
         {% if request.session.get("user_id") %}
-        <a href="/dataset">Dataset</a>
         <a href="/profile">Profile</a>
         {% if is_admin %}<a href="/admin/dashboard">Admin</a>{% endif %}
         <a href="/logout" class="text-danger">Logout</a>

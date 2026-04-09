@@ -822,6 +822,22 @@ code {
   color: var(--green);
 }
 
+/* Ensure form controls stay light (avoid browser dark-mode autofill black boxes) */
+input,
+textarea,
+select {
+  background-color: #fff;
+  color: var(--ink);
+}
+
+input:-webkit-autofill,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: var(--ink);
+  box-shadow: 0 0 0 1000px #fff inset;
+  background-color: #fff;
+}
+
 .input-field {
   width: 100%;
   border: 2px solid var(--border-strong);

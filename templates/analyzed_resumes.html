@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analyzed Resumes - ATS RESUME ANALYZER</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>{% include "_theme.css" %}</style>
+</head>
+<body class="app-shell">
+  <header class="app-topbar">
+    <div class="app-topbar__inner">
+      <div class="app-topbar__left">
+        <div class="app-logo">IQ</div>
+        <span class="brand-title text-lg font-bold">ATS RESUME ANALYZER</span>
+        <span class="badge-pill">Analyzed Resumes</span>
+      </div>
+      <div class="app-topbar__center">
+        <a href="/">Home</a>
+        <a href="/analyzed-resumes" class="is-active">Analyzed Resumes</a>
+        <a href="/interview-list">Interview List</a>
+        <a href="/about">About</a>
+        <a href="/profile">Profile</a>
+        {% if is_admin %}<a href="/admin/dashboard">Admin</a>{% endif %}
+        <a href="/logout" class="text-danger">Logout</a>
+      </div>
+      <div class="app-topbar__right">
+        <span class="app-hello">HELLO {{ (request.session.get("user_name") or "USER") | upper }}</span>
+        <a class="app-cta" href="/interview-list">Go to Interview List</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-wrap page-wrap--content">
+    <div class="glass-panel p-6 md:p-8">
+      <div class="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p class="badge-pill">Shortlist Launchpad</p>
+          <h1 class="brand-title text-3xl md:text-4xl font-bold">Analyzed Resumes Grid</h1>
+          <p class="text-muted mt-2">Review every analyzed resume, see why it stood out, and send the strongest profiles directly to your interview list.</p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <a class="app-cta" href="/">Analyze New</a>
+          <a class="app-cta" href="/interview-list">Interview List</a>
+        </div>
+      </div>
+
+      {% if notice %}
+      <div class="panel-soft mt-5 p-4 md:p-5 rounded-lg {% if notice_tone == 'error' %}border-red-400/60{% else %}border-green-500/50{% endif %}">
+        <div class="font-semibold">{{ notice }}</div>
+      </div>
+      {% endif %}
+
+      <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4 mt-6">
+        {% for r in resumes %}
+        <div class="glass-card p-5 flex flex-col gap-4">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="text-sm text-muted">{{ r.date or "-" }}</div>
+              <div class="text-xl font-semibold">{{ r.candidate_name }}</div>
+              <div class="text-xs text-muted uppercase tracking-wide">{{ r.filetype or "-" }} · ID {{ r.id }}</div>
+            </div>
+            <span class="badge-pill">{{ r.score_display }}</span>
+          </div>
+
+          <div class="panel-soft p-3 rounded-lg">
+            <div class="text-xs text-muted">Why this resume was selected</div>
+            <div class="text-sm font-semibold leading-6">{{ r.selection_reason }}</div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="panel-soft p-3 rounded-lg">
+              <div class="text-xs text-muted">Matched Strengths</div>
+              <div class="text-sm font-semibold">{{ r.found_preview }}</div>
+            </div>
+            <div class="panel-soft p-3 rounded-lg">
+              <div class="text-xs text-muted">To Improve</div>
+              <div class="text-sm font-semibold">{{ r.missing_preview }}</div>
+            </div>
+          </div>
+
+          <form class="grid grid-cols-1 md:grid-cols-2 gap-3" method="POST" action="/interview-list">
+            <input type="hidden" name="history_id" value="{{ r.id }}">
+            <label class="flex flex-col gap-1 text-sm font-semibold">
+              <span class="text-xs text-muted">Candidate Name</span>
+              <input name="candidate_name" value="{{ r.candidate_name }}" class="w-full rounded-lg border border-slate-200 px-3 py-2 focus:border-slate-500 focus:outline-none" required>
+            </label>
+            <label class="flex flex-col gap-1 text-sm font-semibold">
+              <span class="text-xs text-muted">Contact Number</span>
+              <input name="contact" value="{{ r.contact }}" placeholder="Phone or WhatsApp" class="w-full rounded-lg border border-slate-200 px-3 py-2 focus:border-slate-500 focus:outline-none">
+            </label>
+            <label class="flex flex-col gap-1 text-sm font-semibold">
+              <span class="text-xs text-muted">Email</span>
+              <input name="email" type="email" value="{{ r.email or request.session.get('user_email') or '' }}" class="w-full rounded-lg border border-slate-200 px-3 py-2 focus:border-slate-500 focus:outline-none">
+            </label>
+            <label class="flex flex-col gap-1 text-sm font-semibold">
+              <span class="text-xs text-muted">Interview Date</span>
+              <input name="interview_date" type="date" min="{{ today }}" value="{{ today }}" class="w-full rounded-lg border border-slate-200 px-3 py-2 focus:border-slate-500 focus:outline-none">
+            </label>
+            <label class="flex flex-col gap-1 text-sm font-semibold md:col-span-2">
+              <span class="text-xs text-muted">Notes</span>
+              <textarea name="notes" rows="2" class="w-full rounded-lg border border-slate-200 px-3 py-2 focus:border-slate-500 focus:outline-none">{{ r.selection_reason }}</textarea>
+            </label>
+            <div class="flex flex-wrap gap-3 md:col-span-2">
+              <button type="submit" class="app-cta">Send to Interview List</button>
+              <a class="btn-secondary" href="/history/{{ r.id }}">Open Analysis</a>
+            </div>
+          </form>
+        </div>
+        {% else %}
+        <div class="panel-soft p-6 rounded-xl col-span-full text-center text-muted">
+          No analyzed resumes yet. <a class="text-red-500 underline" href="/">Run your first analysis</a>.
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% include "_cookie.html" %}
+</body>
+</html>

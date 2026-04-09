@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interview List - ATS RESUME ANALYZER</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>{% include "_theme.css" %}</style>
+</head>
+<body class="app-shell">
+  <header class="app-topbar">
+    <div class="app-topbar__inner">
+      <div class="app-topbar__left">
+        <div class="app-logo">IQ</div>
+        <span class="brand-title text-lg font-bold">ATS RESUME ANALYZER</span>
+        <span class="badge-pill">Interview List</span>
+      </div>
+      <div class="app-topbar__center">
+        <a href="/">Home</a>
+        <a href="/analyzed-resumes">Analyzed Resumes</a>
+        <a href="/interview-list" class="is-active">Interview List</a>
+        <a href="/about">About</a>
+        <a href="/profile">Profile</a>
+        {% if is_admin %}<a href="/admin/dashboard">Admin</a>{% endif %}
+        <a href="/logout" class="text-danger">Logout</a>
+      </div>
+      <div class="app-topbar__right">
+        <span class="app-hello">HELLO {{ (request.session.get("user_name") or "USER") | upper }}</span>
+        <a class="app-cta" href="/analyzed-resumes">Back to Grid</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-wrap page-wrap--content">
+    <div class="glass-panel p-6 md:p-8">
+      <div class="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p class="badge-pill">Interview Pipeline</p>
+          <h1 class="brand-title text-3xl md:text-4xl font-bold">Candidates Ready for Interviews</h1>
+          <p class="text-muted mt-2">Centralized view of every candidate you've sent from the analyzed resumes page. Track contact info, interview dates, and jump back to the ATS analysis.</p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <a class="app-cta" href="/analyzed-resumes">Add More</a>
+        </div>
+      </div>
+
+      {% if notice %}
+      <div class="panel-soft mt-5 p-4 md:p-5 rounded-lg {% if notice_tone == 'error' %}border-red-400/60{% else %}border-green-500/50{% endif %}">
+        <div class="font-semibold">{{ notice }}</div>
+      </div>
+      {% endif %}
+
+      <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4 mt-6">
+        {% for item in interviews %}
+        <div class="glass-card p-5 flex flex-col gap-3">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="text-xs text-muted uppercase tracking-wide">Interview Date</div>
+              <div class="text-lg font-semibold">{{ item.interview_date }}</div>
+              <div class="text-sm text-muted">Added {{ item.updated_at or item.created_at }}</div>
+            </div>
+            <a class="app-cta" href="/history/{{ item.history_id }}">View Analysis</a>
+          </div>
+          <div>
+            <div class="text-xl font-semibold">{{ item.candidate_name }}</div>
+            <div class="text-sm text-muted">{{ item.filename }} · {{ item.score_display }}</div>
+            <div class="text-sm text-muted">Analyzed on {{ item.analyzed_date }}</div>
+          </div>
+          <div class="panel-soft p-3 rounded-lg">
+            <div class="text-xs text-muted">Contact</div>
+            <div class="text-sm font-semibold">{{ item.contact }}</div>
+            <div class="text-sm font-semibold">
+              <a class="text-red-500 hover:underline" href="mailto:{{ item.email }}">{{ item.email }}</a>
+            </div>
+          </div>
+          <div class="panel-soft p-3 rounded-lg">
+            <div class="text-xs text-muted">Notes</div>
+            <div class="text-sm leading-6">{{ item.notes or "No notes added." }}</div>
+          </div>
+          <form class="panel-soft p-3 rounded-lg flex flex-col gap-2" method="POST" action="/interview-list/update-date">
+            <input type="hidden" name="entry_id" value="{{ item.id }}">
+            <label class="text-xs text-muted font-semibold">Change Interview Date</label>
+            <input
+              class="w-full rounded-lg border border-slate-200 px-3 py-2 focus:border-slate-500 focus:outline-none"
+              type="date"
+              name="interview_date"
+              min="{{ today }}"
+              value="{{ item.interview_date if item.interview_date != 'TBD' else today }}"
+              required>
+            <button type="submit" class="btn-secondary w-full">Update Date</button>
+          </form>
+          <div class="flex flex-wrap gap-3">
+            <a class="btn-secondary" href="/analyzed-resumes">Send another</a>
+            <a class="text-red-600 hover:underline text-sm" href="/interview-list?delete_id={{ item.id }}">Remove</a>
+          </div>
+        </div>
+        {% else %}
+        <div class="panel-soft p-6 rounded-xl col-span-full text-center text-muted">
+          No interview candidates yet. Select resumes from <a class="text-red-500 underline" href="/analyzed-resumes">Analyzed Resumes</a>.
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% include "_cookie.html" %}
+</body>
+</html>
+

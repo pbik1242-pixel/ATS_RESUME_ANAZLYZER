@@ -333,3 +333,46 @@ def export_docx(name, skills, bullets, export_dir, original_text: str | None = N
     except Exception as e:
         print("DOCX export failed:", e)
         return None
+
+
+def extract_contact_details(text: str, fallback_name: str = "Candidate") -> dict[str, str]:
+    """Pull a best-effort name, email, and phone number from resume text.
+
+    - Email: first RFC-ish email pattern
+    - Contact: first phone-like pattern with at least 10 digits
+    - Name: first non-empty line that isn't the email/phone and doesn't look like metadata
+    """
+
+    blob = text or ""
+    email_match = re.search(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", blob)
+    email = email_match.group(0).strip() if email_match else ""
+
+    phone_match = re.search(r"(?:\+?\d[\d\s().-]{8,}\d)", blob)
+    contact = ""
+    if phone_match:
+        raw_phone = phone_match.group(0)
+        digits = re.sub(r"[^0-9+]", "", raw_phone)
+        # normalize leading 00 to + where sensible
+        if digits.startswith("00") and len(digits) > 2:
+            digits = "+" + digits[2:]
+        contact = digits or raw_phone.strip()
+
+    lines = [clean(l) for l in str(blob).splitlines() if clean(l)]
+    candidate_name = fallback_name
+    for line in lines[:8]:
+        lower_line = line.lower()
+        if email and email.lower() in lower_line:
+            continue
+        if contact and any(ch.isdigit() for ch in line):
+            continue
+        # avoid obvious headers
+        if len(line) < 3 or len(line) > 60:
+            continue
+        candidate_name = line
+        break
+
+    return {
+        "candidate_name": candidate_name,
+        "contact": contact,
+        "email": email,
+    }

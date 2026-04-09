@@ -29,6 +29,7 @@ from resume_utils import (
     clean,
     export_docx,
     extract_bullets,
+    extract_contact_details,
     extract_keywords,
     extract_tables,
     extract_text,
@@ -105,6 +106,26 @@ def ensure_schema() -> None:
                 conn.execute(f"ALTER TABLE resume_history ADD COLUMN {name} TEXT")
         conn.execute("CREATE TABLE IF NOT EXISTS login_history(id INTEGER PRIMARY KEY,user_id INTEGER,email TEXT,login_time TEXT,ip_address TEXT,user_agent TEXT)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_login_history_user_time ON login_history(user_id, login_time DESC)")
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS interview_list(
+                id INTEGER PRIMARY KEY,
+                user_id INTEGER,
+                history_id INTEGER,
+                candidate_name TEXT,
+                contact TEXT,
+                email TEXT,
+                interview_date TEXT,
+                notes TEXT,
+                created_at TEXT,
+                updated_at TEXT
+            )
+            """
+        )
+        interview_cols = {r["name"] for r in conn.execute("PRAGMA table_info(interview_list)").fetchall()}
+        for name in ("candidate_name", "contact", "email", "interview_date", "notes", "created_at", "updated_at", "history_id", "user_id"):
+            if name not in interview_cols:
+                conn.execute(f"ALTER TABLE interview_list ADD COLUMN {name} TEXT")
         # lightweight migration: promote known HR account(s)
         for hr_email in ("hr@example.com", "meghashyamroyal@gmail.com", "meghalord772@gmail.com"):
             conn.execute("UPDATE users SET role='hr' WHERE email=?", (hr_email,))
@@ -404,6 +425,25 @@ def find_uploaded_resume_path(filename: str | None) -> Path | None:
     return matches[0]
 
 
+@lru_cache(maxsize=256)
+def resume_contact_snapshot(filename: str | None) -> dict[str, str]:
+    """Return candidate name, contact, and email pulled from the resume text."""
+    fallback_name = Path(str(filename or "Candidate")).stem or "Candidate"
+    try:
+        path = find_uploaded_resume_path(filename)
+        if not path:
+            return {"candidate_name": fallback_name, "contact": "", "email": ""}
+        raw = extract_text(path)
+        info = extract_contact_details(raw, fallback_name)
+        return {
+            "candidate_name": info.get("candidate_name") or fallback_name,
+            "contact": info.get("contact") or "",
+            "email": info.get("email") or "",
+        }
+    except Exception:
+        return {"candidate_name": fallback_name, "contact": "", "email": ""}
+
+
 def rehydrate_history_rewrite(history_id: int, user_id: int, filename: str | None, skills_csv: str | None) -> list[str]:
     path = find_uploaded_resume_path(filename)
     if not path:
@@ -701,6 +741,156 @@ def build_history_groups(rows: list[sqlite3.Row]) -> list[dict[str, Any]]:
     return groups
 
 
+def _clean_list(raw: str | None, limit: int = 4) -> list[str]:
+    return [s.strip() for s in str(raw or "").split(",") if s.strip() and s.strip() != "-"][:limit]
+
+
+def _score_display(score: Any) -> str:
+    try:
+        return f"{float(score):.1f}%"
+    except Exception:
+        return "-"
+
+
+def _resume_summary(name: str, score_display: str, found_list: list[str], missing_list: list[str]) -> str:
+    lead = f"{name} scored {score_display}".strip()
+    strengths = f" after matching {', '.join(found_list[:4])}" if found_list else ""
+    experience = " Shows strong programming background and solid experience." if found_list else " Shows solid overall experience."
+    gaps = ""
+    if missing_list:
+        gaps = f" Consider adding {', '.join(missing_list[:3])} to strengthen alignment."
+    return (lead + strengths + "." + experience + gaps).strip()
+
+
+def analyzed_resumes_for(user_id: int) -> list[dict[str, Any]]:
+    with db() as conn:
+        rows = conn.execute(
+            "SELECT id,filename,filetype,score,date,found,missing FROM resume_history WHERE user_id=? ORDER BY id DESC",
+            (user_id,),
+        ).fetchall()
+    scores_sorted = sorted({float(row["score"]) for row in rows if row["score"] is not None}, reverse=True)
+    payload: list[dict[str, Any]] = []
+    for row in rows:
+        found_list = _clean_list(row["found"], 4)
+        missing_list = _clean_list(row["missing"], 3)
+        contact_snapshot = resume_contact_snapshot(row["filename"])
+        candidate_name = contact_snapshot["candidate_name"]
+        score_val = float(row["score"]) if row["score"] is not None else None
+        rank = scores_sorted.index(score_val) + 1 if score_val is not None else None
+        reason_bits: list[str] = []
+        if row["score"] is not None:
+            reason_bits.append(f"ATS score {_score_display(row['score'])}")
+        if found_list:
+            reason_bits.append(f"matched {', '.join(found_list)}")
+        if missing_list:
+            reason_bits.append(f"could improve {', '.join(missing_list)}")
+        if not reason_bits:
+            reason_bits.append("Selected from your analyzed resumes.")
+        summary = _resume_summary(candidate_name, _score_display(row["score"]), found_list, missing_list)
+        payload.append(
+            {
+                "id": int(row["id"]),
+                "filename": row["filename"],
+                "filetype": (row["filetype"] or "").upper(),
+                "score": row["score"],
+                "score_display": _score_display(row["score"]),
+                "rank": rank,
+                "date": row["date"],
+                "found_preview": ", ".join(found_list) or "-",
+                "missing_preview": ", ".join(missing_list) or "-",
+                "selection_reason": " • ".join(reason_bits),
+                "candidate_name": candidate_name,
+                "contact": contact_snapshot["contact"],
+                "email": contact_snapshot["email"],
+                "summary": summary,
+            }
+        )
+    return payload
+
+
+def save_interview_entry(
+    user_id: int,
+    history_id: int,
+    candidate_name: str,
+    contact: str,
+    email: str,
+    interview_date: str,
+    notes: str,
+) -> None:
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    with db() as conn:
+        existing = conn.execute(
+            "SELECT id FROM interview_list WHERE user_id=? AND history_id=?", (user_id, history_id)
+        ).fetchone()
+        if existing:
+            conn.execute(
+                """
+                UPDATE interview_list
+                SET candidate_name=?, contact=?, email=?, interview_date=?, notes=?, updated_at=?
+                WHERE id=?
+                """,
+                (candidate_name, contact, email, interview_date, notes, timestamp, int(existing["id"])),
+            )
+        else:
+            conn.execute(
+                """
+                INSERT INTO interview_list(user_id,history_id,candidate_name,contact,email,interview_date,notes,created_at,updated_at)
+                VALUES (?,?,?,?,?,?,?,?,?)
+                """,
+                (user_id, history_id, candidate_name, contact, email, interview_date, notes, timestamp, timestamp),
+            )
+
+
+def interview_entries_for(user_id: int) -> list[dict[str, Any]]:
+    with db() as conn:
+        rows = conn.execute(
+            """
+            SELECT il.id, il.history_id, il.candidate_name, il.contact, il.email, il.interview_date, il.notes,
+                   il.created_at, il.updated_at,
+                   rh.filename, rh.filetype, rh.score, rh.found, rh.missing, rh.date AS analyzed_date
+            FROM interview_list il
+            LEFT JOIN resume_history rh ON rh.id = il.history_id
+            WHERE il.user_id=?
+            ORDER BY COALESCE(il.interview_date, il.updated_at, il.created_at) ASC, il.id DESC
+            """,
+            (user_id,),
+        ).fetchall()
+    entries: list[dict[str, Any]] = []
+    for row in rows:
+        found_list = _clean_list(row["found"], 4)
+        missing_list = _clean_list(row["missing"], 3)
+        reason_bits: list[str] = []
+        if row["score"] is not None:
+            reason_bits.append(f"ATS score {_score_display(row['score'])}")
+        if found_list:
+            reason_bits.append(f"matched {', '.join(found_list)}")
+        if missing_list:
+            reason_bits.append(f"could improve {', '.join(missing_list)}")
+        if not reason_bits:
+            reason_bits.append("Selected from your analyzed resumes.")
+        entries.append(
+            {
+                "id": int(row["id"]),
+                "history_id": int(row["history_id"]) if row["history_id"] is not None else None,
+                "candidate_name": row["candidate_name"] or "Candidate",
+                "contact": row["contact"] or "-",
+                "email": row["email"] or "-",
+                "interview_date": row["interview_date"] or "TBD",
+                "notes": row["notes"] or "",
+                "created_at": row["created_at"] or "",
+                "updated_at": row["updated_at"] or "",
+                "filename": row["filename"] or "Resume",
+                "filetype": (row["filetype"] or "").upper(),
+                "score_display": _score_display(row["score"]),
+                "analyzed_date": row["analyzed_date"] or "-",
+                "found_preview": ", ".join(found_list) or "-",
+                "missing_preview": ", ".join(missing_list) or "-",
+                "selection_reason": " • ".join(reason_bits),
+            }
+        )
+    return entries
+
+
 def token_secret() -> bytes:
     return JWT_SECRET.encode("utf-8")
 
@@ -772,7 +962,6 @@ async def home(request: Request) -> Response:
         "index.html",
         base_context(
             request,
-            dataset_available=DATASET_CSV.exists(),
             is_admin=is_admin_user(user),
             genai_enabled=enabled,
             genai_status_message=status_message,
@@ -1248,26 +1437,122 @@ async def profile(request: Request, delete_id: int | None = None, delete_all: in
     )
 
 
-@app.get("/dataset", response_class=HTMLResponse)
-async def dataset(request: Request, category: str = "", q: str = "", page: int = 1) -> HTMLResponse:
+@app.get("/analyzed-resumes", response_class=HTMLResponse)
+async def analyzed_resumes_page(request: Request) -> Response:
     user = require_user(request)
-    ctx = dataset_context(category, q, page)
+    notice = request.session.pop("flash_message", "")
+    tone = request.session.pop("flash_tone", "success")
     return templates.TemplateResponse(
-        "dataset.html",
+        "analyzed_resumes.html",
         base_context(
             request,
+            resumes=analyzed_resumes_for(int(user["id"])),
+            notice=notice,
+            notice_tone=tone,
+            today=datetime.now().strftime("%Y-%m-%d"),
             is_admin=is_admin_user(user),
-            dataset_path=str(DATASET_CSV),
-            dataset_total=ctx["dataset_total"],
-            total_results=ctx["total_results"],
-            dataset_categories=ctx["dataset_categories"],
-            selected_category=clean(category),
-            search_query=q,
-            has_filters=bool(clean(category) or clean(q)),
-            results=ctx["results"],
-            current_page=ctx["page"],
-            total_pages=ctx["total_pages"],
-            visible_pages=get_visible_pages(ctx["page"], ctx["total_pages"]),
+        ),
+    )
+
+
+@app.post("/interview-list")
+async def add_to_interview_list(
+    request: Request,
+    history_id: str = Form(""),
+    candidate_name: str = Form(""),
+    contact: str = Form(""),
+    email: str = Form(""),
+    interview_date: str = Form(""),
+    notes: str = Form(""),
+) -> Response:
+    user = require_user(request)
+    history_id = history_id.strip()
+    if not history_id.isdigit():
+        return render_error(request, 400, "Invalid resume reference.", 400)
+    with db() as conn:
+        resume_row = conn.execute(
+            "SELECT id,filename FROM resume_history WHERE id=? AND user_id=?", (int(history_id), int(user["id"]))
+        ).fetchone()
+    if not resume_row:
+        return render_error(request, 404, "Resume not found for this account.", 404)
+    contact_snapshot = resume_contact_snapshot(resume_row["filename"])
+    candidate_name = candidate_name.strip() or contact_snapshot["candidate_name"] or Path(resume_row["filename"] or "Candidate").stem or "Candidate"
+    contact = contact.strip() or contact_snapshot["contact"]
+    email = email.strip() or contact_snapshot["email"]
+    interview_date = interview_date.strip() or datetime.now().strftime("%Y-%m-%d")
+    notes = notes.strip()
+    if email and not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
+        return render_error(request, 400, "Please enter a valid email address.", 400)
+    save_interview_entry(
+        int(user["id"]),
+        int(history_id),
+        candidate_name,
+        contact,
+        email,
+        interview_date,
+        notes,
+    )
+    request.session["flash_message"] = f"{candidate_name} sent to the interview list."
+    request.session["flash_tone"] = "success"
+    return redirect("/analyzed-resumes")
+
+
+@app.post("/interview-list/update-date")
+async def update_interview_date(request: Request, entry_id: str = Form(""), interview_date: str = Form("")) -> Response:
+    user = require_user(request)
+    entry_id = entry_id.strip()
+    interview_date = interview_date.strip()
+    if not entry_id.isdigit():
+        request.session["flash_message"] = "Invalid interview entry."
+        request.session["flash_tone"] = "error"
+        return redirect("/interview-list")
+    if not interview_date:
+        request.session["flash_message"] = "Please pick a new interview date."
+        request.session["flash_tone"] = "error"
+        return redirect("/interview-list")
+    with db() as conn:
+        existing = conn.execute(
+            "SELECT id FROM interview_list WHERE id=? AND user_id=?",
+            (int(entry_id), int(user["id"])),
+        ).fetchone()
+        if not existing:
+            request.session["flash_message"] = "Interview entry not found."
+            request.session["flash_tone"] = "error"
+            return redirect("/interview-list")
+        conn.execute(
+            "UPDATE interview_list SET interview_date=?, updated_at=? WHERE id=? AND user_id=?",
+            (
+                interview_date,
+                datetime.now().strftime("%Y-%m-%d %H:%M"),
+                int(entry_id),
+                int(user["id"]),
+            ),
+        )
+    request.session["flash_message"] = "Interview date updated."
+    request.session["flash_tone"] = "success"
+    return redirect("/interview-list")
+
+
+@app.get("/interview-list", response_class=HTMLResponse)
+async def interview_list_page(request: Request, delete_id: int | None = None) -> Response:
+    user = require_user(request)
+    notice = request.session.pop("flash_message", "")
+    tone = request.session.pop("flash_tone", "success")
+    if delete_id:
+        with db() as conn:
+            removed = conn.execute("DELETE FROM interview_list WHERE id=? AND user_id=?", (delete_id, user["id"])).rowcount
+        request.session["flash_message"] = "Interview entry removed." if removed else "Entry not found."
+        request.session["flash_tone"] = "success" if removed else "error"
+        return redirect("/interview-list")
+    return templates.TemplateResponse(
+        "interview_list.html",
+        base_context(
+            request,
+            interviews=interview_entries_for(int(user["id"])),
+            notice=notice,
+            notice_tone=tone,
+            today=datetime.now().strftime("%Y-%m-%d"),
+            is_admin=is_admin_user(user),
         ),
     )
 
