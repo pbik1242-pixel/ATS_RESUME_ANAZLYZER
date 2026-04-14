@@ -693,6 +693,7 @@ def require_hr(request: Request) -> sqlite3.Row:
 
 def render_error(request: Request, code: int, message: str, status_code: int | None = None) -> HTMLResponse:
     return templates.TemplateResponse(
+        request,
         "error.html",
         base_context(request, code=code, message=message),
         status_code=status_code or code,
@@ -959,6 +960,7 @@ async def home(request: Request) -> Response:
         return redirect("/login")
     enabled, status_message = get_genai_status()
     return templates.TemplateResponse(
+        request,
         "index.html",
         base_context(
             request,
@@ -992,7 +994,9 @@ async def hr_login_page(request: Request) -> Response:
         return render_error(request, 403, "You are signed in without HR permissions.", 403)
     message = request.session.pop("flash_message", None)
     return templates.TemplateResponse(
-        "login.html", base_context(request, message=message, error=None, email="", remember_me=False, hr_mode=True)
+        request,
+        "login.html",
+        base_context(request, message=message, error=None, email="", remember_me=False, hr_mode=True),
     )
 
 
@@ -1007,6 +1011,7 @@ async def login_submit(
 ) -> Response:
     if not captcha:
         return templates.TemplateResponse(
+            request,
             "login.html",
             base_context(request, error="Please confirm you are not a robot.", message=None, email=email, remember_me=bool(remember_me)),
             status_code=400,
@@ -1014,12 +1019,14 @@ async def login_submit(
     user, error = login_user(email, password, request)
     if error or not user:
         return templates.TemplateResponse(
+            request,
             "login.html",
             base_context(request, error=error or "Unable to sign in.", message=None, email=email, remember_me=bool(remember_me)),
             status_code=400,
         )
     if hr and not is_hr_user(user):
         return templates.TemplateResponse(
+            request,
             "login.html",
             base_context(
                 request,
@@ -1054,7 +1061,9 @@ async def hr_login_submit(
 async def register_page(request: Request) -> Response:
     if current_user(request):
         return redirect("/")
-    return templates.TemplateResponse("register.html", base_context(request, error=None, name="", email="", hr_mode=False))
+    return templates.TemplateResponse(
+        request, "register.html", base_context(request, error=None, name="", email="", hr_mode=False)
+    )
 
 
 @app.get("/hr/register", response_class=HTMLResponse)
@@ -1063,6 +1072,7 @@ async def hr_register_page(request: Request) -> Response:
     if user and is_hr_user(user):
         return redirect("/hr/dashboard")
     return templates.TemplateResponse(
+        request,
         "register.html",
         base_context(request, error=None, name="", email="", hr_mode=True),
     )
@@ -1080,6 +1090,7 @@ async def register_submit(
     ok, message = register_user(name, email, password, confirm_password, role)
     if not ok:
         return templates.TemplateResponse(
+            request,
             "register.html",
             base_context(request, error=message, name=name, email=email, hr_mode=(role.strip().lower() == "hr")),
             status_code=400,
@@ -1114,7 +1125,7 @@ async def consent_page(request: Request) -> Response:
         return redirect("/login")
     if request.session.get("resume_consent"):
         return redirect("/")
-    return templates.TemplateResponse("consent.html", base_context(request))
+    return templates.TemplateResponse(request, "consent.html", base_context(request))
 
 
 @app.post("/consent", response_class=HTMLResponse)
@@ -1132,7 +1143,7 @@ async def consent_submit(request: Request, allow: str = Form("")) -> Response:
 
 @app.get("/about", response_class=HTMLResponse)
 async def about(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("about.html", base_context(request))
+    return templates.TemplateResponse(request, "about.html", base_context(request))
 
 
 @app.post("/result", response_class=HTMLResponse)
@@ -1170,31 +1181,32 @@ async def analyze_result(
         enabled, status_message = get_genai_status()
         combined_points = combine_points(result["rewritten"])
         suggestions = build_suggestions(combined_points, result["missing_display"])
-        return templates.TemplateResponse(
-            "result.html",
-            base_context(
-                request,
-                resume=True,
-                bulk=False,
-                score=result["score"],
-                found=result["found_text"],
-                missing=result["missing_text"],
-                found_display=result["found_display"],
-                missing_display=result["missing_display"],
-                rewritten=result["rewritten"],
-                combined_points=combined_points,
-                suggestions=suggestions,
-                skills=result["skills_csv"],
-                history_filename=result["filename"],
-                history_filetype=result["ext"].lstrip(".").upper(),
-                history_id=history_id,
-                table_count=result.get("table_count", 0),
-                table_preview=result.get("table_preview", []),
-                genai_enabled=enabled,
-                genai_status_message=status_message,
-                is_hr=is_hr_user(user),
-            ),
-        )
+    return templates.TemplateResponse(
+        request,
+        "result.html",
+        base_context(
+            request,
+            resume=True,
+            bulk=False,
+            score=result["score"],
+            found=result["found_text"],
+            missing=result["missing_text"],
+            found_display=result["found_display"],
+            missing_display=result["missing_display"],
+            rewritten=result["rewritten"],
+            combined_points=combined_points,
+            suggestions=suggestions,
+            skills=result["skills_csv"],
+            history_filename=result["filename"],
+            history_filetype=result["ext"].lstrip(".").upper(),
+            history_id=history_id,
+            table_count=result.get("table_count", 0),
+            table_preview=result.get("table_preview", []),
+            genai_enabled=enabled,
+            genai_status_message=status_message,
+            is_hr=is_hr_user(user),
+        ),
+    )
 
     results: list[dict[str, Any]] = []
     skipped: list[str] = []
@@ -1213,6 +1225,7 @@ async def analyze_result(
         row["missing_count"] = len(row.get("missing", []))
     table_resume_count = sum(1 for row in leaderboard if row.get("table_count", 0) > 0)
     return templates.TemplateResponse(
+        request,
         "result.html",
         base_context(
             request,
@@ -1254,6 +1267,7 @@ async def open_history_result(request: Request, history_id: int) -> HTMLResponse
         table_count = len(tables)
     enabled, status_message = get_genai_status()
     return templates.TemplateResponse(
+        request,
         "result.html",
         base_context(
             request,
@@ -1424,6 +1438,7 @@ async def profile(request: Request, delete_id: int | None = None, delete_all: in
         history = conn.execute("SELECT id,filename,filetype,score,date,batch_id,folder_name FROM resume_history WHERE user_id=? ORDER BY id DESC", (user["id"],)).fetchall()
         stats = conn.execute("SELECT COUNT(*) AS analyses_count, ROUND(AVG(score),1) AS avg_score, MAX(date) AS last_analysis FROM resume_history WHERE user_id=?", (user["id"],)).fetchone()
     return templates.TemplateResponse(
+        request,
         "profile.html",
         base_context(
             request,
@@ -1447,6 +1462,7 @@ async def analyzed_resumes_page(request: Request) -> Response:
     notice = request.session.pop("flash_message", "")
     tone = request.session.pop("flash_tone", "success")
     return templates.TemplateResponse(
+        request,
         "analyzed_resumes.html",
         base_context(
             request,
@@ -1549,6 +1565,7 @@ async def interview_list_page(request: Request, delete_id: int | None = None) ->
         request.session["flash_tone"] = "success" if removed else "error"
         return redirect("/interview-list")
     return templates.TemplateResponse(
+        request,
         "interview_list.html",
         base_context(
             request,
@@ -1585,6 +1602,7 @@ async def admin_dashboard(request: Request) -> HTMLResponse:
         total_events = conn.execute("SELECT COUNT(*) AS count FROM login_history").fetchone()["count"]
         today_logins = conn.execute("SELECT COUNT(*) AS count FROM login_history WHERE login_time LIKE ?", (f"{today}%",)).fetchone()["count"]
     return templates.TemplateResponse(
+        request,
         "admin_dashboard.html",
         base_context(
             request,
@@ -1623,6 +1641,7 @@ async def api_token(request: Request) -> HTMLResponse:
     user = require_user(request)
     token = create_bearer_token(user)
     return templates.TemplateResponse(
+        request,
         "token.html",
         base_context(
             request,
