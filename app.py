@@ -975,7 +975,11 @@ async def login_page(request: Request) -> Response:
     if current_user(request):
         return redirect("/")
     message = request.session.pop("flash_message", None)
-    return templates.TemplateResponse("login.html", base_context(request, message=message, error=None, email="", remember_me=False))
+    return templates.TemplateResponse(
+        request,
+        "login.html",
+        base_context(request, message=message, error=None, email="", remember_me=False),
+    )
 
 
 @app.get("/hr/login", response_class=HTMLResponse)
