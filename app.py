@@ -1181,32 +1181,32 @@ async def analyze_result(
         enabled, status_message = get_genai_status()
         combined_points = combine_points(result["rewritten"])
         suggestions = build_suggestions(combined_points, result["missing_display"])
-    return templates.TemplateResponse(
-        request,
-        "result.html",
-        base_context(
+        return templates.TemplateResponse(
             request,
-            resume=True,
-            bulk=False,
-            score=result["score"],
-            found=result["found_text"],
-            missing=result["missing_text"],
-            found_display=result["found_display"],
-            missing_display=result["missing_display"],
-            rewritten=result["rewritten"],
-            combined_points=combined_points,
-            suggestions=suggestions,
-            skills=result["skills_csv"],
-            history_filename=result["filename"],
-            history_filetype=result["ext"].lstrip(".").upper(),
-            history_id=history_id,
-            table_count=result.get("table_count", 0),
-            table_preview=result.get("table_preview", []),
-            genai_enabled=enabled,
-            genai_status_message=status_message,
-            is_hr=is_hr_user(user),
-        ),
-    )
+            "result.html",
+            base_context(
+                request,
+                resume=True,
+                bulk=False,
+                score=result["score"],
+                found=result["found_text"],
+                missing=result["missing_text"],
+                found_display=result["found_display"],
+                missing_display=result["missing_display"],
+                rewritten=result["rewritten"],
+                combined_points=combined_points,
+                suggestions=suggestions,
+                skills=result["skills_csv"],
+                history_filename=result["filename"],
+                history_filetype=result["ext"].lstrip(".").upper(),
+                history_id=history_id,
+                table_count=result.get("table_count", 0),
+                table_preview=result.get("table_preview", []),
+                genai_enabled=enabled,
+                genai_status_message=status_message,
+                is_hr=is_hr_user(user),
+            ),
+        )
 
     results: list[dict[str, Any]] = []
     skipped: list[str] = []
@@ -1217,6 +1217,7 @@ async def analyze_result(
             skipped.append(str(exc))
     if not results:
         return render_error(request, 400, "No supported resumes were found in the upload.", 400)
+
     batch_id = save_bulk_history(int(user["id"]), results, folder_name)
     leaderboard = sorted(results, key=lambda item: item["score"], reverse=True)
     for idx, row in enumerate(leaderboard, start=1):
