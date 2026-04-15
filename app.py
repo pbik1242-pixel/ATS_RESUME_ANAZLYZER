@@ -1463,7 +1463,7 @@ async def profile(request: Request, delete_id: int | None = None, delete_all: in
 
 @app.get("/analyzed-resumes", response_class=HTMLResponse)
 async def analyzed_resumes_page(request: Request) -> Response:
-    user = require_user(request)
+    user = require_hr(request)
     notice = request.session.pop("flash_message", "")
     tone = request.session.pop("flash_tone", "success")
     return templates.TemplateResponse(
@@ -1490,7 +1490,7 @@ async def add_to_interview_list(
     interview_date: str = Form(""),
     notes: str = Form(""),
 ) -> Response:
-    user = require_user(request)
+    user = require_hr(request)
     history_id = history_id.strip()
     if not history_id.isdigit():
         return render_error(request, 400, "Invalid resume reference.", 400)
@@ -1524,7 +1524,7 @@ async def add_to_interview_list(
 
 @app.post("/interview-list/update-date")
 async def update_interview_date(request: Request, entry_id: str = Form(""), interview_date: str = Form("")) -> Response:
-    user = require_user(request)
+    user = require_hr(request)
     entry_id = entry_id.strip()
     interview_date = interview_date.strip()
     if not entry_id.isdigit():
@@ -1560,7 +1560,7 @@ async def update_interview_date(request: Request, entry_id: str = Form(""), inte
 
 @app.get("/interview-list", response_class=HTMLResponse)
 async def interview_list_page(request: Request, delete_id: int | None = None) -> Response:
-    user = require_user(request)
+    user = require_hr(request)
     notice = request.session.pop("flash_message", "")
     tone = request.session.pop("flash_tone", "success")
     if delete_id:
