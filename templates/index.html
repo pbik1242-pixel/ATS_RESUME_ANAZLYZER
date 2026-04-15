@@ -17,8 +17,10 @@
     <div class="nav-logo"><div class="logo-mark">IQ</div><div class="logo-text">ATS RESUME ANALYZER</div></div>
     <div class="nav-center">
       <span>ATS RESUME ANALYZER</span>
+      {% if can_bulk %}
       <a class="nav-link" href="/analyzed-resumes">Analyzed Resumes</a>
       <a class="nav-link" href="/interview-list">Interview List</a>
+      {% endif %}
       <a class="nav-link" href="/about">About</a>
       <a class="nav-link" href="/profile">Profile</a>
       {% if is_admin %}<a class="nav-link" href="/admin/dashboard">Admin</a>{% endif %}
