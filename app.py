@@ -965,6 +965,7 @@ async def home(request: Request) -> Response:
         base_context(
             request,
             is_admin=is_admin_user(user),
+            can_bulk=is_hr_user(user),
             genai_enabled=enabled,
             genai_status_message=status_message,
             recent_history=recent_history_for(int(user["id"])),
@@ -1171,6 +1172,9 @@ async def analyze_result(
         return render_error(request, 400, "Please upload at least one resume file.", 400)
 
     job_skills = extract_keywords(job_text)
+
+    if upload_mode == "bulk" and not is_hr_user(user):
+        return render_error(request, 403, "Bulk folder uploads are only available to HR accounts.", 403)
 
     if upload_mode != "bulk":
         try:
