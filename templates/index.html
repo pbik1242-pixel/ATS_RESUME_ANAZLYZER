@@ -7,30 +7,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>{% include "_theme.css" %}</style>
   <style>{% include "theme.css" %}</style>
 </head>
 <body>
   <div class="scroll-bar" id="scrollBar"></div>
   <div class="floaters" id="floaters"></div>
 
-  <nav id="nav">
-    <div class="nav-logo"><div class="logo-mark">IQ</div><div class="logo-text">ATS RESUME ANALYZER</div></div>
-    <div class="nav-center">
-      <span>ATS RESUME ANALYZER</span>
-      {% if can_bulk %}
-      <a class="nav-link" href="/analyzed-resumes">Analyzed Resumes</a>
-      <a class="nav-link" href="/interview-list">Interview List</a>
-      {% endif %}
-      <a class="nav-link" href="/about">About</a>
-      <a class="nav-link" href="/profile">Profile</a>
-      {% if is_admin %}<a class="nav-link" href="/admin/dashboard">Admin</a>{% endif %}
-      <a class="nav-link" href="/logout">Logout</a>
-    </div>
-    <div class="nav-actions">
-      <span class="micro">{{ request.session.get("user_name") or "User" }}</span>
-      <button class="nav-pill" type="button" onclick="scrollToAnalyzer()">Analyze Now</button>
-    </div>
-  </nav>
+  {% include "_app_topbar.html" %}
 
   <section class="hero">
     <div class="hero-brow">AI-Powered · Python · ATS RESUME ANALYZER</div>
@@ -154,7 +138,7 @@
   </footer>
 
   <script>
-    window.addEventListener("scroll",()=>{const full=document.body.scrollHeight-window.innerHeight,progress=full>0?window.scrollY/full*100:0;document.getElementById("scrollBar").style.width=progress+"%";document.getElementById("nav").classList.toggle("scrolled",window.scrollY>40)});
+    window.addEventListener("scroll",()=>{const full=document.body.scrollHeight-window.innerHeight,progress=full>0?window.scrollY/full*100:0;document.getElementById("scrollBar").style.width=progress+"%"});
     (function(){const c=document.getElementById("floaters"),p=[[8,18],[88,12],[14,65],[92,55],[45,80],[72,30],[25,90],[60,10],[80,75],[35,45]];p.forEach(([x,y],i)=>{const el=document.createElement("div");el.className="floater";const s=[8,6,10,5,12,4,8,6,10,5][i];el.style.cssText=`left:${x}%;top:${y}%;width:${s}px;height:${s}px;animation-duration:${4+i*.7}s;animation-delay:${i*-.8}s;`;c.appendChild(el)})})();
     ["ATS SCORING","KEYWORD ANALYSIS","SINGLE RESUME MODE","BULK FOLDER MODE","PDF DOCX TXT","FASTAPI BACKEND","RECENT HISTORY","INSTANT RESULTS"].concat(["ATS SCORING","KEYWORD ANALYSIS","SINGLE RESUME MODE","BULK FOLDER MODE","PDF DOCX TXT","FASTAPI BACKEND","RECENT HISTORY","INSTANT RESULTS"]).forEach(item=>{document.getElementById("marquee").innerHTML+=`<div class="marquee-item"><span class="dot"></span>${item}</div>`});
     function scrollToAnalyzer(){document.getElementById("analyzer").scrollIntoView({behavior:"smooth"})}

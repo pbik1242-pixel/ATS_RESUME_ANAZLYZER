@@ -8,26 +8,11 @@
   <style>{% include "_theme.css" %}</style>
 </head>
 <body class="app-shell">
-  <header class="app-topbar">
-    <div class="app-topbar__inner">
-      <div class="app-topbar__left">
-        <div class="app-logo">IQ</div>
-        <span class="brand-title text-lg font-bold">ATS RESUME ANALYZER</span>
-        <span class="badge-pill">My Profile</span>
-      </div>
-      <div class="app-topbar__center">
-        <a href="/">ATS RESUME ANALYZER</a>
-        <a href="/about">About</a>
-        <a href="/profile" class="is-active">Profile</a>
-        {% if is_admin %}<a href="/admin/dashboard">Admin</a>{% endif %}
-        <a href="/logout" class="text-danger">Logout</a>
-      </div>
-      <div class="app-topbar__right">
-        <span class="app-hello">HELLO {{ (request.session.get("user_name") or "USER") | upper }}</span>
-        <a class="app-cta" href="/">Analyze Now</a>
-      </div>
-    </div>
-  </header>
+  {% set page_badge = "My Profile" %}
+  {% set page_cta_href = "/" %}
+  {% set page_cta_label = "Analyze Now" %}
+  {% set active_page = "/profile" %}
+  {% include "_app_topbar.html" %}
 
   <div class="page-wrap page-wrap--content">
     <div class="glass-panel p-6 md:p-10">

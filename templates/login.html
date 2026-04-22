@@ -225,25 +225,7 @@
   </style>
 </head>
 <body class="app-shell">
-  <header class="app-topbar">
-    <div class="app-topbar__inner">
-      <div class="app-topbar__left">
-        <div class="app-logo">IQ</div>
-        <span class="brand-title text-lg font-bold">ATS RESUME ANALYZER</span>
-      </div>
-      <div class="app-topbar__center">
-        <a href="/">ATS RESUME ANALYZER</a>
-        <a href="/about">About</a>
-        <a href="/login" class="is-active">Sign In</a>
-        <a href="/register">Sign Up</a>
-        <a href="/hr/login" class="{% if hr_mode %}is-active{% endif %}">Org / HR Login</a>
-      </div>
-      <div class="app-topbar__right">
-        <span class="app-hello">HELLO</span>
-        <a class="app-cta" href="/">Analyze Now</a>
-      </div>
-    </div>
-  </header>
+  {% include "_app_topbar.html" %}
 
   <div class="page-wrap max-w-6xl page-wrap--content auth-center">
     <div class="glass-panel auth-shell">

@@ -8,38 +8,21 @@
   <style>{% include "_theme.css" %}</style>
 </head>
 <body class="app-shell">
-  <header class="app-topbar">
-    <div class="app-topbar__inner">
-      <div class="app-topbar__left">
-        <div class="app-logo">IQ</div>
-        <span class="brand-title text-lg font-bold">ATS RESUME ANALYZER</span>
-        <span class="badge-pill">Interview List</span>
-      </div>
-      <div class="app-topbar__center">
-        <a href="/">Home</a>
-        <a href="/analyzed-resumes">Analyzed Resumes</a>
-        <a href="/interview-list" class="is-active">Interview List</a>
-        <a href="/about">About</a>
-        <a href="/profile">Profile</a>
-        {% if is_admin %}<a href="/admin/dashboard">Admin</a>{% endif %}
-        <a href="/logout" class="text-danger">Logout</a>
-      </div>
-      <div class="app-topbar__right">
-        <span class="app-hello">HELLO {{ (request.session.get("user_name") or "USER") | upper }}</span>
-        <a class="app-cta" href="/analyzed-resumes">Back to Grid</a>
-      </div>
-    </div>
-  </header>
+  {% set page_badge = "Interview List" %}
+  {% set page_cta_href = "/analyzed-resumes" %}
+  {% set page_cta_label = "Back to Grid" %}
+  {% set active_page = "/interview-list" %}
+  {% include "_app_topbar.html" %}
 
   <div class="page-wrap page-wrap--content">
     <div class="glass-panel p-6 md:p-8">
-      <div class="flex flex-wrap items-start justify-between gap-4">
-        <div>
+      <div class="page-hero page-hero--compact">
+        <div class="page-hero__copy">
           <p class="badge-pill">Interview Pipeline</p>
           <h1 class="brand-title text-3xl md:text-4xl font-bold">Candidates Ready for Interviews</h1>
           <p class="text-muted mt-2">Centralized view of every candidate you've sent from the analyzed resumes page. Track contact info, interview dates, and jump back to the ATS analysis.</p>
         </div>
-        <div class="flex flex-wrap gap-3">
+        <div class="page-hero__actions">
           <a class="app-cta" href="/analyzed-resumes">Add More</a>
         </div>
       </div>

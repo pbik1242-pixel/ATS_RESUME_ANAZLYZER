@@ -157,26 +157,11 @@
   </style>
 </head>
 <body class="app-shell result-page">
-  <header class="app-topbar">
-    <div class="app-topbar__inner">
-      <div class="app-topbar__left">
-        <div class="app-logo">IQ</div>
-        <span class="brand-title text-lg font-bold">ATS RESUME ANALYZER</span>
-        <span class="badge-pill">ATS Result</span>
-      </div>
-      <div class="app-topbar__center">
-        <a href="/">ATS RESUME ANALYZER</a>
-        <a href="/about">About</a>
-        <a href="/profile">Profile</a>
-        {% if is_admin %}<a href="/admin/dashboard">Admin</a>{% endif %}
-        <a href="/logout" class="text-danger">Logout</a>
-      </div>
-      <div class="app-topbar__right">
-        <span class="app-hello">HELLO {{ (request.session.get("user_name") or "USER") | upper }}</span>
-        <a class="app-cta" href="/">Analyze Now</a>
-      </div>
-    </div>
-  </header>
+  {% set page_badge = "ATS Result" %}
+  {% set page_cta_href = "/" %}
+  {% set page_cta_label = "Analyze Now" %}
+  {% set active_page = "" %}
+  {% include "_app_topbar.html" %}
 
   <div class="page-wrap page-wrap--content">
     <div class="glass-panel p-6 md:p-10">
@@ -245,9 +230,9 @@
       <div class="mt-8">
         <h2 class="mb-3 text-xl font-semibold">Leaderboard Table</h2>
         <div class="panel-soft overflow-x-auto p-4">
-          <table class="min-w-full text-sm text-slate-100">
+          <table class="min-w-full text-sm text-slate-900">
             <thead>
-              <tr class="text-left text-xs uppercase tracking-wide text-slate-300">
+              <tr class="text-left text-xs uppercase tracking-wide text-slate-700">
                 <th class="px-2 py-2">Rank</th>
                 <th class="px-2 py-2">File</th>
                 <th class="px-2 py-2">Score</th>
@@ -259,10 +244,10 @@
             </thead>
             <tbody>
               {% for row in leaderboard %}
-              <tr class="border-t border-slate-700/40">
-                <td class="px-2 py-2 text-slate-200">#{{ row.rank }}</td>
+              <tr class="border-t border-slate-400/60">
+                <td class="px-2 py-2 text-slate-900 font-semibold">#{{ row.rank }}</td>
                 <td class="px-2 py-2">{{ row.filename }}</td>
-                <td class="px-2 py-2 text-emerald-300 font-semibold">{{ row.score }}%</td>
+                <td class="px-2 py-2 text-slate-900 font-semibold">{{ row.score }}%</td>
                 <td class="px-2 py-2">{{ row.found_count }}</td>
                 <td class="px-2 py-2">{{ row.missing_count }}</td>
                 <td class="px-2 py-2">{{ row.table_count or 0 }}</td>
@@ -295,6 +280,33 @@
             <div class="panel-soft p-5 metric-card">
               <p class="text-muted text-xs uppercase tracking-wide">Optimization Focus</p>
               <p class="mt-3 text-sm text-slate-100">Prioritize missing skills and measurable accomplishments in your experience bullets.</p>
+            </div>
+          </div>
+
+          <div class="grid gap-6 md:grid-cols-2 result-metrics-grid">
+            <div class="panel-soft p-5 metric-card">
+              <h2 class="mb-2 text-lg font-semibold text-cyan-200">Resume Skills</h2>
+              {% if resume_skills %}
+              <div class="skill-pill-row">
+                {% for skill in resume_skills %}
+                <span class="skill-pill">{{ skill }}</span>
+                {% endfor %}
+              </div>
+              {% else %}
+              <p class="text-sm leading-relaxed text-slate-100">No clear resume skills were extracted.</p>
+              {% endif %}
+            </div>
+            <div class="panel-soft p-5 metric-card">
+              <h2 class="mb-2 text-lg font-semibold text-amber-200">Job Skills</h2>
+              {% if job_skills %}
+              <div class="skill-pill-row">
+                {% for skill in job_skills.split(",") if skill.strip() %}
+                <span class="skill-pill">{{ skill.strip() }}</span>
+                {% endfor %}
+              </div>
+              {% else %}
+              <p class="text-sm leading-relaxed text-slate-100">No clear job skills were extracted.</p>
+              {% endif %}
             </div>
           </div>
 
