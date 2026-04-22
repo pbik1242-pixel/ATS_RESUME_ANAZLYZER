@@ -101,7 +101,7 @@ def ensure_schema() -> None:
             "CREATE TABLE IF NOT EXISTS resume_history(id INTEGER PRIMARY KEY,user_id INTEGER,score REAL,filename TEXT,filetype TEXT,date TEXT,found TEXT,missing TEXT,rewritten TEXT,skills TEXT)"
         )
         hist_cols = {r["name"] for r in conn.execute("PRAGMA table_info(resume_history)").fetchall()}
-        for name in ("found", "missing", "rewritten", "skills", "batch_id", "folder_name"):
+        for name in ("found", "missing", "rewritten", "skills", "job_skills", "resume_skills", "batch_id", "folder_name"):
             if name not in hist_cols:
                 conn.execute(f"ALTER TABLE resume_history ADD COLUMN {name} TEXT")
         conn.execute("CREATE TABLE IF NOT EXISTS login_history(id INTEGER PRIMARY KEY,user_id INTEGER,email TEXT,login_time TEXT,ip_address TEXT,user_agent TEXT)")
@@ -224,6 +224,29 @@ SKILL_LABELS = {
 }
 
 SKILL_ALLOWLIST = set(SKILL_LABELS.keys())
+SKILL_PHRASES = {
+    "machine learning": "Machine Learning",
+    "deep learning": "Deep Learning",
+    "data analysis": "Data Analysis",
+    "data analytics": "Data Analytics",
+    "data engineering": "Data Engineering",
+    "data science": "Data Science",
+    "power bi": "Power BI",
+    "tableau": "Tableau",
+    "excel": "Excel",
+    "etl": "ETL",
+    "api": "API",
+    "rest api": "REST API",
+    "microservices": "Microservices",
+    "pandas": "Pandas",
+    "numpy": "NumPy",
+    "scikit learn": "Scikit-learn",
+    "tensorflow": "TensorFlow",
+    "pytorch": "PyTorch",
+    "html": "HTML",
+    "css": "CSS",
+    "bootstrap": "Bootstrap",
+}
 
 
 def _normalize_point(text: str) -> str:
@@ -294,6 +317,37 @@ def filter_skill_terms(terms: list[str]) -> list[str]:
     return filtered
 
 
+def extract_profile_skills(text: str, limit: int = 20) -> list[str]:
+    source = str(text or "")
+    if not source.strip():
+        return []
+    lowered = source.lower()
+    found: list[str] = []
+    seen: set[str] = set()
+
+    for phrase, label in SKILL_PHRASES.items():
+        pattern = r"(?<![a-z0-9])" + re.escape(phrase) + r"(?![a-z0-9])"
+        if re.search(pattern, lowered):
+            key = label.lower()
+            if key not in seen:
+                seen.add(key)
+                found.append(label)
+                if len(found) >= limit:
+                    return found
+
+    for raw_key, label in SKILL_LABELS.items():
+        pattern = r"(?<![a-z0-9])" + re.escape(raw_key) + r"(?![a-z0-9])"
+        if re.search(pattern, lowered):
+            key = label.lower()
+            if key not in seen:
+                seen.add(key)
+                found.append(label)
+                if len(found) >= limit:
+                    return found
+
+    return found
+
+
 def build_table_preview(
     tables: list[list[list[str]]],
     max_tables: int = 2,
@@ -338,6 +392,8 @@ def analyze_resume_text(
     k_score, found, missing = keyword_score(resume_text, job_skills)
     display_found = filter_skill_terms(found)
     display_missing = filter_skill_terms(missing)
+    display_job_skills = filter_skill_terms(job_skills) or extract_profile_skills(job_text) or job_skills[:10]
+    resume_skills = extract_profile_skills(combined_raw) or display_found
     s_score = semantic_score(resume_text, job_text)
     f_score = formatting_score(resume_text)
     score = round((((k_score * 0.5) + (f_score * 0.2)) / 0.7 if s_score is None else (k_score * 0.5 + s_score * 0.3 + f_score * 0.2)) * 100, 1)
@@ -353,8 +409,12 @@ def analyze_resume_text(
         "missing_text": ", ".join(display_missing) or "-",
         "found_display": display_found,
         "missing_display": display_missing,
+        "job_skills_display": display_job_skills,
+        "resume_skills_display": resume_skills,
         "rewritten": rewritten,
-        "skills_csv": ",".join(job_skills),
+        "skills_csv": ",".join(display_job_skills),
+        "job_skills_csv": ",".join(display_job_skills),
+        "resume_skills_csv": ",".join(resume_skills),
         "table_count": len(tables),
         "table_preview": build_table_preview(tables),
     }
@@ -587,7 +647,7 @@ def dataset_context(category: str = "", query: str = "", page: int = 1) -> dict[
 def get_history_row(user_id: int, history_id: int) -> sqlite3.Row | None:
     with db() as conn:
         return conn.execute(
-            "SELECT id,filename,filetype,score,date,found,missing,rewritten,skills,batch_id,folder_name FROM resume_history WHERE id=? AND user_id=?",
+            "SELECT id,filename,filetype,score,date,found,missing,rewritten,skills,job_skills,resume_skills,batch_id,folder_name FROM resume_history WHERE id=? AND user_id=?",
             (history_id, user_id),
         ).fetchone()
 
@@ -595,7 +655,7 @@ def get_history_row(user_id: int, history_id: int) -> sqlite3.Row | None:
 def save_single_history(user_id: int, result: dict[str, Any]) -> int:
     with db() as conn:
         inserted = conn.execute(
-            "INSERT INTO resume_history(user_id,score,filename,filetype,date,found,missing,rewritten,skills,batch_id,folder_name) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            "INSERT INTO resume_history(user_id,score,filename,filetype,date,found,missing,rewritten,skills,job_skills,resume_skills,batch_id,folder_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (
                 user_id,
                 result["score"],
@@ -605,7 +665,9 @@ def save_single_history(user_id: int, result: dict[str, Any]) -> int:
                 result["found_text"],
                 result["missing_text"],
                 json.dumps(result["rewritten"]),
-                result["skills_csv"],
+                result["job_skills_csv"],
+                result["job_skills_csv"],
+                result["resume_skills_csv"],
                 None,
                 None,
             ),
@@ -620,7 +682,7 @@ def save_bulk_history(user_id: int, results: list[dict[str, Any]], folder_name: 
     with db() as conn:
         for row in results:
             inserted = conn.execute(
-                "INSERT INTO resume_history(user_id,score,filename,filetype,date,found,missing,rewritten,skills,batch_id,folder_name) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                "INSERT INTO resume_history(user_id,score,filename,filetype,date,found,missing,rewritten,skills,job_skills,resume_skills,batch_id,folder_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (
                     user_id,
                     row["score"],
@@ -630,7 +692,9 @@ def save_bulk_history(user_id: int, results: list[dict[str, Any]], folder_name: 
                     row["found_text"],
                     row["missing_text"],
                     json.dumps(row["rewritten"]),
-                    row["skills_csv"],
+                    row["job_skills_csv"],
+                    row["job_skills_csv"],
+                    row["resume_skills_csv"],
                     batch_id,
                     label,
                 ),
@@ -640,7 +704,44 @@ def save_bulk_history(user_id: int, results: list[dict[str, Any]], folder_name: 
 
 
 def base_context(request: Request, **extra: Any) -> dict[str, Any]:
-    return {"request": request, **extra}
+    user = current_user(request)
+    is_logged_in = bool(user)
+    is_hr = is_hr_user(user) if user else False
+    is_admin = is_admin_user(user) if user else False
+
+    primary_nav_items: list[dict[str, str]] = [{"label": "ATS RESUME ANALYZER", "href": "/"}]
+    if is_hr:
+        primary_nav_items.extend(
+            [
+                {"label": "Analyzed Resumes", "href": "/analyzed-resumes"},
+                {"label": "Interview List", "href": "/interview-list"},
+            ]
+        )
+    primary_nav_items.append({"label": "About", "href": "/about"})
+
+    if is_logged_in:
+        profile_menu_items = [
+            {"label": "My Profile", "href": "/profile"},
+            {"label": "Logout", "href": "/logout"},
+        ]
+    else:
+        profile_menu_items = [
+            {"label": "About", "href": "/about"},
+            {"label": "Sign In", "href": "/login"},
+            {"label": "Sign Up", "href": "/register"},
+        ]
+
+    return {
+        "request": request,
+        "current_user": user,
+        "is_logged_in": is_logged_in,
+        "is_hr": is_hr,
+        "is_admin": is_admin,
+        "primary_nav_items": primary_nav_items,
+        "profile_menu_items": profile_menu_items,
+        "role_label": "HR Organization" if is_hr else ("Administrator" if is_admin else "Candidate"),
+        **extra,
+    }
 
 
 def redirect(url: str, status_code: int = 303) -> RedirectResponse:
@@ -1171,7 +1272,11 @@ async def analyze_result(
     if not uploads:
         return render_error(request, 400, "Please upload at least one resume file.", 400)
 
-    job_skills = extract_keywords(job_text)
+    job_skills = extract_profile_skills(job_text)
+    if not job_skills:
+        job_skills = filter_skill_terms(extract_keywords(job_text))
+    if not job_skills:
+        job_skills = extract_keywords(job_text)
 
     if upload_mode == "bulk" and not is_hr_user(user):
         return render_error(request, 403, "Bulk folder uploads are only available to HR accounts.", 403)
@@ -1200,7 +1305,9 @@ async def analyze_result(
                 rewritten=result["rewritten"],
                 combined_points=combined_points,
                 suggestions=suggestions,
-                skills=result["skills_csv"],
+                skills=result["resume_skills_csv"],
+                job_skills=result["job_skills_csv"],
+                resume_skills=result["resume_skills_display"],
                 history_filename=result["filename"],
                 history_filetype=result["ext"].lstrip(".").upper(),
                 history_id=history_id,
@@ -1257,10 +1364,12 @@ async def open_history_result(request: Request, history_id: int) -> HTMLResponse
     row = get_history_row(int(user["id"]), history_id)
     if not row:
         raise HTTPException(status_code=404, detail="History record not found.")
-    rewritten = parse_saved_bullets(row["rewritten"]) or rehydrate_history_rewrite(history_id, int(user["id"]), row["filename"], row["skills"])
+    rewritten = parse_saved_bullets(row["rewritten"]) or rehydrate_history_rewrite(history_id, int(user["id"]), row["filename"], row["job_skills"] or row["skills"])
     raw_missing_list = [s.strip() for s in str(row["missing"] or "").split(",") if s.strip() and s.strip() != "-"]
     display_missing_list = filter_skill_terms(raw_missing_list)
     display_found_list = filter_skill_terms([s.strip() for s in str(row["found"] or "").split(",") if s.strip() and s.strip() != "-"])
+    display_resume_skills = filter_skill_terms([s.strip() for s in str(row["resume_skills"] or "").split(",") if s.strip()]) or display_found_list
+    display_job_skills = filter_skill_terms([s.strip() for s in str(row["job_skills"] or row["skills"] or "").split(",") if s.strip()])
     combined_points = combine_points(rewritten)
     suggestions = build_suggestions(combined_points, display_missing_list)
     table_preview: list[list[list[str]]] = []
@@ -1286,7 +1395,9 @@ async def open_history_result(request: Request, history_id: int) -> HTMLResponse
             rewritten=rewritten,
             combined_points=combined_points,
             suggestions=suggestions,
-            skills=row["skills"] or "",
+            skills=row["resume_skills"] or row["found"] or "",
+            job_skills=row["job_skills"] or row["skills"] or "",
+            resume_skills=display_resume_skills,
             history_id=history_id,
             history_filename=row["filename"],
             history_filetype=row["filetype"],
@@ -1308,7 +1419,7 @@ async def export_resume(history_id: str = Form(""), skills: str = Form(""), bull
     if not rewritten and history_id.strip().isdigit():
         with db() as conn:
             history_row = conn.execute(
-                "SELECT filename,rewritten,skills,found,missing,user_id FROM resume_history WHERE id=?", (int(history_id),)
+                "SELECT filename,rewritten,skills,job_skills,resume_skills,found,missing,user_id FROM resume_history WHERE id=?", (int(history_id),)
             ).fetchone()
         if history_row:
             rewritten = parse_saved_bullets(history_row["rewritten"])
@@ -1319,18 +1430,16 @@ async def export_resume(history_id: str = Form(""), skills: str = Form(""), bull
                         int(history_id),
                         int(history_row["user_id"]) if history_row.get("user_id") is not None else 0,
                         history_row["filename"],
-                        history_row["skills"],
+                        history_row["job_skills"] or history_row["skills"],
                     )
                     if regenerated:
                         rewritten = regenerated
                 except Exception:
                     pass
             if not skills:
-                # prefer matched + missing skills saved from analysis if job skills were empty
+                # prefer resume skills for export; fall back to matched skills for older rows
                 found = str(history_row.get("found") or "").strip()
-                missing = str(history_row.get("missing") or "").strip()
-                combined = ", ".join([s for s in (found, missing) if s])
-                skills = history_row["skills"] or combined
+                skills = history_row["resume_skills"] or found
             # pull original resume text for context in export
             try:
                 resume_path = find_uploaded_resume_path(history_row["filename"])
@@ -1398,14 +1507,14 @@ async def export_bulk(batch_id: str, request: Request) -> Response:
         return render_error(request, 400, "Missing batch identifier.", 400)
     with db() as conn:
         rows = conn.execute(
-            "SELECT filename,filetype,score,date,found,missing,skills FROM resume_history WHERE user_id=? AND batch_id=? ORDER BY score DESC",
+            "SELECT filename,filetype,score,found,missing,skills,job_skills,resume_skills FROM resume_history WHERE user_id=? AND batch_id=? ORDER BY score DESC",
             (int(user["id"]), batch_id),
         ).fetchall()
     if not rows:
         return render_error(request, 404, "Bulk batch not found.", 404)
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["Rank", "Filename", "File Type", "Score", "Date", "Matched Skills", "Missing Skills", "Job Skills"])
+    writer.writerow(["Rank", "Filename", "File Type", "Score", "Resume Skills", "Matched Skills", "Missing Skills", "Job Skills"])
     for idx, row in enumerate(rows, start=1):
         writer.writerow(
             [
@@ -1413,10 +1522,10 @@ async def export_bulk(batch_id: str, request: Request) -> Response:
                 row["filename"] or "",
                 row["filetype"] or "",
                 row["score"],
-                row["date"] or "",
+                row["resume_skills"] or row["found"] or "",
                 row["found"] or "",
                 row["missing"] or "",
-                row["skills"] or "",
+                row["job_skills"] or row["skills"] or "",
             ]
         )
     filename = f"bulk-results-{batch_id}.csv"
