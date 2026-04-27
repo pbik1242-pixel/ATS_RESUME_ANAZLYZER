@@ -81,7 +81,7 @@ def _google_redirect_uri(request: Request) -> str:
 async def login_page(request: Request):
     from app import templates
 
-    return templates.TemplateResponse("login.html", _login_context(request, hr_mode=False))
+    return templates.TemplateResponse(request, "login.html", _login_context(request, hr_mode=False))
 
 
 @router.post("/login")
@@ -98,7 +98,7 @@ async def login_submit(
     remote_ip = request.client.host if request.client else None
     captcha_ok, captcha_error = _verify_recaptcha(token, remote_ip)
     if not captcha_ok:
-        return templates.TemplateResponse("login.html", _login_context(request, hr_mode=False, error=captcha_error), status_code=400)
+        return templates.TemplateResponse(request, "login.html", _login_context(request, hr_mode=False, error=captcha_error), status_code=400)
 
     user = db_mod.get_user_by_email(email)
     if user and check_password_hash(user["password"], password):
@@ -109,7 +109,7 @@ async def login_submit(
             return RedirectResponse("/consent", status_code=303)
         return RedirectResponse("/", status_code=303)
 
-    return templates.TemplateResponse("login.html", _login_context(request, hr_mode=False, error="Invalid credentials"), status_code=400)
+    return templates.TemplateResponse(request, "login.html", _login_context(request, hr_mode=False, error="Invalid credentials"), status_code=400)
 
 
 @router.get("/hr/login")
@@ -119,7 +119,7 @@ async def hr_login_page(request: Request):
     user = current_user(request)
     if user and is_hr_user(user):
         return RedirectResponse("/", status_code=303)
-    return templates.TemplateResponse("login.html", _login_context(request, hr_mode=True))
+    return templates.TemplateResponse(request, "login.html", _login_context(request, hr_mode=True))
 
 
 @router.post("/hr/login")
@@ -136,14 +136,15 @@ async def hr_login_submit(
     remote_ip = request.client.host if request.client else None
     captcha_ok, captcha_error = _verify_recaptcha(token, remote_ip)
     if not captcha_ok:
-        return templates.TemplateResponse("login.html", _login_context(request, hr_mode=True, error=captcha_error), status_code=400)
+        return templates.TemplateResponse(request, "login.html", _login_context(request, hr_mode=True, error=captcha_error), status_code=400)
 
     user = db_mod.get_user_by_email(email)
     if not user or not check_password_hash(user["password"], password):
-        return templates.TemplateResponse("login.html", _login_context(request, hr_mode=True, error="Invalid credentials"), status_code=400)
+        return templates.TemplateResponse(request, "login.html", _login_context(request, hr_mode=True, error="Invalid credentials"), status_code=400)
 
     if not (is_hr_user(user) or is_admin_user(user)):
         return templates.TemplateResponse(
+            request,
             "login.html",
             _login_context(request, hr_mode=True, error="This account does not have HR access."),
             status_code=403,
@@ -163,6 +164,7 @@ async def google_oauth_start(request: Request, hr: int = 0):
 
     if not (GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET):
         return templates.TemplateResponse(
+            request,
             "login.html",
             _login_context(request, hr_mode=bool(hr), error="Google sign-in is not configured yet."),
             status_code=400,
@@ -200,6 +202,7 @@ async def google_oauth_callback(
         request.session.pop("google_oauth_state", None)
         request.session.pop("google_login_mode", None)
         return templates.TemplateResponse(
+            request,
             "login.html",
             _login_context(request, hr_mode=hr_mode, error=f"Google sign-in failed: {error}"),
             status_code=400,
@@ -210,6 +213,7 @@ async def google_oauth_callback(
         request.session.pop("google_oauth_state", None)
         request.session.pop("google_login_mode", None)
         return templates.TemplateResponse(
+            request,
             "login.html",
             _login_context(request, hr_mode=hr_mode, error="Google sign-in could not be verified."),
             status_code=400,
@@ -219,6 +223,7 @@ async def google_oauth_callback(
         request.session.pop("google_oauth_state", None)
         request.session.pop("google_login_mode", None)
         return templates.TemplateResponse(
+            request,
             "login.html",
             _login_context(request, hr_mode=hr_mode, error="Google sign-in is not configured yet."),
             status_code=400,
@@ -253,6 +258,7 @@ async def google_oauth_callback(
         request.session.pop("google_oauth_state", None)
         request.session.pop("google_login_mode", None)
         return templates.TemplateResponse(
+            request,
             "login.html",
             _login_context(request, hr_mode=hr_mode, error="Google sign-in failed while contacting Google."),
             status_code=400,
@@ -263,6 +269,7 @@ async def google_oauth_callback(
         request.session.pop("google_oauth_state", None)
         request.session.pop("google_login_mode", None)
         return templates.TemplateResponse(
+            request,
             "login.html",
             _login_context(request, hr_mode=hr_mode, error="Google did not share an email address."),
             status_code=400,
@@ -275,6 +282,7 @@ async def google_oauth_callback(
         request.session.pop("google_oauth_state", None)
         request.session.pop("google_login_mode", None)
         return templates.TemplateResponse(
+            request,
             "login.html",
             _login_context(request, hr_mode=hr_mode, error="Your Google email is not verified."),
             status_code=400,
@@ -288,6 +296,7 @@ async def google_oauth_callback(
             request.session.pop("google_oauth_state", None)
             request.session.pop("google_login_mode", None)
             return templates.TemplateResponse(
+                request,
                 "login.html",
                 _login_context(request, hr_mode=True, error="No HR account is linked to that Google email."),
                 status_code=403,
@@ -297,6 +306,7 @@ async def google_oauth_callback(
         request.session.pop("google_oauth_state", None)
         request.session.pop("google_login_mode", None)
         return templates.TemplateResponse(
+            request,
             "login.html",
             _login_context(request, hr_mode=True, error="This Google account does not have HR access."),
             status_code=403,
@@ -308,6 +318,7 @@ async def google_oauth_callback(
         request.session.pop("google_oauth_state", None)
         request.session.pop("google_login_mode", None)
         return templates.TemplateResponse(
+            request,
             "login.html",
             _login_context(request, hr_mode=hr_mode, error="Google sign-in could not create your account."),
             status_code=400,
@@ -334,7 +345,7 @@ async def logout(request: Request):
 async def register_page(request: Request):
     from app import templates
 
-    return templates.TemplateResponse("register.html", _login_context(request, hr_mode=False))
+    return templates.TemplateResponse(request, "register.html", _login_context(request, hr_mode=False))
 
 
 @router.post("/register")
@@ -350,7 +361,7 @@ async def register_submit(
 
     ok, message = db_mod.register_user(name, email, password, confirm_password, role)
     if not ok:
-        return templates.TemplateResponse("register.html", _login_context(request, hr_mode=False, error=message), status_code=400)
+        return templates.TemplateResponse(request, "register.html", _login_context(request, hr_mode=False, error=message), status_code=400)
     return RedirectResponse("/login", status_code=303)
 
 
@@ -358,7 +369,7 @@ async def register_submit(
 async def hr_register_page(request: Request):
     from app import templates
 
-    return templates.TemplateResponse("register.html", _login_context(request, hr_mode=True))
+    return templates.TemplateResponse(request, "register.html", _login_context(request, hr_mode=True))
 
 
 @router.post("/hr/register")
@@ -373,5 +384,5 @@ async def hr_register_submit(
 
     ok, message = db_mod.register_user(name, email, password, confirm_password, "hr")
     if not ok:
-        return templates.TemplateResponse("register.html", _login_context(request, hr_mode=True, error=message), status_code=400)
+        return templates.TemplateResponse(request, "register.html", _login_context(request, hr_mode=True, error=message), status_code=400)
     return RedirectResponse("/hr/login", status_code=303)
