@@ -132,7 +132,7 @@
     @media (pointer:coarse){body,textarea,.drop-zone,.tab,.btn,.nav-pill,.analyze-btn{cursor:auto}}
 
     /* Cookie banner */
-    .cookie-scrim{position:fixed;inset:0;background:rgba(15,23,42,.35);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:60;display:grid;place-items:end;padding:1.5rem;pointer-events:none;opacity:0;transition:opacity .25s ease}
+    .cookie-scrim{position:fixed;inset:0;background:rgba(15,23,42,.35);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:60;display:grid;place-items:start center;padding:1.5rem 1.5rem 1rem;pointer-events:none;opacity:0;transition:opacity .25s ease}
     .cookie-scrim.is-visible{pointer-events:auto;opacity:1}
     .cookie-banner{width:min(960px,100%);border:2px solid var(--border-strong);border-radius:1.1rem;background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(247,240,228,.92));box-shadow:0 30px 80px rgba(17,17,16,.22);overflow:hidden;transform:translateY(12px);opacity:0;transition:transform .25s ease,opacity .25s ease}
     .cookie-banner__content{display:grid;grid-template-columns:1fr auto;gap:1.1rem 1rem;align-items:center;padding:1.35rem 1.4rem 1.25rem 1.4rem}
@@ -157,4 +157,4 @@
     .cookie-close{border:0;background:transparent;color:var(--muted);cursor:pointer;transition:color .18s ease,transform .18s ease;font-size:1.2rem;line-height:1}
     .cookie-close:hover{color:var(--ink);transform:translateY(-1px)}
     .cookie-banner.is-visible{transform:translateY(0);opacity:1}
-    @media (max-width:720px){.cookie-scrim{place-items:center;padding:1rem}.cookie-banner{width:min(520px,100%)}.cookie-banner__content{grid-template-columns:1fr;justify-items:start}.cookie-banner__actions{width:100%;grid-auto-flow:row;justify-content:stretch}.cookie-banner__actions .btn-secondary,.cookie-banner__actions .btn-primary{width:100%}}
+    @media (max-width:720px){.cookie-scrim{place-items:start center;padding:1rem 1rem .75rem}.cookie-banner{width:min(520px,100%)}.cookie-banner__content{grid-template-columns:1fr;justify-items:start}.cookie-banner__actions{width:100%;grid-auto-flow:row;justify-content:stretch}.cookie-banner__actions .btn-secondary,.cookie-banner__actions .btn-primary{width:100%}}

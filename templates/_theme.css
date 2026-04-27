@@ -1514,8 +1514,8 @@ form.is-submitting .btn-spinner {
   -webkit-backdrop-filter: blur(4px);
   z-index: 60;
   display: grid;
-  place-items: end;
-  padding: 1.5rem;
+  place-items: start center;
+  padding: 1.5rem 1.5rem 1rem;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.25s ease;
@@ -1704,8 +1704,8 @@ form.is-submitting .btn-spinner {
 
 @media (max-width: 720px) {
   .cookie-scrim {
-    place-items: center;
-    padding: 1rem;
+    place-items: start center;
+    padding: 1rem 1rem 0.75rem;
   }
 
   .cookie-banner {
