@@ -8,14 +8,19 @@ import hmac
 import json
 import os
 import re
+import smtplib
 import sqlite3
 from datetime import datetime, timedelta
+from email.message import EmailMessage
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 from uuid import uuid4
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
+import auth
+import database as db_mod
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -24,7 +29,18 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
 from ai_service import get_genai_status, rewrite_bullets
-from config import EXPORT_DIR, JWT_EXPIRE_MINUTES, JWT_SECRET, UPLOAD_DIR
+from config import (
+    EXPORT_DIR,
+    JWT_EXPIRE_MINUTES,
+    JWT_SECRET,
+    SMTP_FROM,
+    SMTP_HOST,
+    SMTP_PASSWORD,
+    SMTP_PORT,
+    SMTP_USE_TLS,
+    SMTP_USER,
+    UPLOAD_DIR,
+)
 from resume_utils import (
     clean,
     export_docx,
@@ -60,6 +76,22 @@ DATASET_CSV = BASE_DIR / "resumesss" / "Resume" / "Resume.py.csv"
 TEMPLATES_DIR = BASE_DIR / "templates"
 SUPPORTED_EXTENSIONS = {".pdf", ".docx", ".txt"}
 PAGE_SIZE = 24
+PIPELINE_STATUSES = (
+    "new",
+    "shortlisted",
+    "interview_scheduled",
+    "interviewed",
+    "rejected",
+    "hired",
+)
+STATUS_LABELS = {
+    "new": "New",
+    "shortlisted": "Shortlisted",
+    "interview_scheduled": "Interview Scheduled",
+    "interviewed": "Interviewed",
+    "rejected": "Rejected",
+    "hired": "Hired",
+}
 ADMIN_EMAILS = {
     email.lower()
     for email in re.findall(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", os.getenv("ADMIN_EMAILS", ""))
@@ -80,63 +112,11 @@ templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 if TEMPLATES_DIR.exists():
     app.mount("/templates", StaticFiles(directory=str(TEMPLATES_DIR)), name="templates")
 
-
-def db() -> sqlite3.Connection:
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-
-def ensure_schema() -> None:
-    with db() as conn:
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY,name TEXT,email TEXT UNIQUE,password TEXT,created_at TEXT,role TEXT)"
-        )
-        user_cols = {r["name"] for r in conn.execute("PRAGMA table_info(users)").fetchall()}
-        if "created_at" not in user_cols:
-            conn.execute("ALTER TABLE users ADD COLUMN created_at TEXT")
-        if "role" not in user_cols:
-            conn.execute("ALTER TABLE users ADD COLUMN role TEXT")
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS resume_history(id INTEGER PRIMARY KEY,user_id INTEGER,score REAL,filename TEXT,filetype TEXT,date TEXT,found TEXT,missing TEXT,rewritten TEXT,skills TEXT)"
-        )
-        hist_cols = {r["name"] for r in conn.execute("PRAGMA table_info(resume_history)").fetchall()}
-        for name in ("found", "missing", "rewritten", "skills", "job_skills", "resume_skills", "batch_id", "folder_name"):
-            if name not in hist_cols:
-                conn.execute(f"ALTER TABLE resume_history ADD COLUMN {name} TEXT")
-        conn.execute("CREATE TABLE IF NOT EXISTS login_history(id INTEGER PRIMARY KEY,user_id INTEGER,email TEXT,login_time TEXT,ip_address TEXT,user_agent TEXT)")
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_login_history_user_time ON login_history(user_id, login_time DESC)")
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS interview_list(
-                id INTEGER PRIMARY KEY,
-                user_id INTEGER,
-                history_id INTEGER,
-                candidate_name TEXT,
-                contact TEXT,
-                email TEXT,
-                interview_date TEXT,
-                notes TEXT,
-                created_at TEXT,
-                updated_at TEXT
-            )
-            """
-        )
-        interview_cols = {r["name"] for r in conn.execute("PRAGMA table_info(interview_list)").fetchall()}
-        for name in ("candidate_name", "contact", "email", "interview_date", "notes", "created_at", "updated_at", "history_id", "user_id"):
-            if name not in interview_cols:
-                conn.execute(f"ALTER TABLE interview_list ADD COLUMN {name} TEXT")
-        # lightweight migration: promote known HR account(s)
-        for hr_email in ("hr@example.com", "meghashyamroyal@gmail.com", "meghalord772@gmail.com"):
-            conn.execute("UPDATE users SET role='hr' WHERE email=?", (hr_email,))
-        # ensure primary HR account password (idempotent reset to known default)
-        default_hr_password = generate_password_hash("megha@772")
-        conn.execute("UPDATE users SET password=? WHERE email=?", (default_hr_password, "meghalord772@gmail.com"))
-
+app.include_router(auth.router)
 
 @app.on_event("startup")
 def startup() -> None:
-    ensure_schema()
+    db_mod.ensure_schema()
 
 
 def normalize_upload_name(filename: str | None) -> tuple[str, str]:
@@ -514,23 +494,64 @@ def rehydrate_history_rewrite(history_id: int, user_id: int, filename: str | Non
         return []
     job_text = "Target skills: " + ", ".join([s.strip() for s in (skills_csv or "").split(",") if s.strip()])
     rewritten = rewrite_bullets(bullets, job_text) or bullets
-    with db() as conn:
+    with db_mod.db() as conn:
         conn.execute("UPDATE resume_history SET rewritten=? WHERE id=? AND user_id=?", (json.dumps(rewritten), history_id, user_id))
     return rewritten
 
 
-def get_user_by_id(user_id: int) -> sqlite3.Row | None:
-    with db() as conn:
-        return conn.execute("SELECT * FROM users WHERE id=?", (user_id,)).fetchone()
+def list_job_descriptions(user_id: int) -> list[sqlite3.Row]:
+    with db_mod.db() as conn:
+        return conn.execute(
+            "SELECT id,title,description,created_at,updated_at FROM job_descriptions WHERE user_id=? ORDER BY updated_at DESC, id DESC",
+            (user_id,),
+        ).fetchall()
 
 
-def get_user_by_email(email: str) -> sqlite3.Row | None:
-    with db() as conn:
-        return conn.execute("SELECT * FROM users WHERE email=?", (email.strip(),)).fetchone()
+def get_job_description(user_id: int, job_id: int) -> sqlite3.Row | None:
+    with db_mod.db() as conn:
+        return conn.execute(
+            "SELECT id,title,description,created_at,updated_at FROM job_descriptions WHERE id=? AND user_id=?",
+            (job_id, user_id),
+        ).fetchone()
 
+
+def save_job_description(user_id: int, title: str, description: str, job_id: int | None = None) -> int:
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    clean_title = clean(title) or "Untitled Role"
+    clean_description = clean(description)
+    with db_mod.db() as conn:
+        if job_id:
+            conn.execute(
+                "UPDATE job_descriptions SET title=?, description=?, updated_at=? WHERE id=? AND user_id=?",
+                (clean_title, clean_description, timestamp, job_id, user_id),
+            )
+            return job_id
+        inserted = conn.execute(
+            "INSERT INTO job_descriptions(user_id,title,description,created_at,updated_at) VALUES (?,?,?,?,?)",
+            (user_id, clean_title, clean_description, timestamp, timestamp),
+        )
+        return int(inserted.lastrowid)
+
+
+def delete_job_description(user_id: int, job_id: int) -> bool:
+    with db_mod.db() as conn:
+        deleted = conn.execute("DELETE FROM job_descriptions WHERE id=? AND user_id=?", (job_id, user_id)).rowcount
+    return bool(deleted)
+
+
+def infer_job_title(job_text: str) -> str:
+    lines = [line.strip(" -:\t") for line in str(job_text or "").splitlines() if line.strip()]
+    if not lines:
+        return "Target Role"
+    first = lines[0]
+    match = re.search(r"(?i)role\s*[:\-]\s*(.+)", first)
+    if match:
+        return clean(match.group(1))[:120] or "Target Role"
+    return clean(first)[:120] or "Target Role"
 
 def is_admin_user(user: sqlite3.Row) -> bool:
-    return str(user["email"] or "").strip().lower() in ADMIN_EMAILS or int(user["id"]) == 1
+    role = str(user["role"] or "").strip().lower()
+    return role == "admin" or str(user["email"] or "").strip().lower() in ADMIN_EMAILS or int(user["id"]) == 1
 
 
 def is_hr_user(user: sqlite3.Row) -> bool:
@@ -540,56 +561,114 @@ def is_hr_user(user: sqlite3.Row) -> bool:
         return False
 
 
-def record_login_success(user: sqlite3.Row, request: Request) -> None:
-    with db() as conn:
-        conn.execute(
-            "INSERT INTO login_history(user_id,email,login_time,ip_address,user_agent) VALUES (?,?,?,?,?)",
-            (
-                user["id"],
-                user["email"],
-                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                request.client.host if request.client else "",
-                request.headers.get("user-agent", ""),
-            ),
+def normalize_status(value: str | None, default: str = "new") -> str:
+    key = str(value or "").strip().lower()
+    return key if key in PIPELINE_STATUSES else default
+
+
+def status_label(value: str | None) -> str:
+    return STATUS_LABELS.get(normalize_status(value), STATUS_LABELS["new"])
+
+
+def status_badge_class(value: str | None) -> str:
+    status = normalize_status(value)
+    return {
+        "new": "bg-slate-100 text-slate-700",
+        "shortlisted": "bg-emerald-100 text-emerald-700",
+        "interview_scheduled": "bg-sky-100 text-sky-700",
+        "interviewed": "bg-amber-100 text-amber-700",
+        "rejected": "bg-rose-100 text-rose-700",
+        "hired": "bg-violet-100 text-violet-700",
+    }.get(status, "bg-slate-100 text-slate-700")
+
+
+def smtp_configured() -> bool:
+    return bool(SMTP_HOST and SMTP_PORT and SMTP_FROM)
+
+
+def smtp_status_message() -> str:
+    missing: list[str] = []
+    if not SMTP_HOST:
+        missing.append("SMTP_HOST")
+    if not SMTP_PORT:
+        missing.append("SMTP_PORT")
+    if not SMTP_FROM:
+        missing.append("SMTP_FROM")
+    if not SMTP_USER:
+        missing.append("SMTP_USER")
+    if not SMTP_PASSWORD:
+        missing.append("SMTP_PASSWORD")
+    if missing:
+        return "Missing SMTP settings: " + ", ".join(missing)
+    host = SMTP_HOST.strip().lower()
+    if host in {"bloody_beast", "localhost", "127.0.0.1"} or "_" in host:
+        return (
+            "SMTP_HOST looks invalid. Set it to a real mail server such as smtp.gmail.com "
+            "and keep SMTP_PORT=587 with SMTP_USE_TLS=true."
         )
+    if SMTP_FROM and SMTP_USER and SMTP_FROM.lower() != SMTP_USER.lower():
+        return (
+            "SMTP_FROM should usually match SMTP_USER for Gmail/Outlook accounts. "
+            "Use the same email address unless your provider allows a different sender."
+        )
+    return "SMTP settings look complete."
 
 
-def register_user(name: str, email: str, password: str, confirm_password: str, role: str = "candidate") -> tuple[bool, str]:
-    if not name or not email or not password or not confirm_password:
-        return False, "Name, email, and password are required."
-    if password != confirm_password:
-        return False, "Passwords do not match."
-    if len(password) < 8:
-        return False, "Password must be at least 8 characters."
-    role = role.strip().lower() or "candidate"
+def send_interview_selection_email(
+    to_email: str,
+    candidate_name: str,
+    interview_date: str,
+    contact: str = "",
+    notes: str = "",
+    recruiter_name: str = "",
+) -> bool:
+    recipient = str(to_email or "").strip()
+    if not recipient or not smtp_configured():
+        return False
+
+    subject = "You have been selected for the interview"
+    body_lines = [
+        f"Hello {candidate_name or 'Candidate'},",
+        "",
+        "We are pleased to inform you that you have been selected for the next stage of the interview process.",
+        "",
+        f"Interview Date: {interview_date or 'To be confirmed'}",
+        f"Contact: {contact or 'N/A'}",
+    ]
+    if notes.strip():
+        body_lines.extend(["", f"Additional Notes: {notes.strip()}"])
+    body_lines.extend(
+        [
+            "",
+            "Please reply to this email if you have any questions or if you need any clarification.",
+            "",
+            f"Best regards,",
+            recruiter_name or (SMTP_FROM or "HR Team"),
+        ]
+    )
+
+    message = EmailMessage()
+    message["Subject"] = subject
+    message["From"] = SMTP_FROM
+    message["To"] = recipient
+    message.set_content("\n".join(body_lines))
+
     try:
-        with db() as conn:
-            conn.execute(
-                "INSERT INTO users(name,email,password,created_at,role) VALUES (?,?,?,?,?)",
-                (
-                    name.strip(),
-                    email.strip(),
-                    generate_password_hash(password),
-                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                    role,
-                ),
-            )
-        return True, "Account created. Please sign in."
-    except sqlite3.IntegrityError:
-        return False, "That email is already registered."
+        if SMTP_USE_TLS:
+            with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+                server.ehlo()
+                server.starttls()
+                if SMTP_USER and SMTP_PASSWORD:
+                    server.login(SMTP_USER, SMTP_PASSWORD)
+                server.send_message(message)
+        else:
+            with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+                if SMTP_USER and SMTP_PASSWORD:
+                    server.login(SMTP_USER, SMTP_PASSWORD)
+                server.send_message(message)
+        return True
     except Exception:
-        return False, "Registration failed. Please try again."
-
-
-def login_user(email: str, password: str, request: Request) -> tuple[sqlite3.Row | None, str | None]:
-    if not email or not password:
-        return None, "Email and password are required."
-    user = get_user_by_email(email)
-    if user and check_password_hash(user["password"], password):
-        record_login_success(user, request)
-        return user, None
-    return None, "Invalid email or password."
-
+        return False
 
 @lru_cache(maxsize=1)
 def load_dataset() -> dict[str, Any]:
@@ -645,17 +724,17 @@ def dataset_context(category: str = "", query: str = "", page: int = 1) -> dict[
 
 
 def get_history_row(user_id: int, history_id: int) -> sqlite3.Row | None:
-    with db() as conn:
+    with db_mod.db() as conn:
         return conn.execute(
-            "SELECT id,filename,filetype,score,date,found,missing,rewritten,skills,job_skills,resume_skills,batch_id,folder_name FROM resume_history WHERE id=? AND user_id=?",
+            "SELECT id,filename,filetype,score,date,found,missing,rewritten,skills,job_skills,resume_skills,batch_id,folder_name,job_id,job_title,candidate_status,recruiter_notes FROM resume_history WHERE id=? AND user_id=?",
             (history_id, user_id),
         ).fetchone()
 
 
-def save_single_history(user_id: int, result: dict[str, Any]) -> int:
-    with db() as conn:
+def save_single_history(user_id: int, result: dict[str, Any], job_id: int | None = None, job_title: str = "") -> int:
+    with db_mod.db() as conn:
         inserted = conn.execute(
-            "INSERT INTO resume_history(user_id,score,filename,filetype,date,found,missing,rewritten,skills,job_skills,resume_skills,batch_id,folder_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            "INSERT INTO resume_history(user_id,score,filename,filetype,date,found,missing,rewritten,skills,job_skills,resume_skills,batch_id,folder_name,job_id,job_title,candidate_status,recruiter_notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (
                 user_id,
                 result["score"],
@@ -670,19 +749,23 @@ def save_single_history(user_id: int, result: dict[str, Any]) -> int:
                 result["resume_skills_csv"],
                 None,
                 None,
+                job_id,
+                job_title,
+                "new",
+                "",
             ),
         )
         return int(inserted.lastrowid)
 
 
-def save_bulk_history(user_id: int, results: list[dict[str, Any]], folder_name: str) -> str:
+def save_bulk_history(user_id: int, results: list[dict[str, Any]], folder_name: str, job_id: int | None = None, job_title: str = "") -> str:
     batch_id = f"bulk-{uuid4().hex}"
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
     label = folder_name.strip() or "Folder Upload"
-    with db() as conn:
+    with db_mod.db() as conn:
         for row in results:
             inserted = conn.execute(
-                "INSERT INTO resume_history(user_id,score,filename,filetype,date,found,missing,rewritten,skills,job_skills,resume_skills,batch_id,folder_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "INSERT INTO resume_history(user_id,score,filename,filetype,date,found,missing,rewritten,skills,job_skills,resume_skills,batch_id,folder_name,job_id,job_title,candidate_status,recruiter_notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (
                     user_id,
                     row["score"],
@@ -697,6 +780,10 @@ def save_bulk_history(user_id: int, results: list[dict[str, Any]], folder_name: 
                     row["resume_skills_csv"],
                     batch_id,
                     label,
+                    job_id,
+                    job_title,
+                    "new",
+                    "",
                 ),
             )
             row["history_id"] = int(inserted.lastrowid)
@@ -740,6 +827,7 @@ def base_context(request: Request, **extra: Any) -> dict[str, Any]:
         "primary_nav_items": primary_nav_items,
         "profile_menu_items": profile_menu_items,
         "role_label": "HR Organization" if is_hr else ("Administrator" if is_admin else "Candidate"),
+        "pipeline_statuses": [{"value": item, "label": STATUS_LABELS[item]} for item in PIPELINE_STATUSES],
         **extra,
     }
 
@@ -767,7 +855,7 @@ def current_user(request: Request) -> sqlite3.Row | None:
     uid = request.session.get("user_id")
     if not uid:
         return None
-    user = get_user_by_id(int(uid))
+    user = db_mod.get_user_by_id(int(uid))
     if not user:
         request.session.clear()
     return user
@@ -802,7 +890,7 @@ def render_error(request: Request, code: int, message: str, status_code: int | N
 
 
 def recent_history_for(user_id: int, limit: int = 6) -> list[sqlite3.Row]:
-    with db() as conn:
+    with db_mod.db() as conn:
         return conn.execute("SELECT id,filename,score,date FROM resume_history WHERE user_id=? ORDER BY id DESC LIMIT ?", (user_id, limit)).fetchall()
 
 
@@ -865,7 +953,7 @@ def _resume_summary(name: str, score_display: str, found_list: list[str], missin
 
 
 def analyzed_resumes_for(user_id: int) -> list[dict[str, Any]]:
-    with db() as conn:
+    with db_mod.db() as conn:
         rows = conn.execute(
             "SELECT id,filename,filetype,score,date,found,missing FROM resume_history WHERE user_id=? ORDER BY id DESC",
             (user_id,),
@@ -918,9 +1006,9 @@ def save_interview_entry(
     email: str,
     interview_date: str,
     notes: str,
-) -> None:
+) -> int:
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
-    with db() as conn:
+    with db_mod.db() as conn:
         existing = conn.execute(
             "SELECT id FROM interview_list WHERE user_id=? AND history_id=?", (user_id, history_id)
         ).fetchone()
@@ -933,22 +1021,24 @@ def save_interview_entry(
                 """,
                 (candidate_name, contact, email, interview_date, notes, timestamp, int(existing["id"])),
             )
+            return int(existing["id"])
         else:
-            conn.execute(
+            inserted = conn.execute(
                 """
                 INSERT INTO interview_list(user_id,history_id,candidate_name,contact,email,interview_date,notes,created_at,updated_at)
                 VALUES (?,?,?,?,?,?,?,?,?)
                 """,
                 (user_id, history_id, candidate_name, contact, email, interview_date, notes, timestamp, timestamp),
             )
+            return int(inserted.lastrowid)
 
 
 def interview_entries_for(user_id: int) -> list[dict[str, Any]]:
-    with db() as conn:
+    with db_mod.db() as conn:
         rows = conn.execute(
             """
             SELECT il.id, il.history_id, il.candidate_name, il.contact, il.email, il.interview_date, il.notes,
-                   il.created_at, il.updated_at,
+                   il.created_at, il.updated_at, il.email_sent_at,
                    rh.filename, rh.filetype, rh.score, rh.found, rh.missing, rh.date AS analyzed_date
             FROM interview_list il
             LEFT JOIN resume_history rh ON rh.id = il.history_id
@@ -981,6 +1071,7 @@ def interview_entries_for(user_id: int) -> list[dict[str, Any]]:
                 "notes": row["notes"] or "",
                 "created_at": row["created_at"] or "",
                 "updated_at": row["updated_at"] or "",
+                "email_sent_at": row["email_sent_at"] or "",
                 "filename": row["filename"] or "Resume",
                 "filetype": (row["filetype"] or "").upper(),
                 "score_display": _score_display(row["score"]),
@@ -1039,7 +1130,7 @@ def api_user_from_request(request: Request) -> sqlite3.Row:
     if not auth.lower().startswith("bearer "):
         raise HTTPException(status_code=401, detail="Missing bearer token")
     payload = parse_bearer_token(auth.split(" ", 1)[1].strip())
-    user = get_user_by_id(int(payload["sub"]))
+    user = db_mod.get_user_by_id(int(payload["sub"]))
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
     return user
@@ -1073,151 +1164,6 @@ async def home(request: Request) -> Response:
         ),
     )
 
-
-@app.get("/login", response_class=HTMLResponse)
-async def login_page(request: Request) -> Response:
-    if current_user(request):
-        return redirect("/")
-    message = request.session.pop("flash_message", None)
-    return templates.TemplateResponse(
-        request,
-        "login.html",
-        base_context(request, message=message, error=None, email="", remember_me=False),
-    )
-
-
-@app.get("/hr/login", response_class=HTMLResponse)
-async def hr_login_page(request: Request) -> Response:
-    user = current_user(request)
-    if user and is_hr_user(user):
-        return redirect("/hr/dashboard")
-    if user:
-        # logged in but not HR
-        return render_error(request, 403, "You are signed in without HR permissions.", 403)
-    message = request.session.pop("flash_message", None)
-    return templates.TemplateResponse(
-        request,
-        "login.html",
-        base_context(request, message=message, error=None, email="", remember_me=False, hr_mode=True),
-    )
-
-
-@app.post("/login", response_class=HTMLResponse)
-async def login_submit(
-    request: Request,
-    email: str = Form(""),
-    password: str = Form(""),
-    remember_me: str | None = Form(None),
-    captcha: str | None = Form(None),
-    hr: str | None = Form(None),
-) -> Response:
-    if not captcha:
-        return templates.TemplateResponse(
-            request,
-            "login.html",
-            base_context(request, error="Please confirm you are not a robot.", message=None, email=email, remember_me=bool(remember_me)),
-            status_code=400,
-        )
-    user, error = login_user(email, password, request)
-    if error or not user:
-        return templates.TemplateResponse(
-            request,
-            "login.html",
-            base_context(request, error=error or "Unable to sign in.", message=None, email=email, remember_me=bool(remember_me)),
-            status_code=400,
-        )
-    if hr and not is_hr_user(user):
-        return templates.TemplateResponse(
-            request,
-            "login.html",
-            base_context(
-                request,
-                error="HR access only. Contact your admin to be granted the HR role.",
-                message=None,
-                email=email,
-                remember_me=bool(remember_me),
-                hr_mode=True,
-            ),
-            status_code=403,
-        )
-    set_session_user(request, user, remember_me=bool(remember_me))
-    # force consent step after login if not already granted
-    if not request.session.get("resume_consent"):
-        return redirect("/consent")
-    return redirect("/about")
-
-
-@app.post("/hr/login", response_class=HTMLResponse)
-async def hr_login_submit(
-    request: Request,
-    email: str = Form(""),
-    password: str = Form(""),
-    remember_me: str | None = Form(None),
-    captcha: str | None = Form(None),
-) -> Response:
-    # Reuse login flow but force HR role
-    return await login_submit(request, email=email, password=password, remember_me=remember_me, captcha=captcha, hr="1")
-
-
-@app.get("/register", response_class=HTMLResponse)
-async def register_page(request: Request) -> Response:
-    if current_user(request):
-        return redirect("/")
-    return templates.TemplateResponse(
-        request, "register.html", base_context(request, error=None, name="", email="", hr_mode=False)
-    )
-
-
-@app.get("/hr/register", response_class=HTMLResponse)
-async def hr_register_page(request: Request) -> Response:
-    user = current_user(request)
-    if user and is_hr_user(user):
-        return redirect("/hr/dashboard")
-    return templates.TemplateResponse(
-        request,
-        "register.html",
-        base_context(request, error=None, name="", email="", hr_mode=True),
-    )
-
-
-@app.post("/register", response_class=HTMLResponse)
-async def register_submit(
-    request: Request,
-    name: str = Form(""),
-    email: str = Form(""),
-    password: str = Form(""),
-    confirm_password: str = Form(""),
-    role: str = Form("candidate"),
-) -> Response:
-    ok, message = register_user(name, email, password, confirm_password, role)
-    if not ok:
-        return templates.TemplateResponse(
-            request,
-            "register.html",
-            base_context(request, error=message, name=name, email=email, hr_mode=(role.strip().lower() == "hr")),
-            status_code=400,
-        )
-    request.session["flash_message"] = message
-    return redirect("/login")
-
-
-@app.post("/hr/register", response_class=HTMLResponse)
-async def hr_register_submit(
-    request: Request,
-    name: str = Form(""),
-    email: str = Form(""),
-    password: str = Form(""),
-    confirm_password: str = Form(""),
-) -> Response:
-    # Force HR role
-    return await register_submit(request, name=name, email=email, password=password, confirm_password=confirm_password, role="hr")
-
-
-@app.get("/logout")
-async def logout(request: Request) -> RedirectResponse:
-    clear_session(request)
-    request.session["flash_message"] = "Signed out successfully."
-    return redirect("/login")
 
 
 @app.get("/consent", response_class=HTMLResponse)
@@ -1417,7 +1363,7 @@ async def export_resume(history_id: str = Form(""), skills: str = Form(""), bull
     rewritten = parse_saved_bullets(bullets)
     original_text = ""
     if not rewritten and history_id.strip().isdigit():
-        with db() as conn:
+        with db_mod.db() as conn:
             history_row = conn.execute(
                 "SELECT filename,rewritten,skills,job_skills,resume_skills,found,missing,user_id FROM resume_history WHERE id=?", (int(history_id),)
             ).fetchone()
@@ -1428,7 +1374,7 @@ async def export_resume(history_id: str = Form(""), skills: str = Form(""), bull
                 try:
                     regenerated = rehydrate_history_rewrite(
                         int(history_id),
-                        int(history_row["user_id"]) if history_row.get("user_id") is not None else 0,
+                        int(history_row["user_id"]) if history_row["user_id"] is not None else 0,
                         history_row["filename"],
                         history_row["job_skills"] or history_row["skills"],
                     )
@@ -1438,7 +1384,7 @@ async def export_resume(history_id: str = Form(""), skills: str = Form(""), bull
                     pass
             if not skills:
                 # prefer resume skills for export; fall back to matched skills for older rows
-                found = str(history_row.get("found") or "").strip()
+                found = str(history_row["found"] or "").strip()
                 skills = history_row["resume_skills"] or found
             # pull original resume text for context in export
             try:
@@ -1478,7 +1424,7 @@ async def export_resume(history_id: str = Form(""), skills: str = Form(""), bull
 def _export_points_response(history_id: str, bullets_json: str) -> Response:
     rewritten = parse_saved_bullets(bullets_json)
     if not rewritten and history_id.strip().isdigit():
-        with db() as conn:
+        with db_mod.db() as conn:
             row = conn.execute("SELECT rewritten FROM resume_history WHERE id=?", (int(history_id),)).fetchone()
         if row:
             rewritten = parse_saved_bullets(row["rewritten"])
@@ -1505,27 +1451,30 @@ async def export_bulk(batch_id: str, request: Request) -> Response:
     batch_id = batch_id.strip()
     if not batch_id:
         return render_error(request, 400, "Missing batch identifier.", 400)
-    with db() as conn:
+    with db_mod.db() as conn:
         rows = conn.execute(
-            "SELECT filename,filetype,score,found,missing,skills,job_skills,resume_skills FROM resume_history WHERE user_id=? AND batch_id=? ORDER BY score DESC",
+            "SELECT filename,filetype,score,found,missing,skills,job_skills,resume_skills,rewritten FROM resume_history WHERE user_id=? AND batch_id=? ORDER BY score DESC",
             (int(user["id"]), batch_id),
         ).fetchall()
     if not rows:
         return render_error(request, 404, "Bulk batch not found.", 404)
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["Rank", "Filename", "File Type", "Score", "Resume Skills", "Matched Skills", "Missing Skills", "Job Skills"])
+    writer.writerow(["Rank", "Filename", "File Type", "Score", "Resume Skills", "Matched Skills", "Missing Skills", "Improved Points"])
     for idx, row in enumerate(rows, start=1):
+        matched_skills = str(row["found"] or "").strip() or str(row["resume_skills"] or "").strip() or "-"
+        missing_skills = str(row["missing"] or "").strip() or "-"
+        improved_points = " | ".join(combine_points(parse_saved_bullets(row["rewritten"]))) or "-"
         writer.writerow(
             [
                 idx,
                 row["filename"] or "",
                 row["filetype"] or "",
                 row["score"],
-                row["resume_skills"] or row["found"] or "",
-                row["found"] or "",
-                row["missing"] or "",
-                row["job_skills"] or row["skills"] or "",
+                row["resume_skills"] or matched_skills,
+                matched_skills,
+                missing_skills,
+                improved_points,
             ]
         )
     filename = f"bulk-results-{batch_id}.csv"
@@ -1538,7 +1487,7 @@ async def profile(request: Request, delete_id: int | None = None, delete_all: in
     user = require_user(request)
     notice = ""
     tone = "success"
-    with db() as conn:
+    with db_mod.db() as conn:
         if delete_all:
             deleted = conn.execute("DELETE FROM resume_history WHERE user_id=?", (user["id"],)).rowcount
             notice = f"Deleted {int(deleted or 0)} history record(s)."
@@ -1601,9 +1550,9 @@ async def add_to_interview_list(
 ) -> Response:
     user = require_hr(request)
     history_id = history_id.strip()
-    if not history_id.isdigit():
+    if not history_id or not history_id.isdigit():
         return render_error(request, 400, "Invalid resume reference.", 400)
-    with db() as conn:
+    with db_mod.db() as conn:
         resume_row = conn.execute(
             "SELECT id,filename FROM resume_history WHERE id=? AND user_id=?", (int(history_id), int(user["id"]))
         ).fetchone()
@@ -1617,7 +1566,7 @@ async def add_to_interview_list(
     notes = notes.strip()
     if email and not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
         return render_error(request, 400, "Please enter a valid email address.", 400)
-    save_interview_entry(
+    entry_id = save_interview_entry(
         int(user["id"]),
         int(history_id),
         candidate_name,
@@ -1626,9 +1575,95 @@ async def add_to_interview_list(
         interview_date,
         notes,
     )
-    request.session["flash_message"] = f"{candidate_name} sent to the interview list."
-    request.session["flash_tone"] = "success"
+    email_sent = False
+    if email:
+        email_sent = send_interview_selection_email(
+            email,
+            candidate_name,
+            interview_date,
+            contact=contact,
+            notes=notes,
+            recruiter_name=str(user["name"] or ""),
+        )
+        if email_sent:
+            with db_mod.db() as conn:
+                conn.execute(
+                    "UPDATE interview_list SET email_sent_at=?, updated_at=? WHERE id=? AND user_id=?",
+                    (
+                        datetime.now().strftime("%Y-%m-%d %H:%M"),
+                        datetime.now().strftime("%Y-%m-%d %H:%M"),
+                        entry_id,
+                        int(user["id"]),
+                    ),
+                    )
+    if email and email_sent:
+        request.session["flash_message"] = f"Interview email sent to {candidate_name}."
+        request.session["flash_tone"] = "success"
+    elif email:
+        request.session["flash_message"] = f"{candidate_name} was added, but the email could not be sent. {smtp_status_message()}"
+        request.session["flash_tone"] = "error"
+    else:
+        request.session["flash_message"] = f"{candidate_name} added to the interview list."
+        request.session["flash_tone"] = "success"
     return redirect("/analyzed-resumes")
+
+
+@app.post("/interview-list/send-email")
+async def send_interview_email(request: Request, entry_id: str = Form("")) -> Response:
+    user = require_hr(request)
+    entry_id = entry_id.strip()
+    if not entry_id.isdigit():
+        request.session["flash_message"] = "Invalid interview entry."
+        request.session["flash_tone"] = "error"
+        return redirect("/interview-list")
+
+    with db_mod.db() as conn:
+        entry = conn.execute(
+            """
+            SELECT il.id, il.candidate_name, il.contact, il.email, il.interview_date, il.notes,
+                   il.email_sent_at, rh.filename
+            FROM interview_list il
+            LEFT JOIN resume_history rh ON rh.id = il.history_id
+            WHERE il.id=? AND il.user_id=?
+            """,
+            (int(entry_id), int(user["id"])),
+        ).fetchone()
+
+    if not entry:
+        request.session["flash_message"] = "Interview entry not found."
+        request.session["flash_tone"] = "error"
+        return redirect("/interview-list")
+
+    if not entry["email"]:
+        request.session["flash_message"] = "No email address is saved for this candidate."
+        request.session["flash_tone"] = "error"
+        return redirect("/interview-list")
+
+    sent = send_interview_selection_email(
+        entry["email"],
+        entry["candidate_name"] or "Candidate",
+        entry["interview_date"] or "To be confirmed",
+        contact=entry["contact"] or "",
+        notes=entry["notes"] or "",
+        recruiter_name=str(user["name"] or ""),
+    )
+    if sent:
+        with db_mod.db() as conn:
+            conn.execute(
+                "UPDATE interview_list SET email_sent_at=?, updated_at=? WHERE id=? AND user_id=?",
+                (
+                    datetime.now().strftime("%Y-%m-%d %H:%M"),
+                    datetime.now().strftime("%Y-%m-%d %H:%M"),
+                    int(entry["id"]),
+                    int(user["id"]),
+                ),
+            )
+        request.session["flash_message"] = f"Interview email sent to {entry['candidate_name'] or 'Candidate'}."
+        request.session["flash_tone"] = "success"
+    else:
+        request.session["flash_message"] = f"Email could not be sent. {smtp_status_message()}"
+        request.session["flash_tone"] = "error"
+    return redirect("/interview-list")
 
 
 @app.post("/interview-list/update-date")
@@ -1644,7 +1679,7 @@ async def update_interview_date(request: Request, entry_id: str = Form(""), inte
         request.session["flash_message"] = "Please pick a new interview date."
         request.session["flash_tone"] = "error"
         return redirect("/interview-list")
-    with db() as conn:
+    with db_mod.db() as conn:
         existing = conn.execute(
             "SELECT id FROM interview_list WHERE id=? AND user_id=?",
             (int(entry_id), int(user["id"])),
@@ -1673,7 +1708,7 @@ async def interview_list_page(request: Request, delete_id: int | None = None) ->
     notice = request.session.pop("flash_message", "")
     tone = request.session.pop("flash_tone", "success")
     if delete_id:
-        with db() as conn:
+        with db_mod.db() as conn:
             removed = conn.execute("DELETE FROM interview_list WHERE id=? AND user_id=?", (delete_id, user["id"])).rowcount
         request.session["flash_message"] = "Interview entry removed." if removed else "Entry not found."
         request.session["flash_tone"] = "success" if removed else "error"
@@ -1698,7 +1733,7 @@ async def admin_dashboard(request: Request) -> HTMLResponse:
     if not is_admin_user(user):
         raise HTTPException(status_code=403, detail="Admin access required.")
     today = datetime.now().strftime("%Y-%m-%d")
-    with db() as conn:
+    with db_mod.db() as conn:
         users = conn.execute(
             """
             SELECT u.id,u.name,u.email,u.created_at,
@@ -1734,7 +1769,7 @@ async def admin_dashboard(request: Request) -> HTMLResponse:
 async def hr_dashboard(request: Request) -> HTMLResponse:
     user = require_hr(request)
     steps = [
-        "Create Job → paste JD or upload PDF.",
+        "Create Job - paste JD or upload PDF.",
         "Upload Resumes (single or bulk).",
         "ATS Engine scores + extracts tables.",
         "Rank / filter by score, tables, missing skills.",
@@ -1783,7 +1818,7 @@ async def api_me(request: Request) -> JSONResponse:
 @app.get("/api/history")
 async def api_history(request: Request) -> JSONResponse:
     user = api_user_from_request(request)
-    with db() as conn:
+    with db_mod.db() as conn:
         rows = conn.execute(
             "SELECT id,filename,filetype,score,date,batch_id,folder_name FROM resume_history WHERE user_id=? ORDER BY id DESC",
             (user["id"],),

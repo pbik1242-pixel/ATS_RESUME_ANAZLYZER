@@ -1,6 +1,7 @@
 import os
 import re
 import uuid
+import logging
 from pathlib import Path
 import pdfplumber
 from docx import Document
@@ -18,6 +19,17 @@ except Exception:
 _EMBED = None
 _EMBED_UTIL = None
 _EMBED_ATTEMPTED = False
+
+
+def _configure_pdf_logging() -> None:
+    # pdfplumber/pdfminer can emit noisy non-fatal font metadata warnings for
+    # some resumes. Keep request logs and real exceptions visible, but suppress
+    # these parser warnings in normal app output.
+    for logger_name in ("pdfminer", "pdfminer.pdffont", "pdfminer.pdfinterp", "pdfplumber"):
+        logging.getLogger(logger_name).setLevel(logging.ERROR)
+
+
+_configure_pdf_logging()
 
 
 def _env_truthy(name: str) -> bool:
