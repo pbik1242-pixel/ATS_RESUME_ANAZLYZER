@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign In - ATS RESUME ANALYZER</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  {% if recaptcha_enabled and recaptcha_site_key %}
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  {% endif %}
   <style>
     {% include "_theme.css" %}
 
@@ -35,84 +38,138 @@
       padding-right: 4rem;
     }
 
-    .captcha-box {
+    .security-block {
       border: 1.5px solid var(--border);
-      border-radius: 0.9rem;
-      padding: 0.75rem 0.9rem;
+      border-radius: 0.95rem;
+      padding: 0.9rem 1rem;
       background: var(--surface-strong);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
       box-shadow: 0 8px 20px rgba(17, 17, 16, 0.05);
     }
 
-    .captcha-left {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.75rem;
-      font-size: 0.92rem;
-      color: var(--ink);
+    .security-copy {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
     }
 
-    .captcha-check {
-      width: 1.2rem;
-      height: 1.2rem;
-      border: 2px solid var(--border-strong);
-      border-radius: 0.2rem;
+    .security-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 0.2rem;
+    }
+
+    .security-text {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .captcha-wrap {
+      display: flex;
+      justify-content: flex-start;
+      overflow-x: auto;
+    }
+
+    .local-captcha {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.9rem 1rem;
+      border-radius: 0.85rem;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(17, 17, 16, 0.14);
+      color: var(--ink);
+      font-weight: 600;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.75);
+    }
+
+    .local-captcha input {
+      width: 1.1rem;
+      height: 1.1rem;
+      accent-color: var(--red);
+    }
+
+    .g-recaptcha {
+      transform-origin: 0 0;
+    }
+
+    .google-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      background: #fff;
-      position: relative;
+      gap: 0.65rem;
+      width: 100%;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--ink);
+      padding: 0.9rem 1rem;
+      font-weight: 700;
+      transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
     }
 
-    .captcha-check input {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      cursor: pointer;
+    .google-btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(217, 43, 43, 0.35);
+      background: rgba(217, 43, 43, 0.08);
     }
 
-    .captcha-check::after {
-      content: "";
-      width: 0.55rem;
-      height: 0.3rem;
-      border-left: 2px solid #fff;
-      border-bottom: 2px solid #fff;
-      transform: rotate(-45deg);
-      opacity: 0;
+    .google-btn--disabled,
+    .google-btn--disabled:hover {
+      cursor: not-allowed;
+      opacity: 0.55;
+      transform: none;
+      border-color: rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.05);
     }
 
-    .captcha-check:has(input:checked) {
-      background: var(--red);
-      border-color: var(--red);
+    .google-icon {
+      width: 1.1rem;
+      height: 1.1rem;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 35% 35%, #fff 0 10%, transparent 11%),
+        conic-gradient(#4285f4 0 25%, #34a853 0 50%, #fbbc05 0 75%, #ea4335 0);
+      box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.85);
     }
 
-    .captcha-check:has(input:checked)::after {
-      opacity: 1;
+    .or-divider {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: var(--muted);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      font-family: "DM Mono", monospace;
     }
 
     .captcha-badge {
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      font-family: "DM Mono", monospace;
-      font-size: 0.7rem;
-      color: var(--muted);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
+      white-space: nowrap;
     }
 
     .captcha-icon {
-      width: 22px;
-      height: 22px;
+      width: 20px;
+      height: 20px;
       border-radius: 50%;
       border: 2px solid rgba(217, 43, 43, 0.6);
       border-top-color: transparent;
       border-right-color: transparent;
       display: inline-block;
       transform: rotate(45deg);
+    }
+
+    .or-divider::before,
+    .or-divider::after {
+      content: "";
+      height: 1px;
+      flex: 1;
+      background: rgba(255, 255, 255, 0.12);
     }
 
     .auth-grid {
@@ -290,16 +347,47 @@
           >
           Keep me signed in
         </label>
-        <div class="captcha-box">
-          <label class="captcha-left">
-            <span class="captcha-check">
+        <div class="security-block">
+          <div class="security-copy">
+            <div>
+              <p class="security-title">Security Check</p>
+              <p class="security-text">
+                {% if recaptcha_enabled and recaptcha_site_key %}
+                Please complete the reCAPTCHA challenge before signing in.
+                {% else %}
+                Complete the local verification checkbox before signing in.
+                {% endif %}
+              </p>
+            </div>
+            <span class="captcha-badge"><span class="captcha-icon"></span>{% if recaptcha_enabled and recaptcha_site_key %}google reCAPTCHA{% else %}local check{% endif %}</span>
+          </div>
+          <div class="captcha-wrap">
+            {% if recaptcha_enabled and recaptcha_site_key %}
+            <div class="g-recaptcha" data-sitekey="{{ recaptcha_site_key }}"></div>
+            {% else %}
+            <label class="local-captcha">
               <input type="checkbox" name="captcha" required>
-            </span>
-            I'm not a robot
-          </label>
-          <span class="captcha-badge"><span class="captcha-icon"></span>captcha</span>
+              <span>I’m not a robot</span>
+            </label>
+            {% endif %}
+          </div>
         </div>
-        <button type="submit" class="btn-primary w-full">Sign In</button>
+        <div class="space-y-3 pt-1">
+          <button type="submit" class="btn-primary w-full">Sign In</button>
+          <a
+            href="{{ google_login_url if google_login_enabled and google_login_url else '#' }}"
+            class="google-btn {% if not (google_login_enabled and google_login_url) %}google-btn--disabled{% endif %}"
+            {% if not (google_login_enabled and google_login_url) %}aria-disabled="true" tabindex="-1"{% endif %}
+          >
+            <span class="google-icon"></span>
+            Continue with Google
+          </a>
+          {% if not (google_login_enabled and google_login_url) %}
+          <p class="text-center text-xs text-muted">
+            Add `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `.env` to enable Google sign-in.
+          </p>
+          {% endif %}
+        </div>
       </form>
       <p class="text-xs text-muted mt-2">After login we will request your permission to access and update your uploaded resumes.</p>
 

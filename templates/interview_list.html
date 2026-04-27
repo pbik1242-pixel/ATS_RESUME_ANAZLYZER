@@ -59,6 +59,13 @@
             <div class="text-sm font-semibold">
               <a class="text-red-500 hover:underline" href="mailto:{{ item.email }}">{{ item.email }}</a>
             </div>
+            <div class="text-xs text-muted mt-1">
+              {% if item.email_sent_at %}
+              Email sent at {{ item.email_sent_at }}
+              {% else %}
+              Email not sent yet
+              {% endif %}
+            </div>
           </div>
           <div class="panel-soft p-3 rounded-lg">
             <div class="text-xs text-muted">Notes</div>
@@ -77,6 +84,10 @@
             <button type="submit" class="btn-secondary w-full">Update Date</button>
           </form>
           <div class="flex flex-wrap gap-3">
+            <form method="POST" action="/interview-list/send-email">
+              <input type="hidden" name="entry_id" value="{{ item.id }}">
+              <button type="submit" class="btn-secondary">Send Email</button>
+            </form>
             <a class="btn-secondary" href="/analyzed-resumes">Send another</a>
             <a class="text-red-600 hover:underline text-sm" href="/interview-list?delete_id={{ item.id }}">Remove</a>
           </div>
