@@ -30,6 +30,12 @@ html {
   scroll-behavior: smooth;
 }
 
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
 body.app-shell {
   position: relative;
   min-height: 100vh;
@@ -98,6 +104,35 @@ code {
 
 .page-wrap--content {
   margin-top: 1rem;
+}
+
+.analyzed-resumes-page {
+  max-height: calc(100vh - 7rem);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0.45rem;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--red) rgba(190, 185, 176, 0.25);
+}
+
+.analyzed-resumes-page::-webkit-scrollbar {
+  width: 12px;
+}
+
+.analyzed-resumes-page::-webkit-scrollbar-track {
+  background: rgba(190, 185, 176, 0.18);
+  border-radius: 999px;
+}
+
+.analyzed-resumes-page::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--red-strong), var(--red));
+  border-radius: 999px;
+  border: 3px solid rgba(255, 255, 255, 0.7);
+}
+
+.analyzed-resumes-page::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #ff5a5a, #d92b2b);
 }
 
 .page-wrap--admin,
@@ -221,6 +256,7 @@ code {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   position: relative;
+  margin-top: 0;
   z-index: 60;
   overflow: visible;
 }
@@ -1145,7 +1181,9 @@ form.is-submitting .btn-spinner {
 
 .table-shell--fit th,
 .table-shell--fit td {
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
+  white-space: nowrap;
 }
 
 .table-shell thead tr {
@@ -1376,10 +1414,6 @@ form.is-submitting .btn-spinner {
 }
 
 @media (max-width: 900px) {
-  .app-topbar {
-    position: relative;
-  }
-
   .app-topbar__inner {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;

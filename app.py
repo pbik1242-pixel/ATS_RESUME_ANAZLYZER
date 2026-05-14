@@ -26,7 +26,6 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 from werkzeug.security import check_password_hash, generate_password_hash
-from werkzeug.utils import secure_filename
 
 from ai_service import get_genai_status, rewrite_bullets
 from config import (
@@ -42,15 +41,23 @@ from config import (
     UPLOAD_DIR,
 )
 from resume_utils import (
+    build_suggestions,
+    build_table_preview,
+    combine_points,
     clean,
+    extract_profile_skills,
     export_docx,
+    build_preview_image_data,
     extract_bullets,
     extract_contact_details,
     extract_keywords,
     extract_tables,
     extract_text,
+    fallback_resume_points,
     formatting_score,
+    filter_skill_terms,
     keyword_score,
+    normalize_upload_name,
     semantic_score,
     tables_to_text,
 )
@@ -117,241 +124,6 @@ app.include_router(auth.router)
 @app.on_event("startup")
 def startup() -> None:
     db_mod.ensure_schema()
-
-
-def normalize_upload_name(filename: str | None) -> tuple[str, str]:
-    raw = str(filename or "").replace("\\", "/").split("/")[-1]
-    safe = secure_filename(raw) or "resume.txt"
-    return safe, Path(safe).suffix.lower()
-
-
-def fallback_resume_points(text: str, limit: int = 12) -> list[str]:
-    src = str(text or "")
-    if not src.strip():
-        return []
-    out: list[str] = []
-    seen: set[str] = set()
-    for raw in src.splitlines():
-        line = re.sub(r"\s+", " ", raw).strip().lstrip("-* ").strip()
-        if 35 <= len(line) <= 260 and line.lower() not in seen:
-            seen.add(line.lower())
-            out.append(line)
-            if len(out) >= limit:
-                return out
-    for part in re.split(r"(?<=[.!?])\s+", clean(src)):
-        part = part.strip()
-        if 35 <= len(part) <= 260 and part.lower() not in seen:
-            seen.add(part.lower())
-            out.append(part)
-            if len(out) >= limit:
-                return out
-    return out[:limit]
-
-
-ACTION_VERBS = (
-    "analyzed", "built", "created", "delivered", "designed", "developed", "drove", "executed",
-    "implemented", "improved", "led", "managed", "optimized", "resolved", "streamlined", "supported",
-    "worked", "owned", "launched", "collaborated", "mentored", "coordinated",
-)
-
-SKILL_LABELS = {
-    "c": "C",
-    "cpp": "C++",
-    "cplus": "C++",
-    "csharp": "C#",
-    "java": "Java",
-    "javascript": "JavaScript",
-    "typescript": "TypeScript",
-    "python": "Python",
-    "ruby": "Ruby",
-    "php": "PHP",
-    "go": "Go",
-    "golang": "Go",
-    "rust": "Rust",
-    "kotlin": "Kotlin",
-    "swift": "Swift",
-    "scala": "Scala",
-    "r": "R",
-    "sql": "SQL",
-    "mysql": "MySQL",
-    "postgresql": "PostgreSQL",
-    "mongodb": "MongoDB",
-    "redis": "Redis",
-    "oracle": "Oracle",
-    "sqlite": "SQLite",
-    "dotnet": ".NET",
-    "net": ".NET",
-    "node": "Node.js",
-    "react": "React",
-    "angular": "Angular",
-    "vue": "Vue",
-    "django": "Django",
-    "flask": "Flask",
-    "fastapi": "FastAPI",
-    "spring": "Spring",
-    "aws": "AWS",
-    "azure": "Azure",
-    "gcp": "GCP",
-    "docker": "Docker",
-    "kubernetes": "Kubernetes",
-    "terraform": "Terraform",
-    "git": "Git",
-    "linux": "Linux",
-    "powershell": "PowerShell",
-    "ssis": "SSIS",
-    "ssrs": "SSRS",
-    "ssms": "SSMS",
-}
-
-SKILL_ALLOWLIST = set(SKILL_LABELS.keys())
-SKILL_PHRASES = {
-    "machine learning": "Machine Learning",
-    "deep learning": "Deep Learning",
-    "data analysis": "Data Analysis",
-    "data analytics": "Data Analytics",
-    "data engineering": "Data Engineering",
-    "data science": "Data Science",
-    "power bi": "Power BI",
-    "tableau": "Tableau",
-    "excel": "Excel",
-    "etl": "ETL",
-    "api": "API",
-    "rest api": "REST API",
-    "microservices": "Microservices",
-    "pandas": "Pandas",
-    "numpy": "NumPy",
-    "scikit learn": "Scikit-learn",
-    "tensorflow": "TensorFlow",
-    "pytorch": "PyTorch",
-    "html": "HTML",
-    "css": "CSS",
-    "bootstrap": "Bootstrap",
-}
-
-
-def _normalize_point(text: str) -> str:
-    cleaned = re.sub(r"\s+", " ", str(text or "").strip())
-    return cleaned.rstrip(";:,. ") + ("" if not cleaned else ".")
-
-
-def combine_points(points: list[str]) -> list[str]:
-    seen: set[str] = set()
-    combined: list[str] = []
-    for raw in points or []:
-        cleaned = _normalize_point(raw)
-        key = cleaned.lower()
-        if len(cleaned) < 8 or key in seen:
-            continue
-        seen.add(key)
-        combined.append(cleaned)
-    return combined
-
-
-def build_suggestions(points: list[str], missing: list[str]) -> list[str]:
-    suggestions: list[str] = []
-    missing_clean = [m.strip() for m in (missing or []) if m and m.strip() and m.strip() != "-"]
-    if missing_clean:
-        suggestions.append(
-            "Add these missing keywords where they are true: "
-            + ", ".join(missing_clean[:8])
-            + ("..." if len(missing_clean) > 8 else "")
-        )
-    if points and any(not re.search(r"\d", p) for p in points):
-        suggestions.append("Quantify impact with numbers (time saved, volume processed, % improvements).")
-    if points and any(len(p) > 170 for p in points):
-        suggestions.append("Shorten long bullets to 1 line and move extra detail into tools or scope lines.")
-    if points and any(not re.match(r"(?i)^(" + "|".join(ACTION_VERBS) + r")\b", p) for p in points):
-        suggestions.append("Start each bullet with a strong action verb to show ownership and outcomes.")
-    if not points:
-        suggestions.append("Add 4-6 focused bullets that describe impact, tools, and measurable results.")
-    return suggestions
-
-
-def _normalize_skill_token(token: str) -> str:
-    key = re.sub(r"[^a-z0-9+.#]", "", token.lower())
-    if key in SKILL_LABELS:
-        return SKILL_LABELS[key]
-    return token.strip()
-
-
-def filter_skill_terms(terms: list[str]) -> list[str]:
-    filtered: list[str] = []
-    seen: set[str] = set()
-    for raw in terms or []:
-        token = str(raw or "").strip()
-        if not token:
-            continue
-        key = re.sub(r"[^a-z0-9+.#]", "", token.lower())
-        # keep experience years like "3 years", "5 yrs", "8+ years"
-        if re.search(r"\b\d+\s*\+?\s*(years?|yrs?)\b", token, re.I):
-            label = re.sub(r"\s+", " ", token)
-        elif key in SKILL_ALLOWLIST:
-            label = _normalize_skill_token(key)
-        else:
-            continue
-        out_key = label.lower()
-        if out_key in seen:
-            continue
-        seen.add(out_key)
-        filtered.append(label)
-    return filtered
-
-
-def extract_profile_skills(text: str, limit: int = 20) -> list[str]:
-    source = str(text or "")
-    if not source.strip():
-        return []
-    lowered = source.lower()
-    found: list[str] = []
-    seen: set[str] = set()
-
-    for phrase, label in SKILL_PHRASES.items():
-        pattern = r"(?<![a-z0-9])" + re.escape(phrase) + r"(?![a-z0-9])"
-        if re.search(pattern, lowered):
-            key = label.lower()
-            if key not in seen:
-                seen.add(key)
-                found.append(label)
-                if len(found) >= limit:
-                    return found
-
-    for raw_key, label in SKILL_LABELS.items():
-        pattern = r"(?<![a-z0-9])" + re.escape(raw_key) + r"(?![a-z0-9])"
-        if re.search(pattern, lowered):
-            key = label.lower()
-            if key not in seen:
-                seen.add(key)
-                found.append(label)
-                if len(found) >= limit:
-                    return found
-
-    return found
-
-
-def build_table_preview(
-    tables: list[list[list[str]]],
-    max_tables: int = 2,
-    max_rows: int = 6,
-    max_cols: int = 6,
-    max_cell_len: int = 80,
-) -> list[list[list[str]]]:
-    preview: list[list[list[str]]] = []
-    for table in tables[:max_tables]:
-        rows: list[list[str]] = []
-        for row in table[:max_rows]:
-            trimmed: list[str] = []
-            for cell in row[:max_cols]:
-                value = (cell or "").strip()
-                if max_cell_len and len(value) > max_cell_len:
-                    value = value[: max_cell_len - 3] + "..."
-                trimmed.append(value)
-            if any(trimmed):
-                rows.append(trimmed)
-        if rows:
-            preview.append(rows)
-    return preview
-
-
 def analyze_resume_text(
     display_name: str,
     raw_resume_text: str,
@@ -379,10 +151,16 @@ def analyze_resume_text(
     score = round((((k_score * 0.5) + (f_score * 0.2)) / 0.7 if s_score is None else (k_score * 0.5 + s_score * 0.3 + f_score * 0.2)) * 100, 1)
     rewritten = rewrite_bullets(bullets, job_text) if include_rewrite else []
     tables = tables or []
+    resume_preview = (raw_resume_text or resume_text).strip()
+    if len(resume_preview) > 1800:
+        resume_preview = resume_preview[:1800].rstrip() + "..."
     return {
         "filename": display_name,
         "ext": ext,
         "score": score,
+        "keyword_score": round(k_score * 100, 1),
+        "semantic_score": round(s_score * 100, 1) if s_score is not None else None,
+        "formatting_score": round(f_score * 100, 1),
         "found": found,
         "missing": missing,
         "found_text": ", ".join(display_found) or "-",
@@ -392,6 +170,7 @@ def analyze_resume_text(
         "job_skills_display": display_job_skills,
         "resume_skills_display": resume_skills,
         "rewritten": rewritten,
+        "resume_preview": resume_preview,
         "skills_csv": ",".join(display_job_skills),
         "job_skills_csv": ",".join(display_job_skills),
         "resume_skills_csv": ",".join(resume_skills),
@@ -414,7 +193,9 @@ async def analyze_uploaded_file(uploaded_file: UploadFile, job_text: str, job_sk
     raw_text = extract_text(path)
     tables = extract_tables(path)
     table_text = tables_to_text(tables)
-    return analyze_resume_text(safe, raw_text, job_text, job_skills, include_rewrite, ext, table_text, tables)
+    result = analyze_resume_text(safe, raw_text, job_text, job_skills, include_rewrite, ext, table_text, tables)
+    result["preview_image"] = build_preview_image_data(path)
+    return result
 
 
 def parse_saved_bullets(raw: str | None) -> list[str]:
@@ -551,7 +332,7 @@ def infer_job_title(job_text: str) -> str:
 
 def is_admin_user(user: sqlite3.Row) -> bool:
     role = str(user["role"] or "").strip().lower()
-    return role == "admin" or str(user["email"] or "").strip().lower() in ADMIN_EMAILS or int(user["id"]) == 1
+    return role == "admin" or str(user["email"] or "").strip().lower() in ADMIN_EMAILS
 
 
 def is_hr_user(user: sqlite3.Row) -> bool:
@@ -614,19 +395,14 @@ def smtp_status_message() -> str:
     return "SMTP settings look complete."
 
 
-def send_interview_selection_email(
-    to_email: str,
+def build_interview_email_draft(
     candidate_name: str,
     interview_date: str,
     contact: str = "",
     notes: str = "",
     recruiter_name: str = "",
-) -> bool:
-    recipient = str(to_email or "").strip()
-    if not recipient or not smtp_configured():
-        return False
-
-    subject = "You have been selected for the interview"
+) -> tuple[str, str]:
+    subject = f"Interview invitation for {candidate_name or 'Candidate'}"
     body_lines = [
         f"Hello {candidate_name or 'Candidate'},",
         "",
@@ -646,12 +422,19 @@ def send_interview_selection_email(
             recruiter_name or (SMTP_FROM or "HR Team"),
         ]
     )
+    return subject, "\n".join(body_lines)
+
+
+def send_email_message(to_email: str, subject: str, body: str) -> bool:
+    recipient = str(to_email or "").strip()
+    if not recipient or not smtp_configured():
+        return False
 
     message = EmailMessage()
     message["Subject"] = subject
     message["From"] = SMTP_FROM
     message["To"] = recipient
-    message.set_content("\n".join(body_lines))
+    message.set_content(body)
 
     try:
         if SMTP_USE_TLS:
@@ -669,6 +452,24 @@ def send_interview_selection_email(
         return True
     except Exception:
         return False
+
+
+def send_interview_selection_email(
+    to_email: str,
+    candidate_name: str,
+    interview_date: str,
+    contact: str = "",
+    notes: str = "",
+    recruiter_name: str = "",
+) -> bool:
+    subject, body = build_interview_email_draft(
+        candidate_name,
+        interview_date,
+        contact=contact,
+        notes=notes,
+        recruiter_name=recruiter_name,
+    )
+    return send_email_message(to_email, subject, body)
 
 @lru_cache(maxsize=1)
 def load_dataset() -> dict[str, Any]:
@@ -824,6 +625,7 @@ def base_context(request: Request, **extra: Any) -> dict[str, Any]:
         "is_logged_in": is_logged_in,
         "is_hr": is_hr,
         "is_admin": is_admin,
+        "show_cookie_banner": False,
         "primary_nav_items": primary_nav_items,
         "profile_menu_items": profile_menu_items,
         "role_label": "HR Organization" if is_hr else ("Administrator" if is_admin else "Candidate"),
@@ -960,7 +762,13 @@ def analyzed_resumes_for(user_id: int) -> list[dict[str, Any]]:
         ).fetchall()
     scores_sorted = sorted({float(row["score"]) for row in rows if row["score"] is not None}, reverse=True)
     payload: list[dict[str, Any]] = []
+    seen_resume_keys: set[str] = set()
     for row in rows:
+        filename_key = clean(str(row["filename"] or "")).lower()
+        resume_key = filename_key or f"history-{int(row['id'])}"
+        if resume_key in seen_resume_keys:
+            continue
+        seen_resume_keys.add(resume_key)
         found_list = _clean_list(row["found"], 4)
         missing_list = _clean_list(row["missing"], 3)
         contact_snapshot = resume_contact_snapshot(row["filename"])
@@ -988,7 +796,7 @@ def analyzed_resumes_for(user_id: int) -> list[dict[str, Any]]:
                 "date": row["date"],
                 "found_preview": ", ".join(found_list) or "-",
                 "missing_preview": ", ".join(missing_list) or "-",
-                "selection_reason": " • ".join(reason_bits),
+                "selection_reason": " | ".join(reason_bits),
                 "candidate_name": candidate_name,
                 "contact": contact_snapshot["contact"],
                 "email": contact_snapshot["email"],
@@ -1021,7 +829,7 @@ def save_interview_entry(
                 """,
                 (candidate_name, contact, email, interview_date, notes, timestamp, int(existing["id"])),
             )
-            return int(existing["id"])
+            entry_id = int(existing["id"])
         else:
             inserted = conn.execute(
                 """
@@ -1030,10 +838,53 @@ def save_interview_entry(
                 """,
                 (user_id, history_id, candidate_name, contact, email, interview_date, notes, timestamp, timestamp),
             )
-            return int(inserted.lastrowid)
+            entry_id = int(inserted.lastrowid)
+
+        conn.execute(
+            "UPDATE resume_history SET candidate_status=? WHERE id=? AND user_id=?",
+            ("interview_scheduled", history_id, user_id),
+        )
+        return entry_id
 
 
-def interview_entries_for(user_id: int) -> list[dict[str, Any]]:
+def update_interview_email(user_id: int, entry_id: int, email: str) -> bool:
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    with db_mod.db() as conn:
+        result = conn.execute(
+            """
+            UPDATE interview_list
+            SET email=?, email_sent_at=NULL, updated_at=?
+            WHERE id=? AND user_id=?
+            """,
+            (email, timestamp, entry_id, user_id),
+        )
+        return result.rowcount > 0
+
+
+def set_resume_candidate_status(user_id: int, history_id: int, status: str) -> None:
+    with db_mod.db() as conn:
+        conn.execute(
+            "UPDATE resume_history SET candidate_status=? WHERE id=? AND user_id=?",
+            (normalize_status(status, "new"), history_id, user_id),
+        )
+
+
+def remove_interview_entry(user_id: int, entry_id: int) -> bool:
+    with db_mod.db() as conn:
+        history_row = conn.execute(
+            "SELECT history_id FROM interview_list WHERE id=? AND user_id=?",
+            (entry_id, user_id),
+        ).fetchone()
+        removed = conn.execute(
+            "DELETE FROM interview_list WHERE id=? AND user_id=?",
+            (entry_id, user_id),
+        ).rowcount
+    if removed and history_row and history_row["history_id"] is not None:
+        set_resume_candidate_status(user_id, int(history_row["history_id"]), "new")
+    return bool(removed)
+
+
+def interview_entries_for(user_id: int, recruiter_name: str = "") -> list[dict[str, Any]]:
     with db_mod.db() as conn:
         rows = conn.execute(
             """
@@ -1060,6 +911,13 @@ def interview_entries_for(user_id: int) -> list[dict[str, Any]]:
             reason_bits.append(f"could improve {', '.join(missing_list)}")
         if not reason_bits:
             reason_bits.append("Selected from your analyzed resumes.")
+        email_subject, email_body = build_interview_email_draft(
+            row["candidate_name"] or "Candidate",
+            row["interview_date"] or "To be confirmed",
+            contact=row["contact"] or "",
+            notes=row["notes"] or "",
+            recruiter_name=recruiter_name,
+        )
         entries.append(
             {
                 "id": int(row["id"]),
@@ -1078,7 +936,9 @@ def interview_entries_for(user_id: int) -> list[dict[str, Any]]:
                 "analyzed_date": row["analyzed_date"] or "-",
                 "found_preview": ", ".join(found_list) or "-",
                 "missing_preview": ", ".join(missing_list) or "-",
-                "selection_reason": " • ".join(reason_bits),
+                "selection_reason": " | ".join(reason_bits),
+                "email_subject": email_subject,
+                "email_body": email_body,
             }
         )
     return entries
@@ -1149,7 +1009,11 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> Respon
 async def home(request: Request) -> Response:
     user = current_user(request)
     if not user:
-        return redirect("/login")
+        return templates.TemplateResponse(
+            request,
+            "landing.html",
+            base_context(request, show_cookie_banner=False),
+        )
     enabled, status_message = get_genai_status()
     return templates.TemplateResponse(
         request,
@@ -1173,7 +1037,7 @@ async def consent_page(request: Request) -> Response:
         return redirect("/login")
     if request.session.get("resume_consent"):
         return redirect("/")
-    return templates.TemplateResponse(request, "consent.html", base_context(request))
+    return templates.TemplateResponse(request, "consent.html", base_context(request, show_cookie_banner=True))
 
 
 @app.post("/consent", response_class=HTMLResponse)
@@ -1254,11 +1118,16 @@ async def analyze_result(
                 skills=result["resume_skills_csv"],
                 job_skills=result["job_skills_csv"],
                 resume_skills=result["resume_skills_display"],
+                keyword_score=result.get("keyword_score"),
+                semantic_score=result.get("semantic_score"),
+                formatting_score=result.get("formatting_score"),
                 history_filename=result["filename"],
                 history_filetype=result["ext"].lstrip(".").upper(),
                 history_id=history_id,
                 table_count=result.get("table_count", 0),
                 table_preview=result.get("table_preview", []),
+                preview_image=result.get("preview_image"),
+                preview_source_url=f"/history/{history_id}/source",
                 genai_enabled=enabled,
                 genai_status_message=status_message,
                 is_hr=is_hr_user(user),
@@ -1320,11 +1189,20 @@ async def open_history_result(request: Request, history_id: int) -> HTMLResponse
     suggestions = build_suggestions(combined_points, display_missing_list)
     table_preview: list[list[list[str]]] = []
     table_count = 0
+    preview_image: str | None = None
+    preview_source_url: str | None = None
     history_path = find_uploaded_resume_path(row["filename"])
+    formatting_score_value: float | None = None
     if history_path:
         tables = extract_tables(history_path)
         table_preview = build_table_preview(tables)
         table_count = len(tables)
+        preview_image = build_preview_image_data(history_path)
+        preview_source_url = f"/history/{history_id}/source"
+        try:
+            formatting_score_value = round(formatting_score(clean(extract_text(history_path))) * 100, 1)
+        except Exception:
+            formatting_score_value = None
     enabled, status_message = get_genai_status()
     return templates.TemplateResponse(
         request,
@@ -1344,10 +1222,15 @@ async def open_history_result(request: Request, history_id: int) -> HTMLResponse
             skills=row["resume_skills"] or row["found"] or "",
             job_skills=row["job_skills"] or row["skills"] or "",
             resume_skills=display_resume_skills,
+            keyword_score=round((len(display_found_list) / max(1, len(display_found_list) + len(display_missing_list))) * 100, 1) if (display_found_list or display_missing_list) else None,
+            semantic_score=None,
+            formatting_score=formatting_score_value,
             history_id=history_id,
             history_filename=row["filename"],
             history_filetype=row["filetype"],
             history_date=row["date"],
+            preview_image=preview_image if history_path else None,
+            preview_source_url=preview_source_url,
             table_preview=table_preview,
             table_count=table_count,
             genai_enabled=enabled,
@@ -1421,6 +1304,52 @@ async def export_resume(history_id: str = Form(""), skills: str = Form(""), bull
     )
 
 
+@app.get("/history/{history_id}/preview")
+async def open_history_preview(request: Request, history_id: int) -> Response:
+    user = require_user(request)
+    row = get_history_row(int(user["id"]), history_id)
+    if not row:
+        raise HTTPException(status_code=404, detail="History record not found.")
+    resume_path = find_uploaded_resume_path(row["filename"])
+    if not resume_path or resume_path.suffix.lower() != ".pdf":
+        raise HTTPException(status_code=404, detail="Preview not available.")
+    return FileResponse(
+        path=str(resume_path),
+        media_type="application/pdf",
+        filename=row["filename"] or "resume.pdf",
+    )
+
+
+@app.get("/history/{history_id}/source")
+async def open_history_source(request: Request, history_id: int) -> Response:
+    user = require_user(request)
+    row = get_history_row(int(user["id"]), history_id)
+    if not row:
+        raise HTTPException(status_code=404, detail="History record not found.")
+    resume_path = find_uploaded_resume_path(row["filename"])
+    if not resume_path:
+        raise HTTPException(status_code=404, detail="Source file not found.")
+
+    filetype = (row["filetype"] or resume_path.suffix.lstrip(".")).upper()
+    if resume_path.suffix.lower() == ".pdf":
+        media_type = "application/pdf"
+    elif resume_path.suffix.lower() == ".docx":
+        media_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    else:
+        media_type = "application/octet-stream"
+
+    headers = {"Content-Disposition": f'inline; filename="{row["filename"] or resume_path.name}"'}
+    if filetype == "DOCX":
+        headers["Content-Disposition"] = f'attachment; filename="{row["filename"] or resume_path.name}"'
+
+    return FileResponse(
+        path=str(resume_path),
+        media_type=media_type,
+        filename=row["filename"] or resume_path.name,
+        headers=headers,
+    )
+
+
 def _export_points_response(history_id: str, bullets_json: str) -> Response:
     rewritten = parse_saved_bullets(bullets_json)
     if not rewritten and history_id.strip().isdigit():
@@ -1487,6 +1416,7 @@ async def profile(request: Request, delete_id: int | None = None, delete_all: in
     user = require_user(request)
     notice = ""
     tone = "success"
+    interview_count = len(interview_entries_for(int(user["id"]))) if (is_hr_user(user) or is_admin_user(user)) else 0
     with db_mod.db() as conn:
         if delete_all:
             deleted = conn.execute("DELETE FROM resume_history WHERE user_id=?", (user["id"],)).rowcount
@@ -1514,6 +1444,7 @@ async def profile(request: Request, delete_id: int | None = None, delete_all: in
             history_groups=build_history_groups(list(history)),
             history_notice=notice,
             history_notice_tone=tone,
+            interviews_left=interview_count,
             is_admin=is_admin_user(user),
         ),
     )
@@ -1666,6 +1597,70 @@ async def send_interview_email(request: Request, entry_id: str = Form("")) -> Re
     return redirect("/interview-list")
 
 
+@app.post("/interview-list/send-custom-email")
+async def send_custom_interview_email(
+    request: Request,
+    entry_id: str = Form(""),
+    subject: str = Form(""),
+    body: str = Form(""),
+) -> Response:
+    user = require_hr(request)
+    entry_id = entry_id.strip()
+    subject = subject.strip()
+    body = body.strip()
+    if not entry_id.isdigit():
+        request.session["flash_message"] = "Invalid interview entry."
+        request.session["flash_tone"] = "error"
+        return redirect("/interview-list")
+    if not subject:
+        request.session["flash_message"] = "Please enter an email subject."
+        request.session["flash_tone"] = "error"
+        return redirect("/interview-list")
+    if not body:
+        request.session["flash_message"] = "Please enter an email message."
+        request.session["flash_tone"] = "error"
+        return redirect("/interview-list")
+
+    with db_mod.db() as conn:
+        entry = conn.execute(
+            """
+            SELECT il.id, il.candidate_name, il.contact, il.email, il.interview_date, il.notes,
+                   il.email_sent_at
+            FROM interview_list il
+            WHERE il.id=? AND il.user_id=?
+            """,
+            (int(entry_id), int(user["id"])),
+        ).fetchone()
+
+    if not entry:
+        request.session["flash_message"] = "Interview entry not found."
+        request.session["flash_tone"] = "error"
+        return redirect("/interview-list")
+    if not entry["email"]:
+        request.session["flash_message"] = "No email address is saved for this candidate."
+        request.session["flash_tone"] = "error"
+        return redirect("/interview-list")
+
+    sent = send_email_message(entry["email"], subject, body)
+    if sent:
+        with db_mod.db() as conn:
+            conn.execute(
+                "UPDATE interview_list SET email_sent_at=?, updated_at=? WHERE id=? AND user_id=?",
+                (
+                    datetime.now().strftime("%Y-%m-%d %H:%M"),
+                    datetime.now().strftime("%Y-%m-%d %H:%M"),
+                    int(entry["id"]),
+                    int(user["id"]),
+                ),
+            )
+        request.session["flash_message"] = f"Edited email sent to {entry['candidate_name'] or 'Candidate'}."
+        request.session["flash_tone"] = "success"
+    else:
+        request.session["flash_message"] = f"Email could not be sent. {smtp_status_message()}"
+        request.session["flash_tone"] = "error"
+    return redirect("/interview-list")
+
+
 @app.post("/interview-list/update-date")
 async def update_interview_date(request: Request, entry_id: str = Form(""), interview_date: str = Form("")) -> Response:
     user = require_hr(request)
@@ -1702,14 +1697,40 @@ async def update_interview_date(request: Request, entry_id: str = Form(""), inte
     return redirect("/interview-list")
 
 
+@app.post("/interview-list/update-email")
+async def update_interview_email_route(request: Request, entry_id: str = Form(""), email: str = Form("")) -> Response:
+    user = require_hr(request)
+    entry_id = entry_id.strip()
+    email = email.strip()
+    if not entry_id.isdigit():
+        request.session["flash_message"] = "Invalid interview entry."
+        request.session["flash_tone"] = "error"
+        return redirect("/interview-list")
+    if not email:
+        request.session["flash_message"] = "Please enter an email address."
+        request.session["flash_tone"] = "error"
+        return redirect("/interview-list")
+    if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
+        request.session["flash_message"] = "Please enter a valid email address."
+        request.session["flash_tone"] = "error"
+        return redirect("/interview-list")
+    updated = update_interview_email(int(user["id"]), int(entry_id), email)
+    if updated:
+        request.session["flash_message"] = "Email updated."
+        request.session["flash_tone"] = "success"
+    else:
+        request.session["flash_message"] = "Interview entry not found."
+        request.session["flash_tone"] = "error"
+    return redirect("/interview-list")
+
+
 @app.get("/interview-list", response_class=HTMLResponse)
 async def interview_list_page(request: Request, delete_id: int | None = None) -> Response:
     user = require_hr(request)
     notice = request.session.pop("flash_message", "")
     tone = request.session.pop("flash_tone", "success")
     if delete_id:
-        with db_mod.db() as conn:
-            removed = conn.execute("DELETE FROM interview_list WHERE id=? AND user_id=?", (delete_id, user["id"])).rowcount
+        removed = remove_interview_entry(int(user["id"]), int(delete_id))
         request.session["flash_message"] = "Interview entry removed." if removed else "Entry not found."
         request.session["flash_tone"] = "success" if removed else "error"
         return redirect("/interview-list")
@@ -1718,7 +1739,7 @@ async def interview_list_page(request: Request, delete_id: int | None = None) ->
         "interview_list.html",
         base_context(
             request,
-            interviews=interview_entries_for(int(user["id"])),
+            interviews=interview_entries_for(int(user["id"]), recruiter_name=str(user["name"] or "")),
             notice=notice,
             notice_tone=tone,
             today=datetime.now().strftime("%Y-%m-%d"),
@@ -1763,26 +1784,6 @@ async def admin_dashboard(request: Request) -> HTMLResponse:
             recent_logins=recent,
         ),
     )
-
-
-@app.get("/hr/dashboard", response_class=HTMLResponse)
-async def hr_dashboard(request: Request) -> HTMLResponse:
-    user = require_hr(request)
-    steps = [
-        "Create Job - paste JD or upload PDF.",
-        "Upload Resumes (single or bulk).",
-        "ATS Engine scores + extracts tables.",
-        "Rank / filter by score, tables, missing skills.",
-        "Shortlist, reject, and add notes per candidate.",
-        "Export shortlist as CSV or improved bullets as TXT/DOCX.",
-    ]
-    html = """<html><head><title>HR Dashboard</title></head><body>
-    <h2>Welcome, {name} (HR)</h2>
-    <p>Use the standard upload page to run the ATS engine, or integrate via the API token.</p>
-    <ol>{steps}</ol>
-    <p><a href="/about">Back to app</a></p>
-    </body></html>""".format(name=user["name"] or "HR", steps="".join(f"<li>{s}</li>" for s in steps))
-    return HTMLResponse(content=html)
 
 
 @app.get("/api-token", response_class=HTMLResponse)

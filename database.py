@@ -20,6 +20,11 @@ def db() -> sqlite3.Connection:
     return conn
 
 
+def _normalize_role(role: str | None) -> str:
+    value = str(role or "").strip().lower()
+    return value if value in {"candidate", "hr"} else "candidate"
+
+
 def _add_column_if_missing(conn: sqlite3.Connection, table: str, column: str, type_def: str) -> None:
     cols = {row["name"] for row in conn.execute(f"PRAGMA table_info({table})").fetchall()}
     if column not in cols:
@@ -54,28 +59,43 @@ def ensure_schema() -> None:
         ):
             _add_column_if_missing(conn, "resume_history", name, "TEXT")
 
-        for name in (
-            "candidate_name",
-            "contact",
-            "email",
-            "interview_date",
-            "notes",
-            "status",
-            "email_sent_at",
-            "created_at",
-            "updated_at",
-            "history_id",
-            "user_id",
+        for name, dtype in (
+            ("candidate_name", "TEXT"),
+            ("contact", "TEXT"),
+            ("email", "TEXT"),
+            ("interview_date", "TEXT"),
+            ("notes", "TEXT"),
+            ("status", "TEXT"),
+            ("email_sent_at", "TEXT"),
+            ("created_at", "TEXT"),
+            ("updated_at", "TEXT"),
+            ("history_id", "INTEGER"),
+            ("user_id", "INTEGER"),
         ):
-            _add_column_if_missing(conn, "interview_list", name, "TEXT")
+            _add_column_if_missing(conn, "interview_list", name, dtype)
 
         for name in ("created_at", "updated_at"):
             _add_column_if_missing(conn, "job_descriptions", name, "TEXT")
 
-        for name in ("login_time", "ip_address", "user_agent"):
-            _add_column_if_missing(conn, "login_history", name, "TEXT")
+        for name, dtype in (
+            ("login_time", "TEXT"),
+            ("ip_address", "TEXT"),
+            ("user_agent", "TEXT"),
+            ("user_id", "INTEGER"),
+        ):
+            _add_column_if_missing(conn, "login_history", name, dtype)
 
         conn.execute("UPDATE users SET session_version=COALESCE(session_version, 0)")
+        conn.execute(
+            """
+            UPDATE users
+            SET role = CASE
+                WHEN LOWER(TRIM(role)) = 'hr' THEN 'hr'
+                WHEN LOWER(TRIM(role)) = 'admin' THEN 'admin'
+                ELSE 'candidate'
+            END
+            """
+        )
         conn.execute("UPDATE resume_history SET candidate_status='new' WHERE candidate_status IS NULL OR TRIM(candidate_status)=''")
         conn.execute("UPDATE interview_list SET status='interview_scheduled' WHERE status IS NULL OR TRIM(status)=''")
 
@@ -98,7 +118,7 @@ def register_user(name: str, email: str, password: str, confirm_password: str, r
     if len(password) < 8:
         return False, "Password must be at least 8 characters."
 
-    role = role.strip().lower() or "candidate"
+    role = _normalize_role(role)
     try:
         with db() as conn:
             conn.execute(
@@ -124,7 +144,7 @@ def ensure_google_user(email: str, name: str, role: str = "candidate") -> sqlite
     if not email:
         return None
 
-    safe_role = role.strip().lower() or "candidate"
+    safe_role = _normalize_role(role)
     display_name = name.strip() or email.split("@", 1)[0]
     with db() as conn:
         user = conn.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()

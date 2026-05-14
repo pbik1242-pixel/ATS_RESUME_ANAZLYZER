@@ -1,3 +1,5 @@
+import base64
+import io
 import os
 import re
 import uuid
@@ -7,13 +9,18 @@ import pdfplumber
 from docx import Document
 from docx.shared import Pt, RGBColor
 
-# Optional OCR imports (only used if available)
+# Optional OCR / PDF-to-image imports (only used if available)
+try:
+    from pdf2image import convert_from_path
+except Exception:
+    convert_from_path = None
+
 try:
     import pytesseract
-    from pdf2image import convert_from_path
     _HAS_OCR = True
 except Exception:
     _HAS_OCR = False
+_HAS_PDF_PREVIEW = convert_from_path is not None
 
 
 _EMBED = None
@@ -131,7 +138,18 @@ def extract_text(path: Path) -> str:
 def _clean_cell(value: str | None) -> str:
     if value is None:
         return ""
-    return re.sub(r"\s+", " ", str(value)).strip()
+    text = re.sub(r"\s+", " ", str(value)).strip()
+    parts = text.split()
+    if (
+        len(parts) >= 2
+        and all(part.isalnum() for part in parts)
+        and (
+            (len(parts) == 2 and (len(parts[0]) > 4 or len(parts[1]) <= 3))
+            or (len(parts) == 3 and any(len(part) <= 2 for part in parts))
+        )
+    ):
+        text = "".join(parts)
+    return text
 
 
 def _table_rows_from_pdf(path: Path) -> list[list[list[str]]]:
@@ -176,11 +194,30 @@ def extract_tables(path: Path) -> list[list[list[str]]]:
         return []
 
 
+def build_preview_image_data(path: Path) -> str | None:
+    try:
+        if path.suffix.lower() != ".pdf" or not _HAS_PDF_PREVIEW:
+            return None
+        pages = convert_from_path(str(path), first_page=1, last_page=1, dpi=180)
+        if not pages:
+            return None
+        buffer = io.BytesIO()
+        pages[0].save(buffer, format="PNG")
+        encoded = base64.b64encode(buffer.getvalue()).decode("ascii")
+        return f"data:image/png;base64,{encoded}"
+    except Exception:
+        return None
+
+
 def tables_to_text(tables: list[list[list[str]]]) -> str:
     lines: list[str] = []
     for table in tables:
         for row in table:
-            cleaned = [c for c in row if c]
+            cleaned = []
+            for cell in row:
+                value = _clean_cell(cell)
+                if value:
+                    cleaned.append(value)
             if cleaned:
                 lines.append(" | ".join(cleaned))
     return "\n".join(lines)
@@ -188,6 +225,242 @@ def tables_to_text(tables: list[list[list[str]]]) -> str:
 
 def clean(text):
     return re.sub(r"\s+", " ", text).strip()
+
+
+def normalize_upload_name(filename: str | None) -> tuple[str, str]:
+    raw = str(filename or "").replace("\\", "/").split("/")[-1]
+    safe = re.sub(r"[^A-Za-z0-9_.-]+", "_", raw).strip("._")
+    safe = safe or "resume.txt"
+    return safe, Path(safe).suffix.lower()
+
+
+def fallback_resume_points(text: str, limit: int = 12) -> list[str]:
+    src = str(text or "")
+    if not src.strip():
+        return []
+    out: list[str] = []
+    seen: set[str] = set()
+    for raw in src.splitlines():
+        line = re.sub(r"\s+", " ", raw).strip().lstrip("-* ").strip()
+        if 35 <= len(line) <= 260 and line.lower() not in seen:
+            seen.add(line.lower())
+            out.append(line)
+            if len(out) >= limit:
+                return out
+    for part in re.split(r"(?<=[.!?])\s+", clean(src)):
+        part = part.strip()
+        if 35 <= len(part) <= 260 and part.lower() not in seen:
+            seen.add(part.lower())
+            out.append(part)
+            if len(out) >= limit:
+                return out
+    return out[:limit]
+
+
+ACTION_VERBS = (
+    "analyzed", "built", "created", "delivered", "designed", "developed", "drove", "executed",
+    "implemented", "improved", "led", "managed", "optimized", "resolved", "streamlined", "supported",
+    "worked", "owned", "launched", "collaborated", "mentored", "coordinated",
+)
+
+
+def _normalize_point(text: str) -> str:
+    cleaned = re.sub(r"\s+", " ", str(text or "").strip())
+    return cleaned.rstrip(";:,. ") + ("" if not cleaned else ".")
+
+
+def combine_points(points: list[str]) -> list[str]:
+    seen: set[str] = set()
+    combined: list[str] = []
+    for raw in points or []:
+        cleaned = _normalize_point(raw)
+        key = cleaned.lower()
+        if len(cleaned) < 8 or key in seen:
+            continue
+        seen.add(key)
+        combined.append(cleaned)
+    return combined
+
+
+def build_suggestions(points: list[str], missing: list[str]) -> list[str]:
+    suggestions: list[str] = []
+    missing_clean = [m.strip() for m in (missing or []) if m and m.strip() and m.strip() != "-"]
+    if missing_clean:
+        suggestions.append(
+            "Add these missing keywords where they are true: "
+            + ", ".join(missing_clean[:8])
+            + ("..." if len(missing_clean) > 8 else "")
+        )
+    if points and any(not re.search(r"\d", p) for p in points):
+        suggestions.append("Quantify impact with numbers (time saved, volume processed, % improvements).")
+    if points and any(len(p) > 170 for p in points):
+        suggestions.append("Shorten long bullets to 1 line and move extra detail into tools or scope lines.")
+    if points and any(not re.match(r"(?i)^(" + "|".join(ACTION_VERBS) + r")\b", p) for p in points):
+        suggestions.append("Start each bullet with a strong action verb to show ownership and outcomes.")
+    if not points:
+        suggestions.append("Add 4-6 focused bullets that describe impact, tools, and measurable results.")
+    return suggestions
+
+
+SKILL_LABELS = {
+    "c": "C",
+    "cpp": "C++",
+    "cplus": "C++",
+    "csharp": "C#",
+    "java": "Java",
+    "javascript": "JavaScript",
+    "typescript": "TypeScript",
+    "python": "Python",
+    "ruby": "Ruby",
+    "php": "PHP",
+    "go": "Go",
+    "golang": "Go",
+    "rust": "Rust",
+    "kotlin": "Kotlin",
+    "swift": "Swift",
+    "scala": "Scala",
+    "r": "R",
+    "sql": "SQL",
+    "mysql": "MySQL",
+    "postgresql": "PostgreSQL",
+    "mongodb": "MongoDB",
+    "redis": "Redis",
+    "oracle": "Oracle",
+    "sqlite": "SQLite",
+    "dotnet": ".NET",
+    "net": ".NET",
+    "node": "Node.js",
+    "react": "React",
+    "angular": "Angular",
+    "vue": "Vue",
+    "django": "Django",
+    "flask": "Flask",
+    "fastapi": "FastAPI",
+    "spring": "Spring",
+    "aws": "AWS",
+    "azure": "Azure",
+    "gcp": "GCP",
+    "docker": "Docker",
+    "kubernetes": "Kubernetes",
+    "terraform": "Terraform",
+    "git": "Git",
+    "linux": "Linux",
+    "powershell": "PowerShell",
+    "ssis": "SSIS",
+    "ssrs": "SSRS",
+    "ssms": "SSMS",
+}
+
+
+SKILL_ALLOWLIST = set(SKILL_LABELS.keys())
+SKILL_PHRASES = {
+    "machine learning": "Machine Learning",
+    "deep learning": "Deep Learning",
+    "data analysis": "Data Analysis",
+    "data analytics": "Data Analytics",
+    "data engineering": "Data Engineering",
+    "data science": "Data Science",
+    "power bi": "Power BI",
+    "tableau": "Tableau",
+    "excel": "Excel",
+    "etl": "ETL",
+    "api": "API",
+    "rest api": "REST API",
+    "microservices": "Microservices",
+    "pandas": "Pandas",
+    "numpy": "NumPy",
+    "scikit learn": "Scikit-learn",
+    "tensorflow": "TensorFlow",
+    "pytorch": "PyTorch",
+    "html": "HTML",
+    "css": "CSS",
+    "bootstrap": "Bootstrap",
+}
+
+
+def _normalize_skill_token(token: str) -> str:
+    key = re.sub(r"[^a-z0-9+.#]", "", token.lower())
+    if key in SKILL_LABELS:
+        return SKILL_LABELS[key]
+    return token.strip()
+
+
+def filter_skill_terms(terms: list[str]) -> list[str]:
+    filtered: list[str] = []
+    seen: set[str] = set()
+    for raw in terms or []:
+        token = str(raw or "").strip()
+        if not token:
+            continue
+        key = re.sub(r"[^a-z0-9+.#]", "", token.lower())
+        # keep experience years like "3 years", "5 yrs", "8+ years"
+        if re.search(r"\b\d+\s*\+?\s*(years?|yrs?)\b", token, re.I):
+            label = re.sub(r"\s+", " ", token)
+        elif key in SKILL_ALLOWLIST:
+            label = _normalize_skill_token(key)
+        else:
+            continue
+        out_key = label.lower()
+        if out_key in seen:
+            continue
+        seen.add(out_key)
+        filtered.append(label)
+    return filtered
+
+
+def extract_profile_skills(text: str, limit: int = 20) -> list[str]:
+    source = str(text or "")
+    if not source.strip():
+        return []
+    lowered = source.lower()
+    found: list[str] = []
+    seen: set[str] = set()
+
+    for phrase, label in SKILL_PHRASES.items():
+        pattern = r"(?<![a-z0-9])" + re.escape(phrase) + r"(?![a-z0-9])"
+        if re.search(pattern, lowered):
+            key = label.lower()
+            if key not in seen:
+                seen.add(key)
+                found.append(label)
+                if len(found) >= limit:
+                    return found
+
+    for raw_key, label in SKILL_LABELS.items():
+        pattern = r"(?<![a-z0-9])" + re.escape(raw_key) + r"(?![a-z0-9])"
+        if re.search(pattern, lowered):
+            key = label.lower()
+            if key not in seen:
+                seen.add(key)
+                found.append(label)
+                if len(found) >= limit:
+                    return found
+
+    return found
+
+
+def build_table_preview(
+    tables: list[list[list[str]]],
+    max_tables: int = 2,
+    max_rows: int = 6,
+    max_cols: int = 6,
+    max_cell_len: int = 80,
+) -> list[list[list[str]]]:
+    preview: list[list[list[str]]] = []
+    for table in tables[:max_tables]:
+        rows: list[list[str]] = []
+        for row in table[:max_rows]:
+            trimmed: list[str] = []
+            for cell in row[:max_cols]:
+                value = (cell or "").strip()
+                if max_cell_len and len(value) > max_cell_len:
+                    value = value[: max_cell_len - 3] + "..."
+                trimmed.append(value)
+            if any(trimmed):
+                rows.append(trimmed)
+        if rows:
+            preview.append(rows)
+    return preview
 
 
 

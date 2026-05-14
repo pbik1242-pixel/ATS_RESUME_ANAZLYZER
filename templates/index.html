@@ -9,6 +9,162 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>{% include "_theme.css" %}</style>
   <style>{% include "theme.css" %}</style>
+  <style>
+    :root {
+      --land-text: var(--ink);
+      --land-text-soft: var(--ink-soft);
+      --land-muted: var(--muted);
+      --land-border: var(--border);
+      --land-border-strong: var(--border-strong);
+      --land-accent: var(--red);
+      --land-accent-weak: var(--red-pale);
+    }
+
+    .landing-footer {
+      margin-top: 1rem;
+      padding: 1.9rem 0 1.25rem;
+      color: var(--land-text-soft);
+      width: 100%;
+    }
+
+    .landing-footer__grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: clamp(0.85rem, 1.25vw, 1.45rem);
+      align-items: start;
+    }
+
+    .landing-footer__brand {
+      display: grid;
+      gap: 0.85rem;
+      align-content: start;
+      max-width: none;
+      grid-column: span 4;
+    }
+
+    .landing-footer__brand-name {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 1.75rem;
+      letter-spacing: 0.08em;
+      color: var(--land-text);
+    }
+
+    .landing-footer__brand-mark {
+      display: inline-grid;
+      place-items: center;
+      width: 1.65rem;
+      height: 1.65rem;
+      border-radius: 0.5rem;
+      background: var(--land-accent);
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+    }
+
+    .landing-footer__brand p {
+      margin: 0;
+      line-height: 1.8;
+      font-size: 0.97rem;
+    }
+
+    .landing-footer__column {
+      display: grid;
+      gap: 0.8rem;
+      min-width: 0;
+      grid-column: span 2;
+    }
+
+    .landing-footer__title {
+      margin: 0;
+      font-size: 0.92rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--land-accent);
+    }
+
+    .landing-footer__links {
+      display: grid;
+      gap: 0.7rem;
+    }
+
+    .landing-footer__links a {
+      width: fit-content;
+      color: var(--land-muted);
+      text-decoration: none;
+      transition: color 0.18s ease, transform 0.18s ease;
+      font-weight: 500;
+    }
+
+    .landing-footer__links span {
+      width: fit-content;
+      color: var(--land-muted);
+      font-weight: 500;
+    }
+
+    .landing-footer__links a:hover {
+      color: var(--land-text);
+      transform: translateX(2px);
+    }
+
+    .landing-footer__bottom {
+      margin-top: 2rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--land-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      color: var(--land-muted);
+      font-size: 0.92rem;
+    }
+
+    .landing-footer__meta {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      flex-wrap: wrap;
+    }
+
+    .landing-footer__chips {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      flex-wrap: wrap;
+    }
+
+    .landing-footer__chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.42rem 0.72rem;
+      border: 1px solid var(--land-border);
+      border-radius: 999px;
+      color: var(--land-text);
+      background: rgba(255, 255, 255, 0.66);
+      font-weight: 600;
+    }
+
+    @media (max-width: 980px) {
+      .landing-footer__grid {
+        grid-template-columns: 1fr;
+      }
+
+      .landing-footer__brand,
+      .landing-footer__column {
+        grid-column: auto;
+      }
+
+      .landing-footer__bottom {
+        align-items: flex-start;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="scroll-bar" id="scrollBar"></div>
@@ -17,14 +173,13 @@
   {% include "_app_topbar.html" %}
 
   <section class="hero">
-    <div class="hero-brow">AI-Powered · Python · ATS RESUME ANALYZER</div>
+    <div class="hero-brow">AI-Powered - Python - ATS RESUME ANALYZER</div>
     <h1 class="hero-title">BEAT<br>THE <span>ATS</span></h1>
     <div class="hero-sub">Land Your Interview</div>
     <p class="hero-desc">This home page now uses your ATS RESUME ANALYZER style while keeping the real app workflow: paste the job description, upload one resume or a full folder, and continue into the existing result page.</p>
-    <div class="hero-status">{% if genai_enabled %}Gen AI active · {{ genai_status_message }}{% else %}Gen AI unavailable · {{ genai_status_message }}{% endif %}</div>
+    <div class="hero-status">{% if genai_enabled %}Gen AI active - {{ genai_status_message }}{% else %}Gen AI unavailable - {{ genai_status_message }}{% endif %}</div>
     <div class="hero-cta">
-      <button class="btn dark" type="button" onclick="scrollToAnalyzer()"><span>Start Analyzing</span><span>→</span></button>
-      <a class="btn outline" href="/profile">View Profile</a>
+      <button class="btn dark" type="button" onclick="scrollToAnalyzer()"><span>Start Analyzing</span><span>-></span></button>
     </div>
   </section>
 
@@ -87,12 +242,12 @@
             <input id="folder-name-input" type="hidden" name="folder_name" value="">
             <input id="resume-input" type="file" name="resume" accept=".pdf,.docx,.txt" aria-label="Resume file upload">
             <input id="folder-input" type="file" name="resumes" accept=".pdf,.docx,.txt" webkitdirectory directory multiple class="hidden" aria-label="Folder resume upload">
-            <div class="drop-icon" id="uploadIcon">↑</div>
+            <div class="drop-icon" id="uploadIcon">^</div>
             <div class="drop-title" id="uploadTitle">Drop a resume file here</div>
             <div class="drop-sub" id="uploadHelp">Click to browse or drag one supported file.</div>
           </div>
-          <div class="file-pill" id="filePill"><span>✓</span><span id="fileName">No file selected</span></div>
-          <div class="line"><span class="micro" id="selectionSummary">Waiting for upload</span><span class="micro">PDF · DOCX · TXT</span></div>
+          <div class="file-pill" id="filePill"><span>OK</span><span id="fileName">No file selected</span></div>
+          <div class="line"><span class="micro" id="selectionSummary">Waiting for upload</span><span class="micro">PDF - DOCX - TXT</span></div>
         </div>
       </div>
 
@@ -132,15 +287,81 @@
     </section>
   </form>
 
-  <footer>
-    <div class="footer">ATS RESUME ANALYZER © 2026 - ATS RESUME ANALYZER</div>
-    <div class="footer"><div class="footer-dot"></div>LIVE · FASTAPI + AI RESUME WORKFLOW</div>
+  <footer class="landing-footer">
+    <div class="landing-footer__grid">
+      <div class="landing-footer__brand">
+        <div class="landing-footer__brand-name">
+          <span class="landing-footer__brand-mark">IQ</span>
+          ATS RESUME ANALYZER
+        </div>
+        <p>
+          Clear resume-to-job feedback with ATS score, keyword coverage, missing skills, readability signals, and a guided
+          path to improvement.
+        </p>
+      </div>
+
+      <div class="landing-footer__column">
+        <h3 class="landing-footer__title">Platform</h3>
+        <div class="landing-footer__links">
+          <a href="/login">Login to Start</a>
+          <a href="#analyzer">How it works</a>
+          <a href="#analyzer">Core features</a>
+          <a href="#resume-form">Final CTA</a>
+        </div>
+      </div>
+
+      <div class="landing-footer__column">
+        <h3 class="landing-footer__title">ATS Resume</h3>
+        <div class="landing-footer__links">
+          <a href="/result">What this website is about</a>
+          <a href="/result">Why users trust it</a>
+          <a href="/result">Proof and stats</a>
+          <span>ATS score overview</span>
+          <span>Keyword match and missing skills</span>
+          <span>Readability signals</span>
+        </div>
+      </div>
+
+      <div class="landing-footer__column">
+        <h3 class="landing-footer__title">Support</h3>
+        <div class="landing-footer__links">
+          <a href="/about">About</a>
+          <span>Privacy</span>
+          <span>Terms</span>
+          <span>Cookie Policy</span>
+          <span>Help</span>
+        </div>
+      </div>
+
+      <div class="landing-footer__column">
+        <h3 class="landing-footer__title">Company</h3>
+        <div class="landing-footer__links">
+          <a href="/login">Login to Start</a>
+          <a href="/result">What this website is about</a>
+          <a href="/about">Why users trust it</a>
+          <a href="/result">Proof and stats</a>
+          <span>ATS Resume Analyzer</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="landing-footer__bottom">
+      <div class="landing-footer__meta">
+        <span>ATS Resume Analyzer</span>
+        <span>Resume Match Intelligence</span>
+      </div>
+      <div class="landing-footer__chips">
+        <span class="landing-footer__chip">Clear feedback</span>
+        <span class="landing-footer__chip">Guided workflow</span>
+        <span class="landing-footer__chip">Fast review</span>
+      </div>
+    </div>
   </footer>
 
   <script>
     window.addEventListener("scroll",()=>{const full=document.body.scrollHeight-window.innerHeight,progress=full>0?window.scrollY/full*100:0;document.getElementById("scrollBar").style.width=progress+"%"});
     (function(){const c=document.getElementById("floaters"),p=[[8,18],[88,12],[14,65],[92,55],[45,80],[72,30],[25,90],[60,10],[80,75],[35,45]];p.forEach(([x,y],i)=>{const el=document.createElement("div");el.className="floater";const s=[8,6,10,5,12,4,8,6,10,5][i];el.style.cssText=`left:${x}%;top:${y}%;width:${s}px;height:${s}px;animation-duration:${4+i*.7}s;animation-delay:${i*-.8}s;`;c.appendChild(el)})})();
-    ["ATS SCORING","KEYWORD ANALYSIS","SINGLE RESUME MODE","BULK FOLDER MODE","PDF DOCX TXT","FASTAPI BACKEND","RECENT HISTORY","INSTANT RESULTS"].concat(["ATS SCORING","KEYWORD ANALYSIS","SINGLE RESUME MODE","BULK FOLDER MODE","PDF DOCX TXT","FASTAPI BACKEND","RECENT HISTORY","INSTANT RESULTS"]).forEach(item=>{document.getElementById("marquee").innerHTML+=`<div class="marquee-item"><span class="dot"></span>${item}</div>`});
+    ["ATS SCORING","BULLET REWRITING","SKILL GAP ANALYSIS","FORMATTING CHECK","SEMANTIC SCORING","BULK ANALYSIS","INTERVIEW PIPELINE","DOCX EXPORT"].concat(["ATS SCORING","BULLET REWRITING","SKILL GAP ANALYSIS","FORMATTING CHECK","SEMANTIC SCORING","BULK ANALYSIS","INTERVIEW PIPELINE","DOCX EXPORT"]).forEach(item=>{document.getElementById("marquee").innerHTML+=`<div class="marquee-item"><span class="dot"></span>${item}</div>`});
     function scrollToAnalyzer(){document.getElementById("analyzer").scrollIntoView({behavior:"smooth"})}
     function updateCount(id,out){const el=document.getElementById(id);document.getElementById(out).textContent=el.value.length+" chars"}
     (function(){
@@ -169,10 +390,10 @@
         templateNote.textContent="Template loaded. Edit the text to match the real job description.";
       }
       function stop(){if(timer){window.clearInterval(timer);timer=null}}
-      function refreshSelection(){if(mode==="bulk"){const list=folderInput.files?[...folderInput.files]:[];if(list.length){filePill.classList.add("show");fileName.textContent=list.length+" files selected";selectionSummary.textContent=(folderNameInput.value||"Folder upload")+" · "+list.length+" resume files"}else{filePill.classList.remove("show");selectionSummary.textContent="Waiting for folder upload"}return}const file=resumeInput.files&&resumeInput.files[0];if(file){filePill.classList.add("show");fileName.textContent=file.name;selectionSummary.textContent="Single resume ready"}else{filePill.classList.remove("show");selectionSummary.textContent="Waiting for upload"}}
-      function setMode(next){mode=canBulk&&next==="bulk"?"bulk":"single";uploadModeInput.value=mode;tabs.forEach(tab=>{const active=tab.dataset.mode===mode;tab.classList.toggle("active",active);tab.setAttribute("aria-pressed",active?"true":"false")});if(mode==="bulk"){uploadTitle.textContent="Drop a folder or multiple resumes here";uploadHelp.textContent="Bulk mode analyzes every supported file in the selected folder.";uploadIcon.textContent="⇅"}else{uploadTitle.textContent="Drop a resume file here";uploadHelp.textContent=canBulk?"Click to browse or drag one supported file.":"Click to browse or drag one supported file.";uploadIcon.textContent="↑";folderNameInput.value=""}refreshSelection()}
-      function showLoading(){loading.style.display="flex";loadingTrack.innerHTML="";steps.forEach(([icon,text],i)=>{const el=document.createElement("div");el.className="step";el.innerHTML=`<span>${icon}</span><span>${text}</span>`;loadingTrack.appendChild(el);setTimeout(()=>el.classList.add("visible","active"),i*220);setTimeout(()=>{el.classList.remove("active");el.classList.add("done");el.firstChild.textContent="✓"},i*220+520)})}
-      function startProgress(total){let n=0;stop();timer=window.setInterval(()=>{n=Math.min(94,n+(mode==="bulk"?12:18));loadingProgressBar.style.width=n+"%";loadingNote.textContent=mode==="bulk"?"Processing folder upload · "+total+" resumes detected":"Processing single resume upload...";if(n>=94)stop()},320)}
+      function refreshSelection(){if(mode==="bulk"){const list=folderInput.files?[...folderInput.files]:[];if(list.length){filePill.classList.add("show");fileName.textContent=list.length+" files selected";selectionSummary.textContent=(folderNameInput.value||"Folder upload")+" - "+list.length+" resume files"}else{filePill.classList.remove("show");selectionSummary.textContent="Waiting for folder upload"}return}const file=resumeInput.files&&resumeInput.files[0];if(file){filePill.classList.add("show");fileName.textContent=file.name;selectionSummary.textContent="Single resume ready"}else{filePill.classList.remove("show");selectionSummary.textContent="Waiting for upload"}}
+      function setMode(next){mode=canBulk&&next==="bulk"?"bulk":"single";uploadModeInput.value=mode;tabs.forEach(tab=>{const active=tab.dataset.mode===mode;tab.classList.toggle("active",active);tab.setAttribute("aria-pressed",active?"true":"false")});if(mode==="bulk"){uploadTitle.textContent="Drop a folder or multiple resumes here";uploadHelp.textContent="Bulk mode analyzes every supported file in the selected folder.";uploadIcon.textContent="BULK";folderNameInput.value=""}refreshSelection()}
+      function showLoading(){loading.style.display="flex";loadingTrack.innerHTML="";steps.forEach(([icon,text],i)=>{const el=document.createElement("div");el.className="step";el.innerHTML=`<span>${icon}</span><span>${text}</span>`;loadingTrack.appendChild(el);setTimeout(()=>el.classList.add("visible","active"),i*220);setTimeout(()=>{el.classList.remove("active");el.classList.add("done");el.firstChild.textContent="OK"},i*220+520)})}
+      function startProgress(total){let n=0;stop();timer=window.setInterval(()=>{n=Math.min(94,n+(mode==="bulk"?12:18));loadingProgressBar.style.width=n+"%";loadingNote.textContent=mode==="bulk"?"Processing folder upload - "+total+" resumes detected":"Processing single resume upload...";if(n>=94)stop()},320)}
       tabs.forEach(tab=>tab.addEventListener("click",()=>setMode(tab.dataset.mode)));
       dropZone.addEventListener("click",()=>canBulk&&mode==="bulk"?folderInput.click():resumeInput.click());
       dropZone.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();canBulk&&mode==="bulk"?folderInput.click():resumeInput.click()}});
@@ -192,6 +413,7 @@
 {% include "_cookie.html" %}
 </body>
 </html>
+
 
 
 

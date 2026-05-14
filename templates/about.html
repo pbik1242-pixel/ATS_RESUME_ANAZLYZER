@@ -3,208 +3,2499 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>About - ATS RESUME ANALYZER</title>
+  <meta name="description" content="ATS Resume Analyzer helps job seekers compare resumes with job descriptions, uncover ATS gaps, and improve faster with clear match scores and revision history.">
+  <title>About - ATS Resume Analyzer</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     {% include "_theme.css" %}
+    {% include "theme.css" %}
 
-    .tour-hero {
-      display: grid;
-      gap: 1.2rem;
-      text-align: center;
-      padding: 1.5rem 1rem 0.5rem;
+    :root {
+      --about-bg: var(--bg);
+      --about-surface: var(--surface);
+      --about-surface-soft: var(--surface-strong);
+      --about-border: var(--border);
+      --about-border-strong: var(--border-strong);
+      --about-text: var(--ink);
+      --about-text-soft: var(--ink-soft);
+      --about-muted: var(--muted);
+      --about-accent: var(--red);
+      --about-accent-weak: var(--red-pale);
+      --about-shadow: var(--shadow-soft);
+      --about-shadow-strong: var(--shadow-lift);
+      --about-radius-lg: 1.35rem;
+      --about-radius-md: 1rem;
+      --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-exit: cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .tour-grid {
+    body.app-shell {
+      background: var(--bg);
+      color: var(--about-text);
+    }
+
+    .about-page.page-wrap {
+      position: relative;
+      z-index: 1;
+      width: min(100vw, 1840px);
+      max-width: none;
+      margin: 0 auto;
+      padding: clamp(0.85rem, 1.35vw, 1.4rem);
       display: grid;
       gap: 1rem;
     }
 
-    .tour-card {
-      border: 1px solid var(--border);
-      border-radius: 1rem;
-      background: var(--surface-strong);
-      padding: 1.2rem 1.1rem;
-      box-shadow: var(--shadow-soft);
+    .about-page::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 28%),
+        linear-gradient(90deg, rgba(217, 43, 43, 0.04), transparent 22%, transparent 78%, rgba(217, 43, 43, 0.04));
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .about-shell {
       display: grid;
-      gap: 0.7rem;
+      gap: 1rem;
     }
 
-    .tour-kicker {
-      font-family: "DM Mono", monospace;
-      font-size: 0.72rem;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--muted);
+    .page-section,
+    .hero-panel,
+    .value-card,
+    .feature-card,
+    .trust-card,
+    .tech-card,
+    .stat-card,
+    .chart-card,
+    .cta-panel,
+    .preview-panel,
+    .flow-step {
+      position: relative;
+      border: 1px solid var(--about-border);
+      background: var(--about-surface);
+      box-shadow: var(--about-shadow);
     }
 
-    .tour-title {
-      font-family: "Bebas Neue", sans-serif;
-      font-size: clamp(1.4rem, 3vw, 2rem);
-      letter-spacing: 0.06em;
-      color: var(--ink);
+    .page-section,
+    .cta-panel {
+      border-radius: var(--about-radius-lg);
+      overflow: hidden;
     }
 
-    .tour-pill {
+    .hero-section {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(20rem, 0.95fr);
+      gap: 1rem;
+      align-items: stretch;
+    }
+
+    .hero-copy,
+    .hero-visual {
+      min-width: 0;
+    }
+
+    .hero-copy {
+      padding: clamp(1.35rem, 2vw, 2rem);
+      display: grid;
+      align-content: center;
+      gap: 1.05rem;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(250, 247, 242, 0.96));
+    }
+
+    .eyebrow {
       display: inline-flex;
       align-items: center;
-      gap: 0.35rem;
-      border: 1px solid rgba(217, 43, 43, 0.2);
+      gap: 0.55rem;
+      width: fit-content;
+      padding: 0.42rem 0.85rem;
       border-radius: 999px;
-      padding: 0.35rem 0.75rem;
-      background: var(--red-pale);
+      border: 1px solid rgba(217, 43, 43, 0.18);
+      background: var(--about-accent-weak);
+      color: var(--about-accent);
+      font-family: "DM Mono", monospace;
+      font-size: 0.74rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .hero-title {
+      margin: 0;
+      max-width: 11.5ch;
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(4.2rem, 7.8vw, 7.6rem);
+      line-height: 0.89;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--about-text);
+    }
+
+    .hero-title .accent {
+      color: var(--about-accent);
+    }
+
+    .hero-copy p {
+      margin: 0;
+      max-width: 56ch;
+      font-size: 1.03rem;
+      line-height: 1.85;
+      color: var(--about-text-soft);
+      font-weight: 500;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      align-items: center;
+      margin-top: 0.2rem;
+    }
+
+    .about-btn,
+    .about-btn-secondary {
+      position: relative;
+      overflow: hidden;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.55rem;
+      min-height: 3.15rem;
+      padding: 0.9rem 1.35rem;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      transition: transform 180ms var(--ease-enter), box-shadow 180ms var(--ease-enter), border-color 180ms var(--ease-enter), background 180ms var(--ease-enter);
+    }
+
+    .about-btn {
+      background: linear-gradient(135deg, var(--red-strong), var(--red));
+      color: #fff;
+      box-shadow: 0 16px 34px rgba(217, 43, 43, 0.22);
+    }
+
+    .about-btn-secondary {
+      background: #fff;
+      color: var(--about-text);
+      border-color: var(--about-border-strong);
+      box-shadow: 0 10px 24px rgba(18, 24, 27, 0.04);
+    }
+
+    .about-btn:hover,
+    .about-btn-secondary:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--about-shadow-strong);
+    }
+
+    .about-btn.is-magnetic,
+    .about-btn-secondary.is-magnetic {
+      transition: transform 120ms var(--ease-enter), box-shadow 180ms var(--ease-enter), border-color 180ms var(--ease-enter), background 180ms var(--ease-enter);
+      will-change: transform;
+    }
+
+    .hero-signals {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+    }
+
+    .hero-signal {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 0.8rem;
+      border-radius: 999px;
+      border: 1px solid var(--about-border);
+      background: #fff;
+      color: var(--about-text-soft);
+      font-size: 0.84rem;
+      font-weight: 600;
+    }
+
+    .hero-signal::before {
+      content: "";
+      width: 0.45rem;
+      height: 0.45rem;
+      border-radius: 999px;
+      background: var(--about-accent);
+      box-shadow: 0 0 0 4px rgba(217, 43, 43, 0.08);
+    }
+
+    .hero-visual {
+      padding: clamp(1rem, 1.6vw, 1.35rem);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(250, 247, 242, 0.98));
+    }
+
+    .dashboard {
+      --mx: 50%;
+      --my: 50%;
+      --tilt-x: 0deg;
+      --tilt-y: 0deg;
+      height: 100%;
+      border-radius: 1.2rem;
+      border: 1px solid var(--about-border-strong);
+      background:
+        linear-gradient(180deg, var(--surface-strong) 0%, var(--surface) 100%);
+      box-shadow: var(--about-shadow-strong);
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      transform: perspective(1200px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) translateZ(0);
+      transform-style: preserve-3d;
+      transition: transform 220ms var(--ease-enter), box-shadow 220ms var(--ease-enter), border-color 220ms var(--ease-enter);
+      will-change: transform;
+      perspective: 1200px;
+    }
+
+    .dashboard::before,
+    .preview-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 180ms var(--ease-enter);
+    }
+
+    .dashboard::before {
+      background:
+        radial-gradient(circle at var(--mx) var(--my), rgba(217, 43, 43, 0.12), transparent 28%),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.15), transparent 42%);
+      mix-blend-mode: multiply;
+    }
+
+    .preview-card::before {
+      background:
+        radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(217, 43, 43, 0.08), transparent 30%);
+    }
+
+    .dashboard.is-hovered::before,
+    .preview-card.is-hovered::before {
+      opacity: 1;
+    }
+
+    .dashboard__top {
+      position: relative;
+      padding: 1rem 1rem 0.85rem;
+      background:
+        linear-gradient(156deg, #111315 0%, #1b1d1f 44%, #f8f2e9 44%, #fdfbf7 100%);
+      color: #fff;
+      overflow: hidden;
+    }
+
+    .dashboard__top::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.13), transparent);
+      transform: translateX(-120%);
+      animation: sweep 6.5s linear infinite;
+      pointer-events: none;
+    }
+
+    .dashboard__chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.9rem;
+      transform: translate3d(calc(var(--px, 0px) * 0.25), calc(var(--py, 0px) * 0.18), 0);
+    }
+
+    .dashboard-chip {
+      min-width: 5.25rem;
+      padding: 0.44rem 0.72rem;
+      border-radius: 0.95rem;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.06);
+      color: rgba(255, 255, 255, 0.92);
+      font-family: "DM Mono", monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .dashboard-chip.is-active {
+      background: rgba(217, 43, 43, 0.14);
+      border-color: rgba(217, 43, 43, 0.45);
+      color: #fff;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      gap: 0.85rem;
+      align-items: start;
+    }
+
+    .score-block {
+      display: grid;
+      justify-items: center;
+      gap: 0.55rem;
+      padding: 1rem 0.2rem 0.8rem;
+      transform: translate3d(calc(var(--px, 0px) * -0.18), calc(var(--py, 0px) * -0.14), 18px);
+    }
+
+    .score-ring {
+      --score: 0%;
+      width: 11rem;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at center, #111315 0 46%, transparent 47%),
+        conic-gradient(var(--red) var(--score), rgba(255, 255, 255, 0.18) 0);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.09);
+      transition: transform 220ms var(--ease-enter), box-shadow 220ms var(--ease-enter);
+    }
+
+    .score-ring__inner {
+      width: 7.15rem;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: #111315;
+      display: grid;
+      place-items: center;
+      gap: 0.1rem;
+      text-align: center;
+    }
+
+    .score-ring__value {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 3rem;
+      letter-spacing: 0.04em;
+      line-height: 1;
+    }
+
+    .score-ring__inner small {
+      font-family: "DM Mono", monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      color: rgba(255, 255, 255, 0.66);
+      text-transform: uppercase;
+    }
+
+    .dashboard-panel {
+      padding: 0.9rem 0.9rem 1rem;
+      background: rgba(255, 255, 255, 0.94);
+      border-top: 1px solid rgba(17, 19, 21, 0.06);
+      display: grid;
+      gap: 0.85rem;
+      transform: translate3d(calc(var(--px, 0px) * 0.16), calc(var(--py, 0px) * 0.12), 10px);
+    }
+
+    .dashboard.is-hovered .score-ring {
+      transform: translate3d(0, 0, 26px) scale(1.01);
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.09),
+        0 18px 34px rgba(217, 43, 43, 0.12);
+    }
+
+    .dashboard.is-hovered .dashboard-panel,
+    .dashboard.is-hovered .score-block,
+    .dashboard.is-hovered .dashboard__chips {
+      will-change: transform;
+    }
+
+    .panel-card {
+      border: 1px solid var(--about-border);
+      border-radius: 1rem;
+      padding: 0.85rem;
+      background: linear-gradient(180deg, var(--surface), var(--surface-strong));
+    }
+
+    .panel-card__head {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 0.7rem;
+      font-family: "DM Mono", monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--about-muted);
+    }
+
+    .metric-row {
+      display: grid;
+      gap: 0.65rem;
+    }
+
+    .metric-line {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 0.55rem;
+      align-items: center;
+      font-size: 0.88rem;
+      color: var(--about-text);
+    }
+
+    .metric-line strong {
+      font-family: "DM Mono", monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      color: var(--about-muted);
+      text-transform: uppercase;
+    }
+
+    .metric-track {
+      height: 0.55rem;
+      border-radius: 999px;
+      background: rgba(217, 43, 43, 0.08);
+      overflow: hidden;
+    }
+
+    .metric-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--red), var(--red-strong));
+      box-shadow: 0 0 0 1px rgba(217, 43, 43, 0.1);
+      transition: width 650ms var(--ease-enter);
+    }
+
+    .metric-line span:last-child {
+      font-family: "DM Mono", monospace;
+      color: var(--about-text-soft);
+      font-size: 0.74rem;
+    }
+
+    .history-stack {
+      display: grid;
+      gap: 0.55rem;
+    }
+
+    .history-row {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 0.55rem;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+
+    .history-row span {
+      color: var(--about-text-soft);
+      font-weight: 600;
+    }
+
+    .history-row strong {
+      font-family: "DM Mono", monospace;
+      font-size: 0.8rem;
+      color: var(--about-muted);
+    }
+
+    .history-track {
+      height: 0.55rem;
+      border-radius: 999px;
+      background: rgba(31, 41, 55, 0.07);
+      overflow: hidden;
+    }
+
+    .history-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #111315, var(--red));
+      transition: width 700ms var(--ease-enter);
+    }
+
+    .hero-side-note {
+      padding: 0.8rem 0.2rem 0.15rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      font-family: "DM Mono", monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      color: rgba(255, 255, 255, 0.7);
+      text-transform: uppercase;
+    }
+
+    .hero-side-note span:last-child {
+      color: rgba(255, 255, 255, 0.88);
+    }
+
+    .value-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .value-card {
+      border-radius: 1.15rem;
+      padding: 1.05rem 1rem;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(251, 248, 243, 0.96));
+      display: grid;
+      gap: 0.7rem;
+      min-height: 10.4rem;
+    }
+
+    .value-card__icon,
+    .trust-card__icon,
+    .tech-card__icon {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 0.9rem;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(217, 43, 43, 0.16);
+      background: var(--about-accent-weak);
+      color: var(--red);
+    }
+
+    .value-card h3,
+    .trust-card h3,
+    .tech-card h3,
+    .feature-card h3,
+    .chart-card h3,
+    .flow-step h3 {
+      margin: 0;
+      font-family: "Bebas Neue", sans-serif;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--about-text);
+    }
+
+    .value-card h3 {
+      font-size: 2rem;
+      line-height: 0.92;
+    }
+
+    .value-card p,
+    .trust-card p,
+    .tech-card p,
+    .feature-card p,
+    .chart-card p,
+    .flow-step p {
+      margin: 0;
+      color: var(--about-text-soft);
+      line-height: 1.7;
+      font-size: 0.97rem;
+      font-weight: 500;
+    }
+
+    .value-card__foot {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding-top: 0.55rem;
+      border-top: 1px solid rgba(31, 41, 55, 0.08);
+      color: var(--about-muted);
+      font-family: "DM Mono", monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .value-card__foot strong {
+      color: var(--about-text);
+      font-family: inherit;
+      letter-spacing: 0.08em;
+    }
+
+    .section-head {
+      display: grid;
+      gap: 0.45rem;
+      padding: 0 0.1rem;
+    }
+
+    .section-kicker {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      gap: 0.45rem;
+      color: var(--about-accent);
+      font-family: "DM Mono", monospace;
+      font-size: 0.74rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .section-kicker::before {
+      content: "";
+      width: 0.42rem;
+      height: 0.42rem;
+      border-radius: 999px;
+      background: currentColor;
+      box-shadow: 0 0 0 4px rgba(217, 43, 43, 0.08);
+      transition: transform 180ms var(--ease-enter);
+    }
+
+    .section-title {
+      margin: 0;
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(2.3rem, 4vw, 4.35rem);
+      line-height: 0.92;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--about-text);
+    }
+
+    .section-copy {
+      margin: 0;
+      max-width: 68ch;
+      color: var(--about-text-soft);
+      line-height: 1.8;
+      font-weight: 500;
+    }
+
+    .preview-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .preview-copy {
+      padding: 1.2rem;
+      display: grid;
+      gap: 0.9rem;
+    }
+
+    .preview-copy .mini-points {
+      display: grid;
+      gap: 0.55rem;
+    }
+
+    .mini-point {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.65rem;
+      padding: 0.8rem 0.9rem;
+      border-radius: 1rem;
+      border: 1px solid var(--about-border);
+      background: var(--about-surface-soft);
+    }
+
+    .mini-point strong {
+      display: block;
+      font-family: "DM Mono", monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 0.2rem;
+    }
+
+    .mini-point span {
+      color: var(--about-text-soft);
+      line-height: 1.55;
+      font-size: 0.94rem;
+      font-weight: 500;
+    }
+
+    .preview-card {
+      position: relative;
+      --mx: 50%;
+      --my: 50%;
+      --tilt-x: 0deg;
+      --tilt-y: 0deg;
+      padding: 1rem;
+      display: grid;
+      gap: 0.85rem;
+      background:
+        linear-gradient(180deg, var(--surface), var(--surface-strong));
+      transform: perspective(1200px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) translateZ(0);
+      transform-style: preserve-3d;
+      transition: transform 220ms var(--ease-enter), box-shadow 220ms var(--ease-enter), border-color 220ms var(--ease-enter);
+      will-change: transform;
+    }
+
+    .preview-tabs {
+      position: relative;
+      display: flex;
+      gap: 0.35rem;
+      padding: 0.25rem;
+      border-radius: 999px;
+      border: 1px solid var(--about-border);
+      background: rgba(255, 255, 255, 0.82);
+      overflow: hidden;
+    }
+
+    .preview-tabs__indicator {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 0;
+      border-radius: inherit;
+      background: rgba(217, 43, 43, 0.08);
+      border: 1px solid rgba(217, 43, 43, 0.2);
+      transition: transform 240ms var(--ease-enter), width 240ms var(--ease-enter);
+      pointer-events: none;
+    }
+
+    .preview-tabs button {
+      position: relative;
+      z-index: 1;
+      flex: 1 1 0;
+      min-height: 3rem;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--about-muted);
+      font-weight: 700;
+      transition: color 180ms var(--ease-enter), transform 180ms var(--ease-enter);
+    }
+
+    .preview-tabs button:hover {
+      transform: translateY(-1px);
+    }
+
+    .preview-tabs button.is-active {
+      color: var(--about-text);
+    }
+
+    .preview-panels {
+      min-height: 26rem;
+      display: grid;
+    }
+
+    .preview-panel {
+      grid-area: 1 / 1;
+      padding: 1rem;
+      border-radius: 1.05rem;
+      background: linear-gradient(180deg, var(--surface), var(--surface-strong));
+      box-shadow: inset 0 0 0 1px rgba(17, 19, 21, 0.04);
+      opacity: 0;
+      transform: translateY(12px);
+      filter: blur(8px);
+      pointer-events: none;
+      transition:
+        opacity 320ms var(--ease-enter),
+        transform 320ms var(--ease-enter),
+        filter 320ms var(--ease-enter);
+      transform-style: preserve-3d;
+    }
+
+    .preview-panel.is-active {
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0);
+      pointer-events: auto;
+    }
+
+    .preview-panel .panel-grid,
+    .preview-panel .panel-stat,
+    .preview-panel .bars,
+    .preview-panel .history,
+    .preview-panel .chips {
+      transform: translate3d(calc(var(--px, 0px) * 0.12), calc(var(--py, 0px) * 0.1), 0);
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      align-items: baseline;
+      margin-bottom: 1rem;
+      font-family: "DM Mono", monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--about-muted);
+    }
+
+    .panel-head span:last-child {
+      color: var(--about-accent);
+    }
+
+    .panel-grid {
+      display: grid;
+      gap: 0.85rem;
+    }
+
+    .panel-split {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      gap: 0.85rem;
+    }
+
+    .panel-stat {
+      border-radius: 1rem;
+      border: 1px solid var(--about-border);
+      background: linear-gradient(180deg, var(--surface), var(--surface-strong));
+      padding: 0.95rem;
+      display: grid;
+      gap: 0.45rem;
+    }
+
+    .panel-stat strong {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 2.2rem;
+      letter-spacing: 0.05em;
+      line-height: 0.9;
+      color: var(--about-text);
+    }
+
+    .panel-stat span {
+      color: var(--about-text-soft);
+      line-height: 1.6;
+      font-size: 0.92rem;
+      font-weight: 500;
+    }
+
+    .bars,
+    .history,
+    .chips {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .bar-row,
+    .history-row {
+      display: grid;
+      grid-template-columns: minmax(7rem, auto) minmax(0, 1fr) auto;
+      gap: 0.7rem;
+      align-items: center;
+    }
+
+    .bar-row label,
+    .history-row label {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--about-text);
+    }
+
+    .bar-row strong,
+    .history-row strong {
+      font-family: "DM Mono", monospace;
+      font-size: 0.74rem;
+      letter-spacing: 0.08em;
+      color: var(--about-muted);
+    }
+
+    .track {
+      height: 0.65rem;
+      border-radius: 999px;
+      background: rgba(217, 43, 43, 0.08);
+      overflow: hidden;
+    }
+
+    .fill {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--red), var(--red-strong));
+      transition: width 720ms var(--ease-enter);
+    }
+
+    .chip-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.56rem 0.8rem;
+      border-radius: 999px;
+      border: 1px solid var(--about-border);
+      background: var(--about-surface-soft);
+      color: var(--about-text);
+      font-size: 0.84rem;
+      font-weight: 600;
+    }
+
+    .chip::before {
+      content: "";
+      width: 0.38rem;
+      height: 0.38rem;
+      border-radius: 999px;
+      background: var(--red);
+    }
+
+    .flow-grid {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .flow-track {
+      position: relative;
+      height: 2px;
+      border-radius: 999px;
+      background: rgba(217, 43, 43, 0.12);
+      overflow: hidden;
+    }
+
+    .flow-track__fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--red), var(--red-strong));
+      transition: width 800ms var(--ease-enter);
+    }
+
+    .flow-steps {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .flow-step {
+      padding: 1rem;
+      border-radius: 1.15rem;
+      background: linear-gradient(180deg, #fff, #fcfbf8);
+      display: grid;
+      gap: 0.7rem;
+      min-height: 14rem;
+    }
+
+    .flow-step__meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .flow-step__num {
+      display: inline-grid;
+      place-items: center;
+      width: 2.35rem;
+      height: 2.35rem;
+      border-radius: 0.8rem;
+      background: var(--about-accent-weak);
+      border: 1px solid rgba(217, 43, 43, 0.18);
+      color: var(--red);
+      font-family: "DM Mono", monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+    }
+
+    .step-details {
+      display: grid;
+      gap: 0.55rem;
+    }
+
+    .step-details p {
+      margin: 0;
+      color: var(--about-text-soft);
+      line-height: 1.72;
+      font-weight: 500;
+    }
+
+    .step-details .subline {
+      font-family: "DM Mono", monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--about-muted);
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.9fr 0.9fr;
+      gap: 1rem;
+      align-items: stretch;
+    }
+
+    .feature-card {
+      padding: 1rem;
+      border-radius: 1.1rem;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(250, 247, 242, 0.98));
+      display: grid;
+      gap: 0.8rem;
+      min-height: 10rem;
+      transition: transform 180ms var(--ease-enter), box-shadow 180ms var(--ease-enter), border-color 180ms var(--ease-enter);
+    }
+
+    .feature-card:hover,
+    .trust-card:hover,
+    .tech-card:hover,
+    .stat-card:hover,
+    .chart-card:hover,
+    .flow-step:hover {
+      transform: translateY(-2px);
+      border-color: rgba(217, 43, 43, 0.22);
+      box-shadow: var(--about-shadow-strong);
+    }
+
+    .flow-step,
+    .feature-card,
+    .trust-card,
+    .tech-card,
+    .stat-card,
+    .chart-card {
+      transition: transform 180ms var(--ease-enter), box-shadow 180ms var(--ease-enter), border-color 180ms var(--ease-enter);
+    }
+
+    .feature-card--wide {
+      grid-column: span 2;
+      min-height: 13rem;
+    }
+
+    .feature-card--tall {
+      grid-row: span 2;
+      min-height: 100%;
+    }
+
+    .card-tag {
+      display: inline-flex;
+      width: fit-content;
+      padding: 0.4rem 0.65rem;
+      border-radius: 999px;
+      border: 1px solid rgba(217, 43, 43, 0.16);
+      background: var(--about-accent-weak);
       color: var(--red);
       font-family: "DM Mono", monospace;
       font-size: 0.7rem;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
     }
 
-    .tour-flow {
+    .feature-card__footer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      padding-top: 0.35rem;
+    }
+
+    .feature-mini {
+      padding: 0.42rem 0.64rem;
+      border-radius: 999px;
+      border: 1px solid var(--about-border);
+      background: #fff;
+      color: var(--about-text-soft);
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .trust-grid {
       display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 1rem;
-      margin-top: 1rem;
     }
 
-    .tour-flow-step {
-      border-left: 3px solid var(--red);
-      padding: 0.9rem 1rem;
-      background: var(--surface);
-      border-radius: 0.9rem;
+    .trust-card {
+      padding: 1rem;
+      border-radius: 1.1rem;
+      background: linear-gradient(180deg, var(--surface), var(--surface-strong));
       display: grid;
-      gap: 0.5rem;
+      gap: 0.8rem;
+      min-height: 12rem;
     }
 
-    .reveal {
+    .trust-card__list {
+      display: grid;
+      gap: 0.55rem;
+    }
+
+    .trust-card__line {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      color: var(--about-text-soft);
+      font-size: 0.9rem;
+      line-height: 1.6;
+      font-weight: 500;
+    }
+
+    .dot {
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 999px;
+      background: var(--about-accent);
+      flex: none;
+    }
+
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .tech-card {
+      padding: 1rem;
+      border-radius: 1.05rem;
+      background: linear-gradient(180deg, var(--surface), var(--surface-strong));
+      display: grid;
+      gap: 0.8rem;
+      min-height: 11rem;
+    }
+
+    .tech-card__meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+    }
+
+    .tech-chip,
+    .trust-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid var(--about-border);
+      background: #fff;
+      color: var(--about-text-soft);
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .tech-chip::before,
+    .trust-chip::before {
+      content: "";
+      width: 0.38rem;
+      height: 0.38rem;
+      border-radius: 999px;
+      background: var(--red);
+    }
+
+    .trust-indicators {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      padding-top: 0.25rem;
+    }
+
+    .stats-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(20rem, 0.9fr);
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .chart-card,
+    .stat-card {
+      border-radius: 1.1rem;
+      padding: 1rem;
+      background: linear-gradient(180deg, var(--surface), var(--surface-strong));
+    }
+
+    .chart-card {
+      display: grid;
+      gap: 0.9rem;
+    }
+
+    .chart-card__head {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      align-items: baseline;
+    }
+
+    .chart-badges {
+      display: flex;
+      gap: 0.45rem;
+      flex-wrap: wrap;
+    }
+
+    .chart-badge {
+      padding: 0.35rem 0.6rem;
+      border-radius: 999px;
+      background: var(--about-accent-weak);
+      color: var(--red);
+      border: 1px solid rgba(217, 43, 43, 0.16);
+      font-family: "DM Mono", monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .donut-row {
+      display: grid;
+      grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
+      gap: 0.9rem;
+      align-items: center;
+    }
+
+    .donut {
+      width: 13rem;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at center, #fff 0 54%, transparent 55%),
+        conic-gradient(var(--red) var(--progress, 74%), rgba(217, 43, 43, 0.12) 0);
+      border: 1px solid rgba(217, 43, 43, 0.16);
+      justify-self: center;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+    }
+
+    .donut__inner {
+      display: grid;
+      place-items: center;
+      gap: 0.1rem;
+      width: 8rem;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: #fff;
+      text-align: center;
+    }
+
+    .donut__value {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 3.3rem;
+      line-height: 0.92;
+      letter-spacing: 0.05em;
+    }
+
+    .donut__inner small {
+      font-family: "DM Mono", monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--about-muted);
+    }
+
+    .sparklines {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .sparkline {
+      display: grid;
+      gap: 0.3rem;
+    }
+
+    .sparkline__meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      align-items: center;
+      font-size: 0.84rem;
+      color: var(--about-text);
+    }
+
+    .sparkline__meta strong {
+      font-family: "DM Mono", monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      color: var(--about-muted);
+      text-transform: uppercase;
+    }
+
+    .sparkline__track {
+      height: 0.55rem;
+      border-radius: 999px;
+      background: rgba(31, 41, 55, 0.07);
+      overflow: hidden;
+    }
+
+    .sparkline__fill {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--red), var(--red-strong));
+      transition: width 700ms var(--ease-enter);
+    }
+
+    .proof-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .stat-card {
+      display: grid;
+      gap: 0.65rem;
+      min-height: 9rem;
+    }
+
+    .stat-card__value {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(3.1rem, 5vw, 4.8rem);
+      line-height: 0.9;
+      letter-spacing: 0.04em;
+      color: var(--about-text);
+    }
+
+    .stat-card__label {
+      margin: 0;
+      color: var(--about-text-soft);
+      line-height: 1.65;
+      font-weight: 500;
+    }
+
+    .cta-panel {
+      padding: clamp(1.2rem, 2vw, 1.7rem);
+      display: grid;
+      gap: 0.9rem;
+      background:
+        linear-gradient(135deg, rgba(217, 43, 43, 0.07), rgba(255, 255, 255, 0.96) 55%, rgba(217, 43, 43, 0.04));
+    }
+
+    .cta-panel__row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .cta-panel p {
+      margin: 0;
+      max-width: 62ch;
+      color: var(--about-text-soft);
+      line-height: 1.8;
+      font-weight: 500;
+    }
+
+    .reveal,
+    [data-reveal] {
       opacity: 0;
-      transform: translateY(18px);
-      transition: opacity 0.45s ease, transform 0.45s ease;
+      transform: translateY(12px);
+      filter: blur(10px);
+      clip-path: inset(4% 0 0 0 round 0.8rem);
+      transition:
+        opacity 420ms var(--ease-enter),
+        transform 420ms var(--ease-enter),
+        filter 420ms var(--ease-enter),
+        clip-path 520ms var(--ease-enter);
+      transition-delay: var(--delay, 0ms);
     }
 
-    .reveal.in-view {
+    .reveal.is-visible,
+    [data-reveal].is-visible {
       opacity: 1;
       transform: translateY(0);
+      filter: blur(0);
+      clip-path: inset(0 0 0 0 round 0.8rem);
     }
 
-    @media (max-width: 900px) {
-      .tour-grid {
-        grid-template-columns: 1fr;
+    .hero-copy > *,
+    .hero-visual,
+    .value-card,
+    .preview-layout,
+    .flow-step,
+    .feature-card,
+    .trust-card,
+    .tech-card,
+    .chart-card,
+    .stat-card,
+    .cta-panel {
+      animation: none;
+    }
+
+    .reveal.is-visible,
+    [data-reveal].is-visible {
+      animation: reveal-pop 460ms var(--ease-enter) both;
+    }
+
+    .hero-copy .eyebrow,
+    .hero-copy .hero-title,
+    .hero-copy p,
+    .hero-copy .hero-actions,
+    .hero-copy .hero-signals {
+      animation: hero-rise 640ms var(--ease-enter) both;
+    }
+
+    .hero-copy .hero-title { animation-delay: 120ms; }
+    .hero-copy p { animation-delay: 190ms; }
+    .hero-copy .hero-actions { animation-delay: 260ms; }
+    .hero-copy .hero-signals { animation-delay: 330ms; }
+
+    .hero-visual .dashboard {
+      animation: dashboard-rise 700ms var(--ease-enter) both;
+    }
+
+    .hero-visual .dashboard__top,
+    .hero-visual .dashboard-panel {
+      animation: panel-enter 720ms var(--ease-enter) both;
+    }
+
+    .hero-visual .dashboard__top { animation-delay: 130ms; }
+    .hero-visual .dashboard-panel { animation-delay: 220ms; }
+
+    .hero-visual .metric-fill,
+    .hero-visual .history-fill,
+    .hero-visual .sparkline__fill,
+    .flow-track__fill,
+    .fill {
+      transition-duration: 800ms;
+    }
+
+    .hero-title .char {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(0.38em);
+      animation: type-up 620ms var(--ease-enter) forwards;
+    }
+
+    .hero-title .char.is-space {
+      width: 0.22em;
+    }
+
+    .hero-title .char.is-accent {
+      color: var(--about-accent);
+    }
+
+    .page-section:hover .section-kicker::before {
+      transform: scale(1.04);
+    }
+
+    @keyframes type-up {
+      from {
+        opacity: 0;
+        transform: translateY(0.38em);
+        filter: blur(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
       }
     }
 
-    @media (min-width: 900px) {
-      .tour-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+    @keyframes reveal-pop {
+      from {
+        opacity: 0;
+        transform: translateY(14px) scale(0.985);
+        filter: blur(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+      }
+    }
+
+    @keyframes hero-rise {
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+        filter: blur(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+      }
+    }
+
+    @keyframes dashboard-rise {
+      from {
+        opacity: 0;
+        transform: perspective(1200px) rotateX(1.5deg) rotateY(-1.5deg) translateY(16px) scale(0.985);
+      }
+      to {
+        opacity: 1;
+        transform: perspective(1200px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) translateY(0) scale(1);
+      }
+    }
+
+    @keyframes panel-enter {
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes sweep {
+      0% {
+        transform: translateX(-125%);
+      }
+      100% {
+        transform: translateX(125%);
+      }
+    }
+
+    @media (max-width: 1180px) {
+      .hero-section,
+      .preview-layout,
+      .stats-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .feature-grid,
+      .trust-grid,
+      .tech-grid,
+      .proof-grid,
+      .flow-steps,
+      .value-strip {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .feature-card--wide,
+      .feature-card--tall {
+        grid-column: auto;
+        grid-row: auto;
+      }
+    }
+
+    @media (max-width: 780px) {
+      .about-page.page-wrap {
+        padding: 0.8rem;
+      }
+
+      .hero-copy,
+      .hero-visual,
+      .preview-copy,
+      .preview-card,
+      .page-section,
+      .cta-panel {
+        padding-left: 0.9rem;
+        padding-right: 0.9rem;
+      }
+
+      .hero-title {
+        max-width: none;
+        font-size: clamp(3.5rem, 18vw, 5.4rem);
+      }
+
+      .feature-grid,
+      .trust-grid,
+      .tech-grid,
+      .proof-grid,
+      .flow-steps,
+      .value-strip,
+      .panel-split,
+      .donut-row {
+        grid-template-columns: 1fr;
+      }
+
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .score-ring {
+        width: 9.8rem;
+      }
+
+      .preview-panels {
+        min-height: 28rem;
+      }
+
+      .bar-row,
+      .history-row {
+        grid-template-columns: 1fr;
+        align-items: start;
+      }
+
+      .flow-track {
+        display: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      .reveal,
+      [data-reveal],
+      .hero-title .char,
+      .metric-fill,
+      .history-fill,
+      .fill,
+      .sparkline__fill,
+      .flow-track__fill,
+      .preview-panel,
+      .dashboard__top::after,
+      .about-btn,
+      .about-btn-secondary,
+      .feature-card,
+      .trust-card,
+      .tech-card,
+      .stat-card,
+      .chart-card,
+      .flow-step {
+        transition: none !important;
+        animation: none !important;
+      }
+
+      .reveal {
+        opacity: 1;
+        transform: none;
+        filter: none;
+        clip-path: none;
       }
     }
   </style>
 </head>
 <body class="app-shell">
-  {% set page_badge = "How It Works" %}
+  {% set page_badge = "About" %}
   {% set page_cta_href = "/" %}
-  {% set page_cta_label = "Analyze Now" %}
+  {% set page_cta_label = "Analyze Resume" %}
   {% set active_page = "/about" %}
   {% include "_app_topbar.html" %}
 
-  <div class="page-wrap page-wrap--content">
-    <div class="glass-panel p-6 md:p-10">
-      <div class="tour-hero reveal">
-        <span class="tour-kicker">Tutorial</span>
-        <h1 class="brand-title text-3xl font-bold md:text-4xl">How ATS RESUME ANALYZER Works</h1>
-        <p class="text-muted text-base leading-relaxed md:text-lg">
-          This walkthrough shows each component on the site, how it analyzes your resume, and what each score means.
+  <div class="page-wrap page-wrap--content about-page">
+    <div class="about-shell">
+      <section class="hero-section page-section reveal" data-reveal>
+        <div class="hero-copy">
+          <span class="eyebrow">Resume Match Intelligence</span>
+          <h1 class="hero-title" data-reveal style="--delay: 80ms;">Turn resume guesses into<br><span class="accent">ATS-ready improvements</span></h1>
+          <p data-reveal style="--delay: 140ms;">
+            ATS Resume Analyzer compares a resume with a job description, then turns the result into clear, practical feedback:
+            ATS score, keyword match, missing skills, readability signals, and a revision path you can act on quickly.
+          </p>
+          <div class="hero-actions" data-reveal style="--delay: 200ms;">
+            <a class="about-btn" href="/">Analyze Resume</a>
+            <a class="about-btn-secondary" href="#how-it-works">See How It Works</a>
+          </div>
+          <div class="hero-signals" aria-label="Key product signals" data-reveal style="--delay: 260ms;">
+            <span class="hero-signal">Clarity first</span>
+            <span class="hero-signal">Proof in the score</span>
+            <span class="hero-signal">Guided improvement</span>
+          </div>
+        </div>
+
+        <div class="hero-visual">
+          <div class="dashboard">
+            <div class="dashboard__top">
+              <div class="dashboard__chips">
+                <span class="dashboard-chip is-active">Score</span>
+                <span class="dashboard-chip">Keywords</span>
+                <span class="dashboard-chip">History</span>
+                <span class="dashboard-chip">Missing</span>
+              </div>
+              <div class="dashboard-grid">
+                <div class="score-block">
+                  <div class="score-ring" data-score-target="92" style="--score:0%;">
+                    <div class="score-ring__inner">
+                      <div class="score-ring__value">0%</div>
+                      <small>ATS score</small>
+                    </div>
+                  </div>
+                  <div class="hero-side-note">
+                    <span>Live preview</span>
+                    <span>Ready in seconds</span>
+                  </div>
+                </div>
+
+                <div class="dashboard-panel">
+                  <div class="panel-card">
+                    <div class="panel-card__head">
+                      <span>Keyword match</span>
+                      <span>Coverage</span>
+                    </div>
+                    <div class="metric-row">
+                      <div class="metric-line">
+                        <strong>Python</strong>
+                        <div class="metric-track"><span class="metric-fill" data-bar-target="92"></span></div>
+                        <span>92%</span>
+                      </div>
+                      <div class="metric-line">
+                        <strong>FastAPI</strong>
+                        <div class="metric-track"><span class="metric-fill" data-bar-target="84"></span></div>
+                        <span>84%</span>
+                      </div>
+                      <div class="metric-line">
+                        <strong>Resume clarity</strong>
+                        <div class="metric-track"><span class="metric-fill" data-bar-target="96"></span></div>
+                        <span>96%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="panel-split">
+                    <div class="panel-card">
+                      <div class="panel-card__head">
+                        <span>History</span>
+                        <span>Version lift</span>
+                      </div>
+                      <div class="history-stack">
+                        <div class="history-row">
+                          <strong>03</strong>
+                          <div class="history-track"><span class="history-fill" data-bar-target="96"></span></div>
+                          <span>96%</span>
+                        </div>
+                        <div class="history-row">
+                          <strong>02</strong>
+                          <div class="history-track"><span class="history-fill" data-bar-target="86"></span></div>
+                          <span>86%</span>
+                        </div>
+                        <div class="history-row">
+                          <strong>01</strong>
+                          <div class="history-track"><span class="history-fill" data-bar-target="68"></span></div>
+                          <span>68%</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="panel-card">
+                      <div class="panel-card__head">
+                        <span>Missing skills</span>
+                        <span>Signals</span>
+                      </div>
+                      <div class="chip-grid">
+                        <span class="chip">Leadership</span>
+                        <span class="chip">Testing</span>
+                        <span class="chip">CI/CD</span>
+                        <span class="chip">Stakeholder communication</span>
+                        <span class="chip">Metrics ownership</span>
+                        <span class="chip">Cloud deployment</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="value-strip">
+        <article class="value-card reveal" data-reveal style="--delay: 50ms;">
+          <div class="value-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3v18"></path>
+              <path d="M4.5 8.5h15"></path>
+              <path d="M6.5 3h11"></path>
+              <path d="M6 21h12"></path>
+            </svg>
+          </div>
+          <h3>Mission</h3>
+          <p>Help resumes pass ATS screening by showing the specific gaps that matter most.</p>
+          <div class="value-card__foot"><strong>Outcome</strong> Clearer next steps</div>
+        </article>
+
+        <article class="value-card reveal" data-reveal style="--delay: 110ms;">
+          <div class="value-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 18V6"></path>
+              <path d="M8 18V10"></path>
+              <path d="M12 18V13"></path>
+              <path d="M16 18V8"></path>
+              <path d="M20 18V11"></path>
+            </svg>
+          </div>
+          <h3>Value</h3>
+          <p>Give actionable feedback on keywords, structure, readability, and match score.</p>
+          <div class="value-card__foot"><strong>Benefit</strong> Less guesswork</div>
+        </article>
+
+        <article class="value-card reveal" data-reveal style="--delay: 170ms;">
+          <div class="value-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14"></path>
+              <path d="M12 5l7 7-7 7"></path>
+            </svg>
+          </div>
+          <h3>Outcome</h3>
+          <p>Help users improve faster, feel more confident, and track real progress between revisions.</p>
+          <div class="value-card__foot"><strong>Result</strong> Better match confidence</div>
+        </article>
+      </section>
+
+      <section class="page-section reveal" data-reveal id="preview">
+        <div class="section-head" data-reveal style="--delay: 50ms; padding: 1.1rem 1.1rem 0;">
+          <span class="section-kicker">Product preview</span>
+          <h2 class="section-title">A preview that explains the product, not just the interface</h2>
+          <p class="section-copy">
+            Switch between score, keyword coverage, revision history, and missing-skill signals to see how the analyzer guides the user from diagnosis to improvement.
+          </p>
+        </div>
+
+        <div class="preview-layout" style="padding: 0 1.1rem 1.1rem;">
+          <div class="preview-copy">
+            <div class="mini-points" data-reveal style="--delay: 80ms;">
+              <div class="mini-point">
+                <div class="value-card__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="8"></circle>
+                    <path d="M12 7v5l3 2"></path>
+                  </svg>
+                </div>
+                <div>
+                  <strong>Score overview</strong>
+                  <span>See the ATS score first, then read the strongest signals behind it.</span>
+                </div>
+              </div>
+              <div class="mini-point">
+                <div class="value-card__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 7h16"></path>
+                    <path d="M4 12h10"></path>
+                    <path d="M4 17h13"></path>
+                  </svg>
+                </div>
+                <div>
+                  <strong>Keyword match</strong>
+                  <span>Review matched terms, missing terms, and coverage strength in one panel.</span>
+                </div>
+              </div>
+              <div class="mini-point">
+                <div class="value-card__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 18h14"></path>
+                    <path d="M5 14l4-4 3 3 5-7 2 2"></path>
+                  </svg>
+                </div>
+                <div>
+                  <strong>Revision history</strong>
+                  <span>Track progress across edits so improvement feels measurable, not vague.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="preview-card">
+            <div class="preview-tabs" role="tablist" aria-label="Product preview tabs">
+              <span class="preview-tabs__indicator" aria-hidden="true"></span>
+              <button type="button" class="is-active" data-preview-tab="score">Score Overview</button>
+              <button type="button" data-preview-tab="keywords">Keyword Match</button>
+              <button type="button" data-preview-tab="history">Revision History</button>
+              <button type="button" data-preview-tab="missing">Missing Skills</button>
+            </div>
+
+            <div class="preview-panels">
+              <div class="preview-panel is-active" data-preview-panel="score">
+                <div class="panel-head">
+                  <span>ATS score</span>
+                  <span>Live preview</span>
+                </div>
+                <div class="panel-grid">
+                  <div class="panel-split">
+                    <div class="panel-stat">
+                      <strong data-score-target="92">0%</strong>
+                      <span>Match score for the current job description.</span>
+                    </div>
+                    <div class="panel-stat">
+                      <strong>+18</strong>
+                      <span>Potential lift shown after focused resume improvements.</span>
+                    </div>
+                  </div>
+                  <div class="sparklines">
+                    <div class="sparkline">
+                      <div class="sparkline__meta"><span>Match signal</span><strong>92%</strong></div>
+                      <div class="sparkline__track"><span class="sparkline__fill" data-bar-target="92"></span></div>
+                    </div>
+                    <div class="sparkline">
+                      <div class="sparkline__meta"><span>Readability</span><strong>91%</strong></div>
+                      <div class="sparkline__track"><span class="sparkline__fill" data-bar-target="91"></span></div>
+                    </div>
+                    <div class="sparkline">
+                      <div class="sparkline__meta"><span>Structure</span><strong>88%</strong></div>
+                      <div class="sparkline__track"><span class="sparkline__fill" data-bar-target="88"></span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="preview-panel" data-preview-panel="keywords">
+                <div class="panel-head">
+                  <span>Keyword match</span>
+                  <span>Coverage view</span>
+                </div>
+                <div class="panel-grid">
+                  <div class="bars">
+                    <div class="bar-row">
+                      <label>Python</label>
+                      <div class="track"><span class="fill" data-bar-target="94"></span></div>
+                      <strong>94%</strong>
+                    </div>
+                    <div class="bar-row">
+                      <label>FastAPI</label>
+                      <div class="track"><span class="fill" data-bar-target="86"></span></div>
+                      <strong>86%</strong>
+                    </div>
+                    <div class="bar-row">
+                      <label>Resume clarity</label>
+                      <div class="track"><span class="fill" data-bar-target="97"></span></div>
+                      <strong>97%</strong>
+                    </div>
+                  </div>
+                  <div class="panel-stat">
+                    <strong>3 key terms</strong>
+                    <span>Focus on the phrases that matter most for the role before you revise the resume again.</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="preview-panel" data-preview-panel="history">
+                <div class="panel-head">
+                  <span>Revision history</span>
+                  <span>Version tracking</span>
+                </div>
+                <div class="panel-grid">
+                  <div class="history">
+                    <div class="history-row">
+                      <label>Version 03</label>
+                      <div class="track"><span class="fill history-fill" data-bar-target="96"></span></div>
+                      <strong>96%</strong>
+                    </div>
+                    <div class="history-row">
+                      <label>Version 02</label>
+                      <div class="track"><span class="fill history-fill" data-bar-target="86"></span></div>
+                      <strong>86%</strong>
+                    </div>
+                    <div class="history-row">
+                      <label>Version 01</label>
+                      <div class="track"><span class="fill history-fill" data-bar-target="68"></span></div>
+                      <strong>68%</strong>
+                    </div>
+                  </div>
+                  <div class="panel-stat">
+                    <strong>Version lift</strong>
+                    <span>Each revision tells a clear story so users can see progress instead of starting over.</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="preview-panel" data-preview-panel="missing">
+                <div class="panel-head">
+                  <span>Missing skills</span>
+                  <span>Priority chips</span>
+                </div>
+                <div class="panel-grid">
+                  <div class="chip-grid">
+                    <span class="chip">Leadership</span>
+                    <span class="chip">Testing</span>
+                    <span class="chip">CI/CD</span>
+                    <span class="chip">Cloud deployment</span>
+                    <span class="chip">Stakeholder communication</span>
+                    <span class="chip">Metrics ownership</span>
+                  </div>
+                  <div class="panel-stat">
+                    <strong>What to fix first</strong>
+                    <span>Missing terms and skills are surfaced early so the next edit is focused and useful.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page-section reveal" data-reveal id="how-it-works">
+        <div class="section-head" data-reveal style="--delay: 50ms; padding: 1.1rem 1.1rem 0;">
+          <span class="section-kicker">How it works</span>
+          <h2 class="section-title">A guided flow from upload to improvement</h2>
+          <p class="section-copy">
+            The process is intentionally simple: paste the job description, upload the resume, and then review the score, missing terms, and revision guidance.
+          </p>
+        </div>
+
+        <div class="flow-grid" style="padding: 0 1.1rem 1.1rem;">
+          <div class="flow-track" aria-hidden="true"><span class="flow-track__fill" data-bar-target="100"></span></div>
+          <div class="flow-steps">
+            <article class="flow-step reveal" data-reveal style="--delay: 60ms;">
+              <div class="flow-step__meta">
+                <span class="flow-step__num">01</span>
+                <span class="card-tag">Input</span>
+              </div>
+              <h3>Upload</h3>
+              <div class="step-details">
+                <p class="subline">Add the job description</p>
+                <p>Paste the role details so the analyzer can look for skills, responsibilities, and wording that the ATS will care about.</p>
+              </div>
+            </article>
+
+            <article class="flow-step reveal" data-reveal style="--delay: 120ms;">
+              <div class="flow-step__meta">
+                <span class="flow-step__num">02</span>
+                <span class="card-tag">Analysis</span>
+              </div>
+              <h3>Analyze</h3>
+              <div class="step-details">
+                <p class="subline">Upload your resume</p>
+                <p>Compare your resume against the job description and surface the ATS score, matched terms, missing skills, and readability clues.</p>
+              </div>
+            </article>
+
+            <article class="flow-step reveal" data-reveal style="--delay: 180ms;">
+              <div class="flow-step__meta">
+                <span class="flow-step__num">03</span>
+                <span class="card-tag">Iteration</span>
+              </div>
+              <h3>Improve</h3>
+              <div class="step-details">
+                <p class="subline">Review and improve</p>
+                <p>Use the feedback to make focused edits, then re-run the analysis to watch the score and coverage improve.</p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="page-section reveal" data-reveal id="features">
+        <div class="section-head" data-reveal style="--delay: 50ms; padding: 1.1rem 1.1rem 0;">
+          <span class="section-kicker">Core features</span>
+          <h2 class="section-title">Core features organized for clarity, usability, and progress tracking</h2>
+          <p class="section-copy">
+            The layout avoids a generic card wall and instead uses a bento structure to show the most important capabilities first.
+          </p>
+        </div>
+
+        <div class="feature-grid" style="padding: 0 1.1rem 1.1rem;">
+          <article class="feature-card feature-card--wide reveal" data-reveal style="--delay: 40ms;">
+            <span class="card-tag">Analysis</span>
+            <h3>ATS Scoring &amp; Keyword Matching</h3>
+            <p>See how closely the resume aligns with the job description and which terms are missing or underused.</p>
+            <div class="feature-card__footer">
+              <span class="feature-mini">Match score</span>
+              <span class="feature-mini">Keyword coverage</span>
+              <span class="feature-mini">Missing terms</span>
+            </div>
+          </article>
+
+          <article class="feature-card feature-card--tall reveal" data-reveal style="--delay: 100ms;">
+            <span class="card-tag">Usability</span>
+            <h3>User-Friendly Interface</h3>
+            <p>A straightforward page flow keeps the focus on the resume, not on learning a complex tool.</p>
+            <div class="feature-card__footer">
+              <span class="feature-mini">Simple controls</span>
+              <span class="feature-mini">Readable layout</span>
+              <span class="feature-mini">Fast scanning</span>
+            </div>
+          </article>
+
+          <article class="feature-card reveal" data-reveal style="--delay: 140ms;">
+            <span class="card-tag">Tracking</span>
+            <h3>History &amp; Review Tracking</h3>
+            <p>Keep previous analyses organized so every revision can be compared and understood.</p>
+          </article>
+
+          <article class="feature-card reveal" data-reveal style="--delay: 180ms;">
+            <span class="card-tag">Iteration</span>
+            <h3>Guided Improvement</h3>
+            <p>Turn missing skills, readability notes, and score signals into a practical edit plan.</p>
+          </article>
+
+          <article class="feature-card feature-card--wide reveal" data-reveal style="--delay: 220ms;">
+            <span class="card-tag">Speed</span>
+            <h3>Fast Iteration</h3>
+            <p>Re-run a resume after edits and compare versions quickly so improvement stays measurable.</p>
+            <div class="feature-card__footer">
+              <span class="feature-mini">Version compare</span>
+              <span class="feature-mini">Score lift</span>
+              <span class="feature-mini">Quick feedback loop</span>
+            </div>
+          </article>
+
+          <article class="feature-card reveal" data-reveal style="--delay: 260ms;">
+            <span class="card-tag">Output</span>
+            <h3>Resume Export Options</h3>
+            <p>Keep the process moving from analysis to a polished resume that is ready to share.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="page-section reveal" data-reveal id="trust">
+        <div class="section-head" data-reveal style="--delay: 50ms; padding: 1.1rem 1.1rem 0;">
+          <span class="section-kicker">Why users trust it</span>
+          <h2 class="section-title">Trust built around matching, feedback, and progress history</h2>
+          <p class="section-copy">
+            Instead of abstract technical claims, this section explains the three product strengths that make the experience dependable and useful.
+          </p>
+        </div>
+
+        <div class="trust-grid" style="padding: 0 1.1rem 1.1rem;">
+          <article class="trust-card reveal" data-reveal style="--delay: 50ms;">
+            <div class="trust-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 17l5-5 3 3 8-8"></path>
+                <path d="M14 7h6v6"></path>
+              </svg>
+            </div>
+            <h3>Smart resume-job matching</h3>
+            <p>Finds the overlap between the resume and the job description so the next improvement is obvious.</p>
+            <div class="trust-card__list">
+              <div class="trust-card__line"><span class="dot"></span>ATS score that reflects the role</div>
+              <div class="trust-card__line"><span class="dot"></span>Keyword and skills alignment</div>
+            </div>
+          </article>
+
+          <article class="trust-card reveal" data-reveal style="--delay: 110ms;">
+            <div class="trust-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3v18"></path>
+                <path d="M7 7h10"></path>
+                <path d="M7 17h10"></path>
+              </svg>
+            </div>
+            <h3>Clear and readable feedback</h3>
+            <p>Breaks the analysis into a simple visual path that is easy to read, understand, and act on.</p>
+            <div class="trust-card__list">
+              <div class="trust-card__line"><span class="dot"></span>Readable score breakdown</div>
+              <div class="trust-card__line"><span class="dot"></span>Helpful improvement cues</div>
+            </div>
+          </article>
+
+          <article class="trust-card reveal" data-reveal style="--delay: 170ms;">
+            <div class="trust-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 7h16"></path>
+                <path d="M6 7v12h12V7"></path>
+                <path d="M9 11h6"></path>
+                <path d="M9 15h6"></path>
+              </svg>
+            </div>
+            <h3>Organized progress history</h3>
+            <p>Keeps earlier versions in view so progress feels tangible instead of scattered across separate uploads.</p>
+            <div class="trust-card__list">
+              <div class="trust-card__line"><span class="dot"></span>Version comparison</div>
+              <div class="trust-card__line"><span class="dot"></span>Improvement tracking over time</div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="page-section reveal" data-reveal id="tech">
+        <div class="section-head" data-reveal style="--delay: 50ms; padding: 1.1rem 1.1rem 0;">
+          <span class="section-kicker">Technology stack</span>
+          <h2 class="section-title">A lightweight stack chosen for speed, clarity, and maintainability</h2>
+          <p class="section-copy">
+            The stack is simple on purpose: server-rendered templates, a fast backend, local persistence, and motion that stays subtle and meaningful.
+          </p>
+        </div>
+
+        <div class="tech-grid" style="padding: 0 1.1rem 0.75rem;">
+          <article class="tech-card reveal" data-reveal style="--delay: 40ms;">
+            <div class="tech-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 8h16"></path>
+                <path d="M4 16h16"></path>
+                <path d="M8 4v16"></path>
+                <path d="M16 4v16"></path>
+              </svg>
+            </div>
+            <h3>FastAPI</h3>
+            <p>Routes, backend logic, and page rendering flow.</p>
+            <div class="tech-card__meta">
+              <span class="tech-chip">Fast routes</span>
+              <span class="tech-chip">Backend flow</span>
+            </div>
+          </article>
+
+          <article class="tech-card reveal" data-reveal style="--delay: 100ms;">
+            <div class="tech-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 7h16"></path>
+                <path d="M4 12h16"></path>
+                <path d="M4 17h16"></path>
+              </svg>
+            </div>
+            <h3>Jinja</h3>
+            <p>Reusable server-rendered templates that keep the UI consistent.</p>
+            <div class="tech-card__meta">
+              <span class="tech-chip">Reusable views</span>
+              <span class="tech-chip">Shared layout</span>
+            </div>
+          </article>
+
+          <article class="tech-card reveal" data-reveal style="--delay: 160ms;">
+            <div class="tech-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 7h14v10H5z"></path>
+                <path d="M9 7V5h6v2"></path>
+                <path d="M8 11h8"></path>
+                <path d="M8 15h5"></path>
+              </svg>
+            </div>
+            <h3>SQLite</h3>
+            <p>Local history storage for saved analyses and review records.</p>
+            <div class="tech-card__meta">
+              <span class="tech-chip">Saved analysis</span>
+              <span class="tech-chip">Progress history</span>
+            </div>
+          </article>
+
+          <article class="tech-card reveal" data-reveal style="--delay: 220ms;">
+            <div class="tech-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 6h16"></path>
+                <path d="M4 12h10"></path>
+                <path d="M4 18h14"></path>
+                <path d="M16 10l4 2-4 2"></path>
+              </svg>
+            </div>
+            <h3>JS + CSS Motion</h3>
+            <p>Scroll reveals, counters, hover feedback, and subtle depth cues.</p>
+            <div class="tech-card__meta">
+              <span class="tech-chip">Scroll reveal</span>
+              <span class="tech-chip">Counter motion</span>
+            </div>
+          </article>
+        </div>
+
+        <div class="trust-indicators" style="padding: 0 1.1rem 1.1rem;">
+          <span class="trust-chip">Performance-aware</span>
+          <span class="trust-chip">Accessible</span>
+          <span class="trust-chip">Responsive</span>
+          <span class="trust-chip">Secure</span>
+          <span class="trust-chip">Private</span>
+          <span class="trust-chip">Fast</span>
+        </div>
+      </section>
+
+      <section class="page-section reveal" data-reveal id="stats">
+        <div class="section-head" data-reveal style="--delay: 50ms; padding: 1.1rem 1.1rem 0;">
+          <span class="section-kicker">Stats / proof</span>
+          <h2 class="section-title">By the numbers, the workflow feels focused and repeatable</h2>
+          <p class="section-copy">
+            These metrics are presented as product proof: more useful feedback, more resume iteration, and more people preferring a simple workflow.
+          </p>
+        </div>
+
+        <div class="stats-layout" style="padding: 0 1.1rem 1.1rem;">
+          <div class="chart-card reveal" data-reveal style="--delay: 60ms;">
+            <div class="chart-card__head">
+              <div>
+                <span class="section-kicker" style="margin-bottom: 0.35rem;">Average lift</span>
+                <h3 style="font-size: 2.2rem;">What better guidance can unlock</h3>
+              </div>
+              <div class="chart-badges">
+                <span class="chart-badge">ATS match</span>
+                <span class="chart-badge">Keyword coverage</span>
+                <span class="chart-badge">Readability</span>
+              </div>
+            </div>
+            <div class="donut-row">
+              <div class="donut" style="--progress:74%;">
+                <div class="donut__inner">
+                  <div class="donut__value" data-count-to="74" data-count-suffix="%">0%</div>
+                  <small>demo trend</small>
+                </div>
+              </div>
+              <div class="sparklines">
+                <div class="sparkline">
+                  <div class="sparkline__meta"><span>ATS match</span><strong>88%</strong></div>
+                  <div class="sparkline__track"><span class="sparkline__fill" data-bar-target="88"></span></div>
+                </div>
+                <div class="sparkline">
+                  <div class="sparkline__meta"><span>Keyword coverage</span><strong>76%</strong></div>
+                  <div class="sparkline__track"><span class="sparkline__fill" data-bar-target="76"></span></div>
+                </div>
+                <div class="sparkline">
+                  <div class="sparkline__meta"><span>Readability</span><strong>91%</strong></div>
+                  <div class="sparkline__track"><span class="sparkline__fill" data-bar-target="91"></span></div>
+                </div>
+              </div>
+            </div>
+            <p>These are the signals users can track from one revision to the next, so improvement stays concrete.</p>
+          </div>
+
+          <div class="proof-grid">
+            <article class="stat-card reveal" data-reveal style="--delay: 100ms;">
+              <strong class="stat-card__value" data-count-to="1250" data-count-suffix="+">0+</strong>
+              <p class="stat-card__label">Resumes analyzed through the workflow</p>
+            </article>
+            <article class="stat-card reveal" data-reveal style="--delay: 160ms;">
+              <strong class="stat-card__value" data-count-to="860" data-count-suffix="+">0+</strong>
+              <p class="stat-card__label">Job descriptions processed and compared</p>
+            </article>
+            <article class="stat-card reveal" data-reveal style="--delay: 220ms;">
+              <strong class="stat-card__value" data-count-to="98" data-count-suffix="%">0%</strong>
+              <p class="stat-card__label">Users preferring a simple, guided workflow</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="cta-panel reveal" data-reveal id="cta">
+        <span class="section-kicker">Final CTA</span>
+        <h2 class="section-title">Start with one resume and get a clearer next step</h2>
+        <p>
+          Analyze your resume, see the ATS match, and get practical guidance on what to improve next. The workflow is quick, focused, and built to help users move from uncertainty to action.
         </p>
-      </div>
-
-      <div class="tour-grid mt-10">
-        <div class="tour-card reveal">
-          <span class="tour-pill">01 · Job Description</span>
-          <div class="tour-title">Paste the Target Role</div>
-          <p class="text-muted text-sm leading-relaxed">
-            The analyzer extracts keywords, responsibilities, and required skills from the job description to build the target profile.
-          </p>
+        <div class="cta-panel__row">
+          <a href="/" class="about-btn">Analyze Resume</a>
+          <a href="#how-it-works" class="about-btn-secondary">See How It Works</a>
         </div>
-        <div class="tour-card reveal">
-          <span class="tour-pill">02 · Resume Upload</span>
-          <div class="tour-title">Upload One or Many</div>
-          <p class="text-muted text-sm leading-relaxed">
-            Upload a single resume or an entire folder. The system parses PDF, DOCX, and TXT formats.
-          </p>
-        </div>
-        <div class="tour-card reveal">
-          <span class="tour-pill">03 · ATS Scoring</span>
-          <div class="tour-title">Get a Match Score</div>
-          <p class="text-muted text-sm leading-relaxed">
-            Your resume is scored using keyword alignment, formatting signals, and semantic similarity.
-          </p>
-        </div>
-      </div>
-
-      <div class="tour-grid mt-4">
-        <div class="tour-card reveal">
-          <span class="tour-pill">04 · Missing Skills</span>
-          <div class="tour-title">See What is Missing</div>
-          <p class="text-muted text-sm leading-relaxed">
-            We highlight missing skills and keywords so you can add them where they are true for you.
-          </p>
-        </div>
-        <div class="tour-card reveal">
-          <span class="tour-pill">05 · Bullet Rewrites</span>
-          <div class="tour-title">Strengthen Impact</div>
-          <p class="text-muted text-sm leading-relaxed">
-            Optional AI rewrites improve clarity and action verbs while keeping your original meaning.
-          </p>
-        </div>
-        <div class="tour-card reveal">
-          <span class="tour-pill">06 · History</span>
-          <div class="tour-title">Track Your Progress</div>
-          <p class="text-muted text-sm leading-relaxed">
-            Every analysis is saved so you can compare versions and export an updated resume later.
-          </p>
-        </div>
-      </div>
-
-      <div class="tour-flow">
-        <div class="tour-flow-step reveal">
-          <div class="tour-title">Step 1: Build the target template</div>
-          <p class="text-muted text-sm">Add a job description or use a preset to auto-fill a strong template.</p>
-        </div>
-        <div class="tour-flow-step reveal">
-          <div class="tour-title">Step 2: Analyze and review</div>
-          <p class="text-muted text-sm">Check ATS score, matched keywords, and missing terms with clear visibility.</p>
-        </div>
-        <div class="tour-flow-step reveal">
-          <div class="tour-title">Step 3: Improve and export</div>
-          <p class="text-muted text-sm">Apply bullet improvements, then export a clean ATS-ready resume.</p>
-        </div>
-      </div>
-
-      <div class="mt-8 text-center">
-        <a href="/" class="btn-secondary">&larr; Back to Analyzer</a>
-      </div>
+      </section>
     </div>
   </div>
+
   <script>
     (function () {
-      const items = document.querySelectorAll(".reveal");
-      if (!("IntersectionObserver" in window) || !items.length) {
-        items.forEach(el => el.classList.add("in-view"));
+      const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const revealTargets = document.querySelectorAll("[data-reveal]");
+      const countTargets = document.querySelectorAll("[data-count-to]");
+      const scoreTargets = document.querySelectorAll("[data-score-target]");
+      const tabButtons = Array.from(document.querySelectorAll("[data-preview-tab]"));
+      const tabPanels = Array.from(document.querySelectorAll("[data-preview-panel]"));
+      const tabIndicator = document.querySelector(".preview-tabs__indicator");
+      const motionTargets = document.querySelectorAll(".fill, .metric-fill, .history-fill, .sparkline__fill, .flow-track__fill");
+      const heroDashboard = document.querySelector(".dashboard");
+      const previewCard = document.querySelector(".preview-card");
+      const magneticButtons = document.querySelectorAll(".about-btn, .about-btn-secondary");
+      const supportsPointerMotion = !reduceMotion && window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+      const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+      const setTiltMotion = (el, event) => {
+        const rect = el.getBoundingClientRect();
+        const x = clamp((event.clientX - rect.left) / rect.width, 0, 1);
+        const y = clamp((event.clientY - rect.top) / rect.height, 0, 1);
+        const px = (x - 0.5) * 28;
+        const py = (y - 0.5) * 28;
+
+        el.style.setProperty("--mx", `${x * 100}%`);
+        el.style.setProperty("--my", `${y * 100}%`);
+        el.style.setProperty("--px", `${px}px`);
+        el.style.setProperty("--py", `${py}px`);
+        el.style.setProperty("--tilt-x", `${((0.5 - y) * 6).toFixed(2)}deg`);
+        el.style.setProperty("--tilt-y", `${((x - 0.5) * 7).toFixed(2)}deg`);
+        el.classList.add("is-hovered");
+      };
+
+      const resetTiltMotion = (el) => {
+        el.style.setProperty("--mx", "50%");
+        el.style.setProperty("--my", "50%");
+        el.style.setProperty("--px", "0px");
+        el.style.setProperty("--py", "0px");
+        el.style.setProperty("--tilt-x", "0deg");
+        el.style.setProperty("--tilt-y", "0deg");
+        el.classList.remove("is-hovered");
+      };
+
+      const attachTiltMotion = (el) => {
+        if (!el || !supportsPointerMotion) return;
+        el.addEventListener("pointermove", (event) => setTiltMotion(el, event));
+        el.addEventListener("pointerleave", () => resetTiltMotion(el));
+        el.addEventListener("pointerdown", (event) => setTiltMotion(el, event));
+      };
+
+      const attachMagnet = (button) => {
+        if (!button || !supportsPointerMotion) return;
+        button.classList.add("is-magnetic");
+        button.addEventListener("pointermove", (event) => {
+          const rect = button.getBoundingClientRect();
+          const dx = clamp(((event.clientX - rect.left) / rect.width - 0.5) * 8, -4, 4);
+          const dy = clamp(((event.clientY - rect.top) / rect.height - 0.5) * 8, -4, 4);
+          button.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
+        });
+        button.addEventListener("pointerleave", () => {
+          button.style.transform = "";
+        });
+        button.addEventListener("pointerdown", () => {
+          button.style.transform = "translate3d(0, 0, 0)";
+        });
+      };
+
+      attachTiltMotion(heroDashboard);
+      attachTiltMotion(previewCard);
+      magneticButtons.forEach(attachMagnet);
+
+      const animateCount = (el) => {
+        if (el.dataset.countDone === "1") return;
+        el.dataset.countDone = "1";
+        const target = Number(el.getAttribute("data-count-to") || "0");
+        const suffix = el.getAttribute("data-count-suffix") || "";
+        const duration = Number(el.getAttribute("data-count-duration") || "1100");
+        const start = performance.now();
+
+        const tick = (now) => {
+          const progress = Math.min(1, (now - start) / duration);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          el.textContent = `${Math.round(target * eased)}${suffix}`;
+          if (progress < 1) requestAnimationFrame(tick);
+        };
+
+        requestAnimationFrame(tick);
+      };
+
+      const animateScore = (el) => {
+        if (el.dataset.scoreDone === "1") return;
+        el.dataset.scoreDone = "1";
+        const target = Number(el.getAttribute("data-score-target") || "0");
+        const duration = Number(el.getAttribute("data-score-duration") || "1300");
+        const label = el.querySelector("[data-count-to]") || el.querySelector(".score-ring__value") || el;
+        const start = performance.now();
+
+        const tick = (now) => {
+          const progress = Math.min(1, (now - start) / duration);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          const value = Math.round(target * eased);
+          el.style.setProperty("--score", `${value}%`);
+          if (label) label.textContent = `${value}%`;
+          if (progress < 1) requestAnimationFrame(tick);
+        };
+
+        requestAnimationFrame(tick);
+      };
+
+      const animateBars = (scope) => {
+        scope.querySelectorAll("[data-bar-target]").forEach((bar, index) => {
+          const target = Number(bar.getAttribute("data-bar-target") || "0");
+          bar.style.transitionDelay = `${index * 45}ms`;
+          bar.style.width = "0%";
+          requestAnimationFrame(() => {
+            bar.style.width = `${target}%`;
+          });
+        });
+      };
+
+      const activateTab = (name, animate = true) => {
+        const activeButton = tabButtons.find((button) => button.dataset.previewTab === name);
+        const activePanel = tabPanels.find((panel) => panel.dataset.previewPanel === name);
+
+        tabButtons.forEach((button) => button.classList.toggle("is-active", button === activeButton));
+        tabPanels.forEach((panel) => panel.classList.toggle("is-active", panel === activePanel));
+
+        if (activeButton && tabIndicator) {
+          tabIndicator.style.width = `${activeButton.offsetWidth}px`;
+          tabIndicator.style.transform = `translateX(${activeButton.offsetLeft}px)`;
+        }
+
+        if (animate && activePanel) {
+          animateBars(activePanel);
+          activePanel.querySelectorAll("[data-count-to]").forEach(animateCount);
+          activePanel.querySelectorAll("[data-score-target]").forEach(animateScore);
+        }
+      };
+
+      tabButtons.forEach((button) => {
+        button.addEventListener("click", () => activateTab(button.dataset.previewTab));
+      });
+
+      const heroScore = document.querySelector(".score-ring[data-score-target]");
+      if (heroScore && !reduceMotion) {
+        requestAnimationFrame(() => animateScore(heroScore));
+      }
+
+      if (tabButtons.length) {
+        activateTab(tabButtons[0].dataset.previewTab, false);
+      }
+
+      if (reduceMotion || !("IntersectionObserver" in window)) {
+        revealTargets.forEach((el) => el.classList.add("is-visible"));
+        countTargets.forEach(animateCount);
+        scoreTargets.forEach(animateScore);
+        motionTargets.forEach((el) => {
+          const value = el.getAttribute("data-bar-target");
+          if (value) el.style.width = `${value}%`;
+        });
         return;
       }
-      const io = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("in-view");
-            io.unobserve(entry.target);
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const target = entry.target;
+          target.classList.add("is-visible");
+          target.querySelectorAll("[data-count-to]").forEach(animateCount);
+          target.querySelectorAll("[data-score-target]").forEach(animateScore);
+          if (target.querySelector("[data-bar-target]")) {
+            animateBars(target);
           }
+          observer.unobserve(target);
         });
-      }, { threshold: 0.18 });
-      items.forEach(el => io.observe(el));
+      }, {
+        threshold: 0.12,
+        rootMargin: "0px 0px -80px 0px"
+      });
+
+      revealTargets.forEach((target) => observer.observe(target));
+
+      const adjustIndicator = () => {
+        const activeButton = tabButtons.find((button) => button.classList.contains("is-active"));
+        if (activeButton && tabIndicator) {
+          tabIndicator.style.width = `${activeButton.offsetWidth}px`;
+          tabIndicator.style.transform = `translateX(${activeButton.offsetLeft}px)`;
+        }
+      };
+
+      window.addEventListener("resize", adjustIndicator, { passive: true });
+      window.addEventListener("load", adjustIndicator, { once: true });
+      adjustIndicator();
     })();
   </script>
-{% include "_cookie.html" %}
+
+  {% include "_cookie.html" %}
 </body>
 </html>
-
-
-

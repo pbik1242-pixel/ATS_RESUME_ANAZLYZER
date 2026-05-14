@@ -1,0 +1,43 @@
+<div class="scroll-bar" id="scrollBar" aria-hidden="true"></div>
+<div class="floaters" id="floaters" aria-hidden="true"></div>
+<script>
+  (function () {
+    const scrollBar = document.getElementById("scrollBar");
+    if (scrollBar) {
+      const updateScrollBar = () => {
+        const full = document.body.scrollHeight - window.innerHeight;
+        const progress = full > 0 ? (window.scrollY / full) * 100 : 0;
+        scrollBar.style.width = progress + "%";
+      };
+      updateScrollBar();
+      window.addEventListener("scroll", updateScrollBar, { passive: true });
+      window.addEventListener("resize", updateScrollBar);
+    }
+
+    const floaters = document.getElementById("floaters");
+    if (floaters && !floaters.dataset.ready) {
+      floaters.dataset.ready = "true";
+      const points = [
+        [8, 18],
+        [88, 12],
+        [14, 65],
+        [92, 55],
+        [45, 80],
+        [72, 30],
+        [25, 90],
+        [60, 10],
+        [80, 75],
+        [35, 45],
+      ];
+
+      points.forEach(([x, y], index) => {
+        const dot = document.createElement("div");
+        dot.className = "floater";
+        const size = [8, 6, 10, 5, 12, 4, 8, 6, 10, 5][index];
+        dot.style.cssText =
+          "left:" + x + "%;top:" + y + "%;width:" + size + "px;height:" + size + "px;animation-duration:" + (4 + index * 0.7) + "s;animation-delay:" + (index * -0.8) + "s;";
+        floaters.appendChild(dot);
+      });
+    }
+  })();
+</script>

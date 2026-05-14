@@ -367,7 +367,7 @@
             {% else %}
             <label class="local-captcha">
               <input type="checkbox" name="captcha" required>
-              <span>I’m not a robot</span>
+              <span>I'm not a robot</span>
             </label>
             {% endif %}
           </div>
@@ -414,7 +414,7 @@
         <span class="auth-hero-ring"></span>
         <span class="auth-hero-dot"></span>
         <div>
-          <div class="hero-brow">AI-POWERED · PYTHON · ATS RESUME ANALYZER</div>
+          <div class="hero-brow">AI-POWERED - PYTHON - ATS RESUME ANALYZER</div>
           <div class="auth-hero-title">
             {{ 'ORGANIZE' if hr_mode else 'BEAT' }}<br>THE <span>ATS</span>
           </div>
@@ -439,9 +439,12 @@
       });
     })();
   </script>
-{% include "_cookie.html" %}
+{% if current_user %}
+  {% include "_cookie.html" %}
+{% endif %}
 </body>
 </html>
+
 
 
 

@@ -14,92 +14,145 @@
   {% set active_page = "/interview-list" %}
   {% include "_app_topbar.html" %}
 
-  <div class="page-wrap page-wrap--content">
-    <div class="glass-panel p-6 md:p-8">
-      <div class="page-hero page-hero--compact">
-        <div class="page-hero__copy">
-          <p class="badge-pill">Interview Pipeline</p>
-          <h1 class="brand-title text-3xl md:text-4xl font-bold">Candidates Ready for Interviews</h1>
-          <p class="text-muted mt-2">Centralized view of every candidate you've sent from the analyzed resumes page. Track contact info, interview dates, and jump back to the ATS analysis.</p>
-        </div>
-        <div class="page-hero__actions">
-          <a class="app-cta" href="/analyzed-resumes">Add More</a>
-        </div>
-      </div>
-
-      {% if notice %}
-      <div class="panel-soft mt-5 p-4 md:p-5 rounded-lg {% if notice_tone == 'error' %}border-red-400/60{% else %}border-green-500/50{% endif %}">
-        <div class="font-semibold">{{ notice }}</div>
-      </div>
-      {% endif %}
-
-      <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4 mt-6">
-        {% for item in interviews %}
-        <div class="glass-card p-5 flex flex-col gap-3">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <div class="text-xs text-muted uppercase tracking-wide">Interview Date</div>
-              <div class="text-lg font-semibold">{{ item.interview_date }}</div>
-              <div class="text-sm text-muted">Added {{ item.updated_at or item.created_at }}</div>
-            </div>
-            <a class="app-cta" href="/history/{{ item.history_id }}">View Analysis</a>
-          </div>
-          <div>
-            <div class="text-xl font-semibold">{{ item.candidate_name }}</div>
-            <div class="text-sm text-muted">{{ item.filename }} · {{ item.filetype }} · {{ item.score_display }}</div>
-            <div class="text-sm text-muted">Analyzed on {{ item.analyzed_date }}</div>
-          </div>
-          <div class="panel-soft p-3 rounded-lg">
-            <div class="text-xs text-muted">Why selected</div>
-            <div class="text-sm font-semibold leading-6">{{ item.selection_reason }}</div>
-          </div>
-          <div class="panel-soft p-3 rounded-lg">
-            <div class="text-xs text-muted">Contact</div>
-            <div class="text-sm font-semibold">{{ item.contact }}</div>
-            <div class="text-sm font-semibold">
-              <a class="text-red-500 hover:underline" href="mailto:{{ item.email }}">{{ item.email }}</a>
-            </div>
-            <div class="text-xs text-muted mt-1">
-              {% if item.email_sent_at %}
-              Email sent at {{ item.email_sent_at }}
-              {% else %}
-              Email not sent yet
-              {% endif %}
-            </div>
-          </div>
-          <div class="panel-soft p-3 rounded-lg">
-            <div class="text-xs text-muted">Notes</div>
-            <div class="text-sm leading-6">{{ item.notes or "No notes added." }}</div>
-          </div>
-          <form class="panel-soft p-3 rounded-lg flex flex-col gap-2" method="POST" action="/interview-list/update-date">
-            <input type="hidden" name="entry_id" value="{{ item.id }}">
-            <label class="text-xs text-muted font-semibold">Change Interview Date</label>
-            <input
-              class="w-full rounded-lg border border-slate-200 px-3 py-2 focus:border-slate-500 focus:outline-none"
-              type="date"
-              name="interview_date"
-              min="{{ today }}"
-              value="{{ item.interview_date if item.interview_date != 'TBD' else today }}"
-              required>
-            <button type="submit" class="btn-secondary w-full">Update Date</button>
-          </form>
-          <div class="flex flex-wrap gap-3">
-            <form method="POST" action="/interview-list/send-email">
-              <input type="hidden" name="entry_id" value="{{ item.id }}">
-              <button type="submit" class="btn-secondary">Send Email</button>
-            </form>
-            <a class="btn-secondary" href="/analyzed-resumes">Send another</a>
-            <a class="text-red-600 hover:underline text-sm" href="/interview-list?delete_id={{ item.id }}">Remove</a>
-          </div>
-        </div>
-        {% else %}
-        <div class="panel-soft p-6 rounded-xl col-span-full text-center text-muted">
-          No interview candidates yet. Select resumes from <a class="text-red-500 underline" href="/analyzed-resumes">Analyzed Resumes</a>.
-        </div>
-        {% endfor %}
+  <div class="page-wrap page-wrap--content interview-list-page">
+    <div class="page-hero page-hero--compact">
+      <div class="page-hero__copy">
+        <p class="badge-pill">Interview Pipeline</p>
+        <h1 class="brand-title text-3xl md:text-4xl font-bold">Candidates Ready for Interviews</h1>
+        <p class="text-muted mt-2">
+          Centralized view of every candidate you've sent from the analyzed resumes page. Track contact info, interview dates, and jump back to the ATS analysis.
+        </p>
       </div>
     </div>
+
+    {% if notice %}
+    <div class="panel-soft mt-5 p-4 md:p-5 rounded-lg {% if notice_tone == 'error' %}border-red-400/60{% else %}border-green-500/50{% endif %}">
+      <div class="font-semibold">{{ notice }}</div>
+    </div>
+    {% endif %}
+
+    <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4 mt-6">
+      {% for item in interviews %}
+      <div class="glass-card p-5 flex flex-col gap-3">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <div class="text-xs text-muted uppercase tracking-wide">Interview Date</div>
+            <div class="text-lg font-semibold">{{ item.interview_date }}</div>
+            <div class="text-sm text-muted">Added {{ item.updated_at or item.created_at }}</div>
+          </div>
+          <a class="app-cta" href="/history/{{ item.history_id }}">View Analysis</a>
+        </div>
+        <div>
+          <div class="text-xl font-semibold">{{ item.candidate_name }}</div>
+          <div class="text-sm text-muted">{{ item.filename }}  -  {{ item.filetype }}  -  {{ item.score_display }}</div>
+          <div class="text-sm text-muted">Analyzed on {{ item.analyzed_date }}</div>
+        </div>
+        <div class="panel-soft p-3 rounded-lg">
+          <div class="text-xs text-muted">Why selected</div>
+          <div class="text-sm font-semibold leading-6">{{ item.selection_reason }}</div>
+        </div>
+        <div class="panel-soft p-3 rounded-lg">
+          <div class="flex items-center justify-between gap-3">
+            <div class="text-xs text-muted">Contact</div>
+            <button
+              type="button"
+              class="text-xs font-semibold text-red-600 hover:underline"
+              data-toggle-email-draft="{{ item.id }}"
+            >
+              Edit Email
+            </button>
+          </div>
+          <div class="text-sm font-semibold">{{ item.contact }}</div>
+          <div class="text-sm font-semibold">
+            {% if item.email and item.email != '-' %}
+            <a class="text-red-500 hover:underline" href="mailto:{{ item.email }}">{{ item.email }}</a>
+            {% else %}
+            <span class="text-muted">No email saved</span>
+            {% endif %}
+          </div>
+          <div class="text-xs text-muted mt-1">
+            {% if item.email_sent_at %}
+            Email sent at {{ item.email_sent_at }}
+            {% else %}
+            Email not sent yet
+            {% endif %}
+          </div>
+          <form method="POST" action="/interview-list/send-custom-email" class="mt-3 hidden" data-email-draft-form="{{ item.id }}">
+            <input type="hidden" name="entry_id" value="{{ item.id }}">
+            <label class="text-xs text-muted font-semibold">Subject</label>
+            <input
+              class="w-full rounded-lg border border-slate-200 px-3 py-2 focus:border-slate-500 focus:outline-none"
+              type="text"
+              name="subject"
+              value="{{ item.email_subject }}"
+              required>
+            <label class="mt-3 block text-xs text-muted font-semibold">Message Preview</label>
+            <textarea
+              class="w-full rounded-lg border border-slate-200 px-3 py-2 focus:border-slate-500 focus:outline-none"
+              name="body"
+              rows="10"
+              required>{{ item.email_body }}</textarea>
+            <div class="mt-2 text-xs text-muted">
+              This draft will be sent to <span class="font-semibold">{{ item.email if item.email and item.email != '-' else 'No email saved' }}</span>.
+            </div>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button type="submit" class="btn-secondary">Send Edited Email</button>
+              <button type="button" class="btn-secondary" data-cancel-email-draft="{{ item.id }}">Cancel</button>
+            </div>
+          </form>
+        </div>
+        <div class="panel-soft p-3 rounded-lg">
+          <div class="text-xs text-muted">Notes</div>
+          <div class="text-sm leading-6">{{ item.notes or "No notes added." }}</div>
+        </div>
+        <form class="panel-soft p-3 rounded-lg flex flex-col gap-2" method="POST" action="/interview-list/update-date">
+          <input type="hidden" name="entry_id" value="{{ item.id }}">
+          <label class="text-xs text-muted font-semibold">Change Interview Date</label>
+          <input
+            class="w-full rounded-lg border border-slate-200 px-3 py-2 focus:border-slate-500 focus:outline-none"
+            type="date"
+            name="interview_date"
+            min="{{ today }}"
+            value="{{ item.interview_date if item.interview_date != 'TBD' else today }}"
+            required>
+          <button type="submit" class="btn-secondary w-full">Update Date</button>
+        </form>
+        <div class="flex flex-wrap gap-3">
+          <form method="POST" action="/interview-list/send-email">
+            <input type="hidden" name="entry_id" value="{{ item.id }}">
+            <button type="submit" class="btn-secondary">Send Email</button>
+          </form>
+          <a class="btn-secondary" href="/analyzed-resumes">Back to Grid</a>
+          <a class="text-red-600 hover:underline text-sm" href="/interview-list?delete_id={{ item.id }}">Remove</a>
+        </div>
+      </div>
+      {% else %}
+      <div class="panel-soft p-6 rounded-xl col-span-full text-center text-muted">
+        No interview candidates yet. Select resumes from <a class="text-red-500 underline" href="/analyzed-resumes">Analyzed Resumes</a>.
+      </div>
+      {% endfor %}
+    </div>
   </div>
-{% include "_cookie.html" %}
+
+  {% include "_cookie.html" %}
+  <script>
+    document.addEventListener("click", function (event) {
+      const toggleButton = event.target.closest("[data-toggle-email-draft]");
+      const cancelButton = event.target.closest("[data-cancel-email-draft]");
+      if (!toggleButton && !cancelButton) return;
+
+      const source = toggleButton || cancelButton;
+      const entryId = source.getAttribute("data-toggle-email-draft") || source.getAttribute("data-cancel-email-draft");
+      const editor = document.querySelector(`[data-email-draft-form="${entryId}"]`);
+      if (!editor) return;
+      if (toggleButton) {
+        editor.classList.remove("hidden");
+        const input = editor.querySelector("input[name='subject']");
+        if (input) input.focus();
+      } else {
+        editor.classList.add("hidden");
+      }
+    });
+  </script>
 </body>
 </html>

@@ -5,144 +5,725 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Profile - ATS RESUME ANALYZER</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>{% include "_theme.css" %}</style>
+  <style>
+    {% include "_theme.css" %}
+
+    body.profile-page {
+      overflow-x: hidden;
+    }
+
+    .profile-scene {
+      width: min(100%, 1540px);
+      margin: 0 auto;
+      padding: 0.75rem 0.75rem 2rem;
+    }
+
+    .profile-shell {
+      position: relative;
+      min-height: calc(100vh - 1.5rem);
+      padding-top: 1.5rem;
+    }
+
+    .profile-frame {
+      position: relative;
+      width: min(100%, 1540px);
+      margin: 0 auto;
+    }
+
+    .profile-stage {
+      position: relative;
+      min-height: 24rem;
+      border-radius: 0 0 0 0;
+      overflow: hidden;
+      background: transparent;
+    }
+
+    .profile-card {
+      position: relative;
+      width: min(calc(100% - 1.5rem), 1520px);
+      margin: -3rem auto 0;
+      padding: 4.75rem 2.25rem 2.5rem;
+      border-radius: 2rem;
+      background: rgba(255, 255, 255, 0.98);
+      box-shadow: 0 34px 90px rgba(76, 18, 44, 0.18);
+      z-index: 2;
+    }
+
+    .profile-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    }
+
+    .profile-top-actions {
+      position: absolute;
+      top: 1.1rem;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      padding: 0 2.25rem;
+      z-index: 3;
+    }
+
+    .profile-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-family: "DM Mono", monospace;
+      font-size: 0.92rem;
+      letter-spacing: 0.02em;
+      color: #ff7a98;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .profile-action__icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 999px;
+      background: rgba(255, 122, 152, 0.12);
+      color: #ff7a98;
+    }
+
+    .profile-avatar {
+      position: absolute;
+      top: -5.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 11.5rem;
+      height: 11.5rem;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow:
+        0 14px 36px rgba(66, 20, 40, 0.10),
+        0 0 0 0.7rem rgba(255, 255, 255, 0.82),
+        0 0 0 1.8rem rgba(255, 255, 255, 0.48);
+      display: grid;
+      place-items: center;
+      z-index: 4;
+    }
+
+    .profile-avatar__inner {
+      width: 9rem;
+      height: 9rem;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, #fff, #ffe7ee);
+      color: #6d6671;
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 3.9rem;
+      letter-spacing: 0.06em;
+      box-shadow: inset 0 0 0 1px rgba(255, 122, 152, 0.08);
+    }
+
+    .profile-body {
+      text-align: center;
+      padding-top: 4.5rem;
+    }
+
+    .profile-name {
+      margin: 0;
+      color: #6d6671;
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(3rem, 5vw, 4.6rem);
+      letter-spacing: 0.03em;
+      line-height: 1;
+    }
+
+    .profile-subtitle {
+      margin: 0.7rem 0 0;
+      color: #8b828e;
+      font-size: 1.15rem;
+      font-weight: 500;
+    }
+
+    .profile-meta {
+      margin-top: 2rem;
+      color: #7b7480;
+      font-size: clamp(1.05rem, 2vw, 1.45rem);
+      line-height: 1.65;
+    }
+
+    .profile-meta__line + .profile-meta__line {
+      margin-top: 0.2rem;
+    }
+
+    .profile-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+      max-width: 34rem;
+      margin: 2.3rem auto 0;
+      text-align: center;
+    }
+
+    .profile-stat__value {
+      display: block;
+      color: #6d6671;
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(2.6rem, 4vw, 3.6rem);
+      letter-spacing: 0.03em;
+      line-height: 1;
+    }
+
+    .profile-stat__label {
+      margin-top: 0.35rem;
+      color: #8f8790;
+      font-size: 0.98rem;
+      font-weight: 500;
+    }
+
+    .profile-cta {
+      display: flex;
+      justify-content: center;
+      margin: 2.4rem 0 1.2rem;
+    }
+
+    .profile-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 13rem;
+      padding: 1rem 1.6rem;
+      border-radius: 999px;
+      border: 0;
+      color: #fff;
+      text-decoration: none;
+      font-family: "Poppins", sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      background: linear-gradient(90deg, #ff4d9a, #ff8a6a);
+      box-shadow: 0 16px 34px rgba(255, 83, 130, 0.28);
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .profile-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 22px 40px rgba(255, 83, 130, 0.32);
+    }
+
+    .profile-more {
+      width: min(100%, 1560px);
+      margin: 0 auto;
+      padding-top: 2rem;
+    }
+
+    .profile-section {
+      margin-top: 1rem;
+    }
+
+    .profile-section__title {
+      margin: 0;
+      color: #6d6671;
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(2rem, 3vw, 2.8rem);
+      letter-spacing: 0.03em;
+    }
+
+    .profile-details {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-top: 1.1rem;
+    }
+
+    .profile-detail {
+      border-radius: 1.2rem;
+      border: 1px solid rgba(109, 102, 113, 0.08);
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 16px 34px rgba(16, 14, 18, 0.05);
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .profile-detail__label {
+      color: #a094a3;
+      font-family: "DM Mono", monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .profile-detail__value {
+      margin-top: 0.45rem;
+      color: #6d6671;
+      font-size: 0.98rem;
+      font-weight: 600;
+      word-break: break-word;
+    }
+
+    .profile-history {
+      margin-top: 2rem;
+      display: grid;
+      gap: 1rem;
+    }
+
+    .profile-history__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .profile-delete-all {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 0.85rem 1.2rem;
+      background: rgba(255, 91, 124, 0.12);
+      color: #ff5a84;
+      text-decoration: none;
+      font-weight: 700;
+      border: 1px solid rgba(255, 91, 124, 0.2);
+      transition: transform 0.18s ease, background 0.18s ease;
+    }
+
+    .profile-delete-all:hover {
+      background: rgba(255, 91, 124, 0.18);
+      transform: translateY(-1px);
+    }
+
+    .profile-history__summary {
+      margin: 0.8rem 0 0;
+      color: #8d8490;
+      font-size: 0.98rem;
+      line-height: 1.6;
+    }
+
+    .profile-history__split {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.25rem;
+      align-items: start;
+      margin-top: 1.25rem;
+    }
+
+    .profile-history-box {
+      border-radius: 1.3rem;
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(109, 102, 113, 0.10);
+      box-shadow: 0 18px 40px rgba(16, 14, 18, 0.05);
+      padding: 1rem;
+      min-width: 0;
+    }
+
+    .profile-history-box__head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .profile-history-box__title {
+      margin: 0;
+      color: #6d6671;
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(1.7rem, 2.6vw, 2.3rem);
+      letter-spacing: 0.03em;
+      line-height: 1;
+    }
+
+    .profile-history-box__meta {
+      color: #8d8490;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-align: right;
+    }
+
+    .profile-history-scroll {
+      max-height: 31rem;
+      overflow-y: auto;
+      padding-right: 0.35rem;
+      min-width: 0;
+      scrollbar-width: thin;
+      scrollbar-color: #ff7a98 rgba(190, 185, 176, 0.25);
+    }
+
+    .profile-history-scroll::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    .profile-history-scroll::-webkit-scrollbar-track {
+      background: rgba(190, 185, 176, 0.18);
+      border-radius: 999px;
+    }
+
+    .profile-history-scroll::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #ff8ca9, #ff5f86);
+      border-radius: 999px;
+      border: 2px solid rgba(255, 255, 255, 0.7);
+    }
+
+    .profile-history-scroll::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, #ff9bb3, #ff517c);
+    }
+
+    .profile-table-shell {
+      overflow: hidden;
+      border-radius: 1.4rem;
+      min-width: 0;
+    }
+
+    .profile-empty {
+      padding: 1.2rem;
+      border-radius: 1rem;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px dashed rgba(109, 102, 113, 0.12);
+      color: #8d8490;
+      text-align: center;
+    }
+
+    .profile-back {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 0.95rem 1.4rem;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(109, 102, 113, 0.12);
+      color: #6c6570;
+      text-decoration: none;
+      font-weight: 700;
+      box-shadow: 0 12px 26px rgba(16, 14, 18, 0.05);
+    }
+
+    .profile-footer {
+      display: flex;
+      justify-content: center;
+      margin: 1.8rem 0 0.4rem;
+    }
+
+    @media (max-width: 980px) {
+      .profile-card {
+        width: min(calc(100% - 1rem), 1350px);
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+
+      .profile-details {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .profile-history__split {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .profile-card {
+        margin-top: -2.4rem;
+        border-radius: 1.5rem;
+        padding-top: 4.5rem;
+      }
+
+      .profile-avatar {
+        width: 9.8rem;
+        height: 9.8rem;
+        top: -4.8rem;
+      }
+
+      .profile-avatar__inner {
+        width: 7.8rem;
+        height: 7.8rem;
+        font-size: 3.2rem;
+      }
+
+      .profile-top-actions {
+        padding: 0 1rem;
+      }
+
+      .profile-body {
+        padding-top: 3.4rem;
+      }
+
+      .profile-stats {
+        grid-template-columns: 1fr;
+      }
+
+      .profile-details {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
-<body class="app-shell">
+<body class="app-shell profile-page">
   {% set page_badge = "My Profile" %}
   {% set page_cta_href = "/" %}
   {% set page_cta_label = "Analyze Now" %}
   {% set active_page = "/profile" %}
   {% include "_app_topbar.html" %}
 
-  <div class="page-wrap page-wrap--content">
-    <div class="glass-panel p-6 md:p-10">
-      <div class="mb-6">
-        <h1 class="brand-title text-3xl font-bold">Account Overview</h1>
-        <p class="text-muted mt-2">Your account details and saved ATS analysis history are shown below.</p>
-      </div>
+  <main class="profile-shell">
+    <section class="profile-frame">
+      <div class="profile-stage"></div>
 
-      <div class="grid gap-6 md:grid-cols-2">
-        <div class="panel-soft p-5">
-          <h2 class="text-xl font-semibold">User Details</h2>
-          <dl class="mt-4 space-y-3 text-sm">
-            <div>
-              <dt class="text-muted">Name</dt>
-              <dd class="mt-1 font-semibold">{{ user_name }}</dd>
-            </div>
-            <div>
-              <dt class="text-muted">Email</dt>
-              <dd class="mt-1 break-all">{{ user_email }}</dd>
-            </div>
-            <div>
-              <dt class="text-muted">Joined</dt>
-              <dd class="mt-1">{{ user_created_at }}</dd>
-            </div>
-          </dl>
-        </div>
-        <div class="panel-soft p-5">
-          <h2 class="text-xl font-semibold">History Summary</h2>
-          <div class="mt-4 grid gap-3 sm:grid-cols-3">
-            <div class="panel-soft p-3">
-              <p class="text-muted text-xs uppercase tracking-wide">Analyses</p>
-              <p class="metric-value mt-2 text-2xl font-bold">{{ analysis_count }}</p>
-            </div>
-            <div class="panel-soft p-3">
-              <p class="text-muted text-xs uppercase tracking-wide">Avg Score</p>
-              <p class="metric-value mt-2 text-2xl font-bold">{{ avg_score }}</p>
-            </div>
-            <div class="panel-soft p-3">
-              <p class="text-muted text-xs uppercase tracking-wide">Last Analysis</p>
-              <p class="mt-2 text-sm">{{ last_analysis }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-8">
-        <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <h2 class="text-2xl font-semibold">Resume History</h2>
-          {% if history_groups %}
-          <a
-            href="/profile?delete_all=1"
-            onclick="return confirm('Delete all history records? This cannot be undone.');"
-            class="rounded-lg border border-rose-300/40 bg-rose-500/10 px-3 py-2 text-sm font-semibold text-rose-100 transition hover:bg-rose-500/20"
-          >
-            Delete All
+      <div class="profile-card">
+        <div class="profile-top-actions">
+          <a href="/" class="profile-action">
+            <span class="profile-action__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" width="16" height="16">
+                <path d="M4 12h16M12 4v16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </span>
+            Analyze
           </a>
-          {% endif %}
+          <a href="/interview-list" class="profile-action">
+            <span class="profile-action__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" width="16" height="16">
+                <path d="M4 5.8C4 4.8 4.8 4 5.8 4h12.4c1 0 1.8.8 1.8 1.8v7.1c0 1-.8 1.8-1.8 1.8H11l-4.7 3.8v-3.8H5.8c-1 0-1.8-.8-1.8-1.8V5.8Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            Interview List
+          </a>
         </div>
-        {% if history_notice %}
-        <p class="mb-4 {{ 'notice notice-error' if history_notice_tone == 'error' else 'notice notice-success' }}">{{ history_notice }}</p>
-        {% endif %}
-        <p class="text-muted mb-4 text-sm">Open a saved record to review full match details and rewritten bullets.</p>
-        <div class="space-y-4">
-          {% if history_groups %}
-          {% for group in history_groups %}
-          <div class="panel-soft p-4 md:p-5">
-            <div class="mb-3 flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p class="text-muted text-xs uppercase tracking-wide">
-                  {{ "Folder Batch" if group.group_type == "folder" else "Single Analysis" }}
-                </p>
-                <h3 class="mt-1 text-lg font-semibold">{{ group.title }}</h3>
-              </div>
-              <div class="text-right text-sm">
-                <p class="font-semibold text-cyan-100">{{ group.count }} file{{ "" if group.count == 1 else "s" }}</p>
-                <p class="text-muted">{{ group.latest_date }}</p>
-              </div>
+
+        <div class="profile-avatar" aria-hidden="true">
+          <div class="profile-avatar__inner">{{ (user_name[:1] if user_name else 'C') | upper }}</div>
+        </div>
+
+        <div class="profile-body">
+          <h1 class="profile-name">{{ user_name or "Candidate" }}</h1>
+          <p class="profile-subtitle">{{ user_email }}</p>
+          <div class="profile-meta">
+            <div class="profile-meta__line">{{ role_label }}</div>
+          </div>
+
+          <div class="profile-stats">
+            <div>
+              <span class="profile-stat__value">{{ analysis_count }}</span>
+              <div class="profile-stat__label">Analyses</div>
             </div>
-            <div class="overflow-x-auto">
-              <table class="table-shell min-w-[760px]">
-                <thead>
-                  <tr>
-                    <th>File Name</th>
-                    <th>Format</th>
-                    <th>ATS Score</th>
-                    <th>Date</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for r in group["items"] %}
-                  <tr>
-                    <td>
-                      <a href="/history/{{ r.id }}" class="font-semibold text-cyan-200 hover:text-white hover:underline">
-                        {{ r.filename or "-" }}
-                      </a>
-                    </td>
-                    <td class="text-blue-200">{{ r.filetype or "-" }}</td>
-                    <td class="font-bold text-emerald-300">{{ r.score }}</td>
-                    <td class="text-muted">{{ r.date }}</td>
-                    <td>
-                      <a
-                        href="/profile?delete_id={{ r.id }}"
-                        onclick="return confirm('Delete this history record?');"
-                        class="rounded-md border border-rose-300/40 bg-rose-500/10 px-3 py-1 text-xs font-semibold text-rose-100 transition hover:bg-rose-500/20"
-                      >
-                        Delete
-                      </a>
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
+            <div>
+              <span class="profile-stat__value">{{ history_groups|length if history_groups else 0 }}</span>
+              <div class="profile-stat__label">Groups</div>
+            </div>
+            <div>
+              <span class="profile-stat__value">{{ interviews_left }}</span>
+              <div class="profile-stat__label">Interviews Left</div>
             </div>
           </div>
-          {% endfor %}
-          {% else %}
-          <div class="panel-soft p-6 text-center text-muted">No resume history yet.</div>
-          {% endif %}
+
+          <div class="profile-cta">
+            <a href="#profile-more" class="profile-btn">Show more</a>
+          </div>
         </div>
       </div>
 
-      <div class="mt-6 flex flex-wrap gap-3">
-        <a href="/" class="btn-secondary">&larr; Back to Analyzer</a>
+      <div class="profile-more" id="profile-more">
+        <section class="profile-section">
+          <h2 class="profile-section__title">Account Details</h2>
+          <div class="profile-details">
+            <div class="profile-detail">
+              <div class="profile-detail__label">Name</div>
+              <div class="profile-detail__value">{{ user_name }}</div>
+            </div>
+            <div class="profile-detail">
+              <div class="profile-detail__label">Email</div>
+              <div class="profile-detail__value">{{ user_email }}</div>
+            </div>
+            <div class="profile-detail">
+              <div class="profile-detail__label">Joined</div>
+              <div class="profile-detail__value">{{ user_created_at }}</div>
+            </div>
+            <div class="profile-detail">
+              <div class="profile-detail__label">Role</div>
+              <div class="profile-detail__value">{{ role_label }}</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="profile-section profile-history">
+          <div class="profile-history__header">
+            <h2 class="profile-section__title">Resume History</h2>
+            {% if history_groups %}
+            <a
+              href="/profile?delete_all=1"
+              onclick="return confirm('Delete all history records? This cannot be undone.');"
+              class="profile-delete-all"
+            >
+              Delete All
+            </a>
+            {% endif %}
+          </div>
+
+          <p class="profile-history__summary">
+            Open saved analyses to revisit the score, keywords, and rewritten bullets.
+          </p>
+
+          {% if history_notice %}
+          <div class="notice {{ 'notice-error' if history_notice_tone == 'error' else 'notice-success' }} mt-4">
+            {{ history_notice }}
+          </div>
+          {% endif %}
+
+          {% set single_groups = history_groups | selectattr("group_type", "equalto", "single") | list if history_groups else [] %}
+          {% set folder_groups = history_groups | selectattr("group_type", "equalto", "folder") | list if history_groups else [] %}
+
+          <div class="profile-history__split">
+            <div class="profile-history-box">
+              <div class="profile-history-box__head">
+                <div>
+                  <div class="badge-pill">Single Analyses</div>
+                  <h3 class="profile-history-box__title">One Resume at a Time</h3>
+                </div>
+                <div class="profile-history-box__meta">
+                  <div>{{ single_groups|length }} group{{ "" if single_groups|length == 1 else "s" }}</div>
+                </div>
+              </div>
+              <div class="profile-history-scroll">
+                {% if single_groups %}
+                <div class="space-y-4">
+                  {% for group in single_groups %}
+                  <div class="panel-soft p-4 md:p-5">
+                    <div class="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <div class="badge-pill">Single Analysis</div>
+                        <h3 class="mt-3 text-xl font-semibold">{{ group.title }}</h3>
+                      </div>
+                      <div class="text-right text-sm">
+                        <div class="font-semibold">{{ group.count }} file{{ "" if group.count == 1 else "s" }}</div>
+                        <div class="text-muted">{{ group.latest_date }}</div>
+                      </div>
+                    </div>
+
+                    <div class="mt-4 overflow-x-auto profile-table-shell">
+                      <table class="table-shell min-w-[760px]">
+                        <thead>
+                          <tr>
+                            <th>File Name</th>
+                            <th>Format</th>
+                            <th>ATS Score</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for r in group["items"] %}
+                          <tr>
+                            <td>
+                              <a href="/history/{{ r.id }}" class="font-semibold text-cyan-200 hover:underline">
+                                {{ r.filename or "-" }}
+                              </a>
+                            </td>
+                            <td>{{ r.filetype or "-" }}</td>
+                            <td class="font-bold text-emerald-300">{{ r.score }}</td>
+                            <td class="text-muted">{{ r.date }}</td>
+                            <td>
+                              <a
+                                href="/profile?delete_id={{ r.id }}"
+                                onclick="return confirm('Delete this history record?');"
+                                class="rounded-full border border-rose-300/40 bg-rose-500/10 px-3 py-1 text-xs font-semibold text-rose-700 transition hover:bg-rose-500/20"
+                              >
+                                Delete
+                              </a>
+                            </td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  {% endfor %}
+                </div>
+                {% else %}
+                <div class="profile-empty">No single analyses yet.</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="profile-history-box">
+              <div class="profile-history-box__head">
+                <div>
+                  <div class="badge-pill">Bulk Analyses</div>
+                  <h3 class="profile-history-box__title">Folder Uploads</h3>
+                </div>
+                <div class="profile-history-box__meta">
+                  <div>{{ folder_groups|length }} batch{{ "" if folder_groups|length == 1 else "es" }}</div>
+                </div>
+              </div>
+              <div class="profile-history-scroll">
+                {% if folder_groups %}
+                <div class="space-y-4">
+                  {% for group in folder_groups %}
+                  <div class="panel-soft p-4 md:p-5">
+                    <div class="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <div class="badge-pill">Folder Batch</div>
+                        <h3 class="mt-3 text-xl font-semibold">{{ group.title }}</h3>
+                      </div>
+                      <div class="text-right text-sm">
+                        <div class="font-semibold">{{ group.count }} file{{ "" if group.count == 1 else "s" }}</div>
+                        <div class="text-muted">{{ group.latest_date }}</div>
+                      </div>
+                    </div>
+
+                    <div class="mt-4 overflow-x-auto profile-table-shell">
+                      <table class="table-shell min-w-[760px]">
+                        <thead>
+                          <tr>
+                            <th>File Name</th>
+                            <th>Format</th>
+                            <th>ATS Score</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for r in group["items"] %}
+                          <tr>
+                            <td>
+                              <a href="/history/{{ r.id }}" class="font-semibold text-cyan-200 hover:underline">
+                                {{ r.filename or "-" }}
+                              </a>
+                            </td>
+                            <td>{{ r.filetype or "-" }}</td>
+                            <td class="font-bold text-emerald-300">{{ r.score }}</td>
+                            <td class="text-muted">{{ r.date }}</td>
+                            <td>
+                              <a
+                                href="/profile?delete_id={{ r.id }}"
+                                onclick="return confirm('Delete this history record?');"
+                                class="rounded-full border border-rose-300/40 bg-rose-500/10 px-3 py-1 text-xs font-semibold text-rose-700 transition hover:bg-rose-500/20"
+                              >
+                                Delete
+                              </a>
+                            </td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  {% endfor %}
+                </div>
+                {% else %}
+                <div class="profile-empty">No bulk analyses yet.</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="profile-footer">
+          <a href="/" class="profile-back">&larr; Back to Analyzer</a>
+        </div>
       </div>
-    </div>
-  </div>
-{% include "_cookie.html" %}
+    </section>
+  </main>
+
+  {% include "_cookie.html" %}
 </body>
 </html>
-
-
-

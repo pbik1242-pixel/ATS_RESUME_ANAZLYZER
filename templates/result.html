@@ -8,93 +8,1155 @@
   <style>
     {% include "_theme.css" %}
 
-    /* Result page scaling */
+    body.result-page {
+      position: relative;
+      background:
+        radial-gradient(circle at top left, rgba(217, 43, 43, 0.12), transparent 30%),
+        radial-gradient(circle at top right, rgba(30, 107, 69, 0.10), transparent 26%),
+        linear-gradient(180deg, #f6f1eb 0%, #ede9e1 100%);
+    }
+
+    body.result-page::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.32), transparent 26%),
+        radial-gradient(circle at 80% 16%, rgba(217, 43, 43, 0.08), transparent 20%),
+        radial-gradient(circle at 85% 75%, rgba(30, 107, 69, 0.06), transparent 22%);
+      z-index: 0;
+    }
+
     .result-page {
-      font-size: 21px;
+      font-size: 17px;
+      line-height: 1.65;
+    }
+
+    .result-page .app-topbar,
+    .result-page .page-wrap {
+      position: relative;
+      z-index: 1;
+    }
+
+    .result-shell {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .result-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+      gap: 1rem;
+      padding: 1.2rem;
+      border: 1px solid rgba(17, 17, 16, 0.09);
+      border-radius: 1.4rem;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(247, 240, 228, 0.94));
+      box-shadow: 0 24px 80px rgba(17, 17, 16, 0.10);
+    }
+
+    .result-hero__content {
+      display: grid;
+      gap: 0.85rem;
+      align-content: start;
+    }
+
+    .result-hero__actions {
+      margin-top: 0.15rem;
+    }
+
+    .result-score-panel {
+      display: grid;
+      gap: 0.8rem;
+      padding: 1rem 1.05rem;
+      border-radius: 1.2rem;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(247, 242, 234, 0.94));
+      border: 1px solid rgba(17, 17, 16, 0.08);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    }
+
+    .result-score-panel__top {
+      display: grid;
+      grid-template-columns: 210px minmax(0, 1fr);
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .result-score-panel__lead {
+      display: grid;
+      gap: 0.4rem;
+      align-content: start;
+      padding-top: 0.2rem;
+    }
+
+    .result-score-panel__note {
+      color: var(--ink2);
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+
+    .result-score-panel__facts {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.65rem;
+    }
+
+    .result-score-panel__fact {
+      padding: 0.85rem;
+      border-radius: 0.95rem;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid rgba(17, 17, 16, 0.08);
+    }
+
+    .result-score-panel__fact-label {
+      color: var(--muted);
+      font-family: "DM Mono", monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .result-score-panel__fact-value {
+      margin-top: 0.35rem;
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1.35;
+    }
+
+    .result-score-panel__title {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 1.7rem;
+      letter-spacing: 0.06em;
+      line-height: 0.96;
+    }
+
+    .result-verdict {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.45rem 0.75rem;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 0.82rem;
+      border: 1px solid transparent;
+    }
+
+    .result-verdict--excellent {
+      background: rgba(30, 107, 69, 0.10);
+      border-color: rgba(30, 107, 69, 0.18);
+      color: var(--green);
+    }
+
+    .result-verdict--good {
+      background: rgba(30, 107, 69, 0.08);
+      border-color: rgba(30, 107, 69, 0.14);
+      color: var(--green);
+    }
+
+    .result-verdict--warn {
+      background: rgba(217, 43, 43, 0.08);
+      border-color: rgba(217, 43, 43, 0.16);
+      color: var(--red);
+    }
+
+    .result-kicker {
+      font-family: "DM Mono", monospace;
+      font-size: 0.76rem;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .result-title {
+      font-family: "Bebas Neue", sans-serif;
+      letter-spacing: 0.06em;
+      line-height: 0.95;
+      font-size: clamp(2.7rem, 5vw, 4.4rem);
+    }
+
+    .result-subtitle {
+      max-width: 70ch;
+      color: var(--ink2);
+      font-size: 1rem;
       line-height: 1.75;
     }
 
-    .result-page .brand-title {
-      font-size: clamp(2.05rem, 3.4vw, 2.65rem);
+    .result-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      align-items: center;
     }
 
-    .result-page h1 {
-      font-size: clamp(2.7rem, 3.6vw, 3.3rem);
+    .result-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.55rem 0.9rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(17, 17, 16, 0.10);
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--ink);
     }
 
-    .result-page h2 {
-      font-size: clamp(1.9rem, 2.8vw, 2.25rem);
+    .result-chip--soft {
+      background: rgba(17, 17, 16, 0.04);
+      color: var(--ink2);
     }
 
-    .result-page .text-sm {
-      font-size: 1.15rem !important;
+    .result-workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1.78fr) minmax(0, 390px);
+      gap: clamp(1.1rem, 1.8vw, 1.5rem);
+      align-items: start;
+      isolation: isolate;
     }
 
-    .result-page .text-xs {
-      font-size: 1.05rem !important;
+    .result-workspace__left,
+    .result-workspace__right {
+      min-width: 0;
     }
 
-    .result-page .metric-value {
-      font-size: clamp(3.9rem, 6.5vw, 5.4rem);
+    .result-workspace__left {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 1rem;
     }
 
-    .result-page .panel-soft,
-    .result-page .glass-panel {
-      padding: clamp(1.35rem, 2.4vw, 1.85rem);
+    .result-workspace__right {
+      position: sticky;
+      top: 24px;
+      z-index: 2;
+      justify-self: start;
+      width: 100%;
+      max-width: 390px;
+      margin-left: 0;
+      height: auto;
+      align-self: start;
     }
 
-    .result-page .panel-soft .p-4,
-    .result-page .panel-soft .p-5 {
-      padding: clamp(1.2rem, 2.2vw, 1.6rem) !important;
+    .result-workspace__sticky {
+      position: static;
+      display: block;
+      width: 100%;
     }
 
-    .result-page .btn-primary,
-    .result-page .btn-secondary {
-      padding: 1.05rem 1.5rem;
-      font-size: 1.12rem;
+    .result-workspace__scroll {
+      display: block;
+      overflow: visible;
+      padding-right: 0;
+      padding-left: 0;
+      width: 100%;
     }
 
-    .result-page table {
-      font-size: 1.08rem;
+    .result-workspace__scroll::-webkit-scrollbar,
+    .result-preview-scroll::-webkit-scrollbar {
+      width: 8px;
     }
 
-    /* Center the metrics block vertically and horizontally */
-    .result-metrics-col {
+    .result-workspace__scroll::-webkit-scrollbar-track,
+    .result-preview-scroll::-webkit-scrollbar-track {
+      background: rgba(17, 17, 16, 0.05);
+      border-radius: 999px;
+    }
+
+    .result-workspace__scroll::-webkit-scrollbar-thumb,
+    .result-preview-scroll::-webkit-scrollbar-thumb {
+      background: rgba(17, 17, 16, 0.18);
+      border-radius: 999px;
+    }
+
+    .result-preview-card {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .result-preview-card__file {
+      align-items: flex-start;
+    }
+
+    .result-preview-scroll {
+      max-height: calc(100vh - 13rem);
+      overflow-y: auto;
+      padding-right: 0.35rem;
+      min-height: 0;
+      overscroll-behavior: contain;
+    }
+
+    .result-score-card {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .result-score-card__top {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .result-score-card__summary {
+      display: grid;
+      gap: 0.75rem;
+      justify-items: start;
+      min-width: 0;
+    }
+
+    .result-score-card__meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem 0.85rem;
+      align-items: center;
+    }
+
+    .result-score-card__copy {
+      color: var(--ink2);
+      font-size: 0.95rem;
+      line-height: 1.7;
+      overflow-wrap: anywhere;
+    }
+
+    .result-score-card__bar-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      font-family: "DM Mono", monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #7a7a7a;
+    }
+
+    .result-score-card__bar {
+      display: grid;
+      gap: 0.45rem;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .result-score-card__value {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(4.1rem, 7vw, 6.2rem);
+      line-height: 0.86;
+      letter-spacing: 0.03em;
+      color: var(--red);
+    }
+
+    .result-score-card__value span {
+      font-size: 0.28em;
+      line-height: 1;
+      color: var(--muted);
+      margin-bottom: 0.18em;
+      margin-left: -0.02em;
+    }
+
+    .result-score-card__value-wrap {
+      display: grid;
+      gap: 0.25rem;
+      align-content: start;
+      min-width: 0;
+    }
+
+    .result-score-card__value-label {
+      font-family: "DM Mono", monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .result-score-card__value-note {
+      color: var(--ink2);
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+
+    .result-score-card__metrics {
+      display: grid;
+      gap: 0.85rem;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: stretch;
+    }
+
+    .result-score-card__metric {
       display: flex;
       flex-direction: column;
-      gap: 1.6rem;
+      gap: 0.3rem;
+      padding: 0.85rem;
+      border-radius: 1rem;
+      background: rgba(255, 255, 255, 0.76);
+      border: 1px solid rgba(17, 17, 16, 0.08);
+      min-width: 0;
+      min-height: 100%;
+    }
+
+    .result-score-card__metric-label {
+      color: var(--muted);
+      font-family: "DM Mono", monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      line-height: 1.25;
+    }
+
+    .result-score-card__metric-value {
+      margin-top: 0;
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 2rem;
+      line-height: 0.92;
+      letter-spacing: 0.04em;
+      color: var(--ink);
+    }
+
+    .result-score-card__metric-copy {
+      margin-top: 0.1rem;
+      color: var(--ink2);
+      font-size: 0.82rem;
+      line-height: 1.45;
+      text-wrap: pretty;
+      overflow-wrap: anywhere;
+    }
+
+    .result-score-card__metric-value--green {
+      color: var(--green);
+    }
+
+    .result-score-card__metric-value--red {
+      color: var(--red);
+    }
+
+    .analysis-grid {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .analysis-grid--single {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: start;
+    }
+
+    .analysis-grid--bulk {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .analysis-card {
+      border-radius: 1.2rem;
+      border: 1px solid rgba(17, 17, 16, 0.10);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.93), rgba(251, 246, 238, 0.94));
+      box-shadow: 0 18px 50px rgba(17, 17, 16, 0.08);
+    }
+
+    .result-page .analysis-card {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(249, 245, 237, 0.96));
+      border-color: rgba(17, 17, 16, 0.10);
+      box-shadow: 0 16px 46px rgba(17, 17, 16, 0.08);
+    }
+
+    .result-page .analysis-card.p-5 {
+      padding: 1.15rem;
+    }
+
+    .analysis-card__header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .analysis-label {
+      font-family: "DM Mono", monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .analysis-heading {
+      font-family: "Bebas Neue", sans-serif;
+      letter-spacing: 0.06em;
+      font-size: 1.8rem;
+      line-height: 1;
+    }
+
+    .analysis-copy {
+      color: var(--ink2);
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+
+    .score-hero {
+      position: relative;
+      overflow: hidden;
+      padding: 1.4rem;
+    }
+
+    .score-hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -15% -35% auto;
+      width: 12rem;
+      height: 12rem;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(217, 43, 43, 0.15), transparent 70%);
+      pointer-events: none;
+    }
+
+    .score-layout {
+      display: grid;
+      grid-template-columns: 240px minmax(0, 1fr);
+      gap: 1.1rem;
+      align-items: center;
+    }
+
+    .score-ring {
+      --score: 0;
+      --ring-color: var(--green);
+      --ring-thickness: 18px;
+      width: 210px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      padding: 0.9rem;
+      position: relative;
+      background: rgba(255, 255, 255, 0.2);
+      box-shadow: inset 0 0 0 1px rgba(17, 17, 16, 0.08), 0 18px 45px rgba(17, 17, 16, 0.10);
+      margin-inline: auto;
+    }
+
+    .score-ring::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background:
+        conic-gradient(
+          from -90deg,
+          var(--ring-color) 0 calc(var(--score) * 1%),
+          rgba(17, 17, 16, 0.08) 0 100%
+        );
+      -webkit-mask: radial-gradient(
+        farthest-side,
+        transparent calc(100% - var(--ring-thickness)),
+        #000 calc(100% - var(--ring-thickness) + 1px)
+      );
+      mask: radial-gradient(
+        farthest-side,
+        transparent calc(100% - var(--ring-thickness)),
+        #000 calc(100% - var(--ring-thickness) + 1px)
+      );
+      transition: background 0.25s ease;
+      animation: score-ring-pulse 1.6s ease-out 1;
+    }
+
+    .score-ring::after {
+      content: "";
+      position: absolute;
+      inset: calc(var(--ring-thickness) - 1px);
+      border-radius: inherit;
+      background: linear-gradient(180deg, #fff, #fbf7f0);
+      box-shadow: inset 0 0 0 1px rgba(17, 17, 16, 0.05);
+    }
+
+    .score-ring__inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      display: block;
+      text-align: center;
+      padding: 1rem;
+      z-index: 1;
+    }
+
+    .score-value {
+      position: absolute;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -58%);
+      font-family: "Bebas Neue", sans-serif;
+      display: inline-flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 0.06em;
+      font-size: clamp(3.5rem, 7vw, 5rem);
+      line-height: 0.86;
+      letter-spacing: 0.02em;
+      color: var(--ink);
+    }
+
+    .score-value span {
+      font-size: 0.26em;
+      line-height: 1;
+      color: var(--muted);
+      margin-bottom: 0.2em;
+      margin-left: -0.02em;
+    }
+
+    .score-ring__caption {
+      position: absolute;
+      left: 50%;
+      bottom: 15%;
+      transform: translateX(-50%);
+      font-family: "DM Mono", monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: #9c9b95;
+      white-space: nowrap;
+    }
+
+    .score-ring--mini {
+      width: 150px;
+      --ring-thickness: 14px;
+      box-shadow: none;
+      background: rgba(255, 255, 255, 0.55);
+    }
+
+    .score-ring--mini .score-value {
+      font-size: clamp(2.6rem, 5vw, 3.7rem);
+    }
+
+    .score-ring--mini .score-ring__caption {
+      display: none;
+    }
+
+    .score-ring--teal {
+      --ring-color: #25d0b0;
+    }
+
+    .score-ring--violet {
+      --ring-color: #9d7af5;
+    }
+
+    .score-ring--mint {
+      --ring-color: #2ccbb6;
+    }
+
+    .result-summary-card {
+      display: grid;
+      gap: 1.8rem;
+      padding: 1.45rem;
+      border-radius: 2rem;
+      border: 1px solid rgba(17, 17, 16, 0.08);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(251, 247, 240, 0.96));
+      box-shadow: 0 24px 70px rgba(17, 17, 16, 0.08);
+    }
+
+    .result-summary-card__top {
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(360px, 1.05fr);
+      gap: clamp(1rem, 2vw, 1.75rem);
+      align-items: start;
+    }
+
+    .result-summary-card__lead {
+      display: grid;
+      gap: 1rem;
+      align-content: start;
+    }
+
+    .result-file {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      min-width: 0;
+    }
+
+    .result-file__icon {
+      width: 5rem;
+      height: 5rem;
+      border-radius: 1.2rem;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 90, 90, 0.12);
+      border: 1px solid rgba(255, 90, 90, 0.22);
+      color: var(--red);
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .result-file__icon svg {
+      width: 2rem;
+      height: 2rem;
+    }
+
+    .result-file__icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+      display: block;
+    }
+
+    .result-file__name {
+      font-size: clamp(1.6rem, 2.2vw, 2.2rem);
+      font-weight: 800;
+      line-height: 1.1;
+      color: var(--ink);
+      overflow-wrap: anywhere;
+    }
+
+    .result-file__meta {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .result-file__chip {
+      padding: 0.55rem 1rem;
+      border-radius: 999px;
+      background: rgba(255, 90, 90, 0.09);
+      border: 1px solid rgba(255, 90, 90, 0.18);
+      color: var(--red);
+      font-family: "DM Mono", monospace;
+      font-size: 0.82rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .result-score-badge {
+      display: grid;
+      gap: 0.1rem;
+      text-align: left;
+      min-width: 0;
+    }
+
+    .result-score-badge__value {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(4.2rem, 7vw, 6.5rem);
+      line-height: 0.86;
+      color: var(--red);
+      letter-spacing: 0.03em;
+    }
+
+    .result-score-badge__label {
+      font-family: "DM Mono", monospace;
+      font-size: 0.82rem;
+      letter-spacing: 0.18em;
+      color: #7d7d7d;
+      text-transform: uppercase;
+    }
+
+    .result-score-badge__verdict {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--red);
+    }
+
+    .result-summary-card__body {
+      display: grid;
+      grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.2fr);
+      gap: clamp(1rem, 1.8vw, 1.75rem);
+      align-items: start;
+      margin-top: 0.4rem;
+    }
+
+    .result-rings {
+      grid-column: 1;
+      display: flex;
+      gap: 1.1rem;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .result-ring-block {
+      display: grid;
+      justify-items: center;
+      gap: 0.7rem;
+      min-width: 150px;
+    }
+
+    .result-ring-block__label {
+      font-family: "DM Mono", monospace;
+      font-size: 0.76rem;
+      letter-spacing: 0.24em;
+      color: #7d7d7d;
+      text-transform: uppercase;
+    }
+
+    .result-bars {
+      grid-column: 1;
+      display: grid;
+      gap: 1.1rem;
+    }
+
+    .result-preview-side {
+      display: grid;
+      gap: 0.9rem;
+      min-width: 0;
+      align-content: start;
+    }
+
+    .result-preview-side--hero {
+      align-self: start;
+      padding-top: 0.1rem;
+    }
+
+    .result-preview-side .analysis-heading {
+      font-size: 2rem;
+    }
+
+    .result-bar {
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    .result-bar__head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      font-family: "DM Mono", monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #7a7a7a;
+    }
+
+    .result-bar__track {
+      height: 14px;
+      border-radius: 999px;
+      background: #f1f1f1;
+      overflow: hidden;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    }
+
+    .result-bar__fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #f23833 0%, #f23833 100%);
+      box-shadow: 0 0 0 1px rgba(242, 56, 51, 0.08);
+      width: 0;
+      transition: width 0.8s ease;
+    }
+
+    .result-bar__fill--formatting {
+      background: linear-gradient(90deg, #f23833 0%, #f23833 100%);
+    }
+
+    .result-bar__fill--semantic {
+      background: linear-gradient(90deg, #f23833 0%, #f23833 100%);
+    }
+
+    .result-section {
+      display: grid;
+      gap: 1rem;
+      margin-top: 1.4rem;
+    }
+
+    .result-section__title {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 2rem;
+      letter-spacing: 0.06em;
+      color: var(--ink);
+    }
+
+    @keyframes score-ring-pulse {
+      0% {
+        transform: scale(0.94);
+        opacity: 0;
+      }
+      45% {
+        transform: scale(1.02);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .score-state {
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-height: 75vh;
+      gap: 0.4rem;
+      margin-top: 0.3rem;
+      padding: 0.4rem 0.7rem;
+      border-radius: 999px;
+      background: rgba(30, 107, 69, 0.08);
+      border: 1px solid rgba(30, 107, 69, 0.15);
+      color: var(--green);
+      font-weight: 800;
+      font-size: 0.85rem;
+    }
+
+    .score-state--warn {
+      background: rgba(217, 43, 43, 0.08);
+      border-color: rgba(217, 43, 43, 0.16);
+      color: var(--red);
+    }
+
+    .score-summary {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .score-summary__line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.85rem 0;
+      border-bottom: 1px solid rgba(17, 17, 16, 0.08);
+    }
+
+    .score-summary__line:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .score-summary__label {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .score-summary__value {
+      font-weight: 800;
+      color: var(--ink);
+      text-align: right;
+    }
+
+    .score-insight {
+      display: grid;
+      gap: 0.45rem;
+      padding: 1rem 1.1rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(17, 17, 16, 0.08);
+      background: rgba(255, 255, 255, 0.76);
+    }
+
+    .score-insight__label {
+      font-family: "DM Mono", monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .score-insight__title {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 1.5rem;
+      letter-spacing: 0.06em;
+      line-height: 1;
+      color: var(--ink);
+    }
+
+    .score-insight__text {
+      color: var(--ink2);
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+
+    .score-insight--warn {
+      background: linear-gradient(180deg, rgba(255, 244, 244, 0.96), rgba(255, 233, 233, 0.92));
+      border-color: rgba(217, 43, 43, 0.16);
+    }
+
+    .score-insight--ok {
+      background: linear-gradient(180deg, rgba(255, 249, 236, 0.96), rgba(255, 242, 216, 0.92));
+      border-color: rgba(217, 43, 43, 0.12);
+    }
+
+    .score-insight--good {
+      background: linear-gradient(180deg, rgba(239, 248, 242, 0.96), rgba(228, 245, 233, 0.92));
+      border-color: rgba(30, 107, 69, 0.14);
+    }
+
+    .score-insight--excellent {
+      background: linear-gradient(180deg, rgba(236, 248, 240, 0.98), rgba(224, 243, 231, 0.94));
+      border-color: rgba(30, 107, 69, 0.18);
+    }
+
+    .metric-grid {
+      display: grid;
+      gap: 0.9rem;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .metric-tile {
+      padding: 1rem;
+      border-radius: 1rem;
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(17, 17, 16, 0.08);
+    }
+
+    .metric-tile__label {
+      color: var(--muted);
+      font-size: 0.74rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      font-family: "DM Mono", monospace;
+    }
+
+    .metric-tile__value {
+      margin-top: 0.35rem;
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 2.2rem;
+      letter-spacing: 0.05em;
+      color: var(--ink);
+    }
+
+    .metric-tile__value--red {
+      color: var(--red);
+    }
+
+    .metric-tile__value--green {
+      color: var(--green);
+    }
+
+    .pill-cloud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.44rem 0.8rem;
+      border-radius: 999px;
+      border: 1px solid rgba(17, 17, 16, 0.10);
+      background: rgba(255, 255, 255, 0.88);
+      color: var(--ink);
+      font-weight: 700;
+      font-size: 0.9rem;
+      box-shadow: 0 8px 24px rgba(17, 17, 16, 0.06);
+    }
+
+    .pill--match {
+      background: linear-gradient(180deg, #eefaf0, #e3f7e7);
+      border-color: rgba(30, 107, 69, 0.18);
+      color: #114b2f;
+    }
+
+    .pill--missing {
+      background: linear-gradient(180deg, #fff1f2, #ffe7ea);
+      border-color: rgba(217, 43, 43, 0.18);
+      color: #7f1d1d;
+    }
+
+    .pill--job {
+      background: linear-gradient(180deg, #fff8e8, #ffefd3);
+      border-color: rgba(217, 43, 43, 0.12);
     }
 
     .result-metrics-grid {
-      width: 100%;
-      justify-items: center;
-      max-width: 860px;
-      margin-left: auto;
-      margin-right: auto;
-      gap: 1.4rem;
+      display: grid;
+      gap: 0.9rem;
+      grid-template-columns: 1fr;
     }
 
-    .metric-card {
-      border-radius: 1.1rem;
-      border: 2px solid rgba(15, 23, 42, 0.12);
-      box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08), 0 6px 18px rgba(15, 23, 42, 0.06);
-      background: linear-gradient(180deg, #ffffff, #f8fafc);
+    .result-metric-card {
+      display: grid;
+      gap: 0.7rem;
+      min-height: 100%;
+      padding: 1.05rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(17, 17, 16, 0.08);
+      background: rgba(255, 255, 255, 0.76);
+      min-width: 0;
     }
 
-    .metric-card p.text-muted {
-      color: #7b8699 !important;
+    .result-metric-card--wide {
+      grid-column: 1 / -1;
+    }
+
+    .result-metric-card__label {
+      color: var(--muted);
+      font-family: "DM Mono", monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .result-metric-card__value {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 2.3rem;
       letter-spacing: 0.05em;
+      line-height: 1;
+      color: var(--ink);
     }
 
-    /* Scrollable content box for long lists */
+    .result-metric-card__value--green {
+      color: var(--green);
+    }
+
+    .result-metric-card__value--red {
+      color: var(--red);
+    }
+
+    .result-metric-card__copy {
+      color: var(--ink2);
+      line-height: 1.65;
+      overflow-wrap: anywhere;
+    }
+
+    .result-metric-card__chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+    }
+
+    .result-metric-card__chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0.65rem;
+      border-radius: 999px;
+      background: rgba(17, 17, 16, 0.04);
+      border: 1px solid rgba(17, 17, 16, 0.08);
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--ink2);
+    }
+
+    .analysis-list {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .analysis-list__item {
+      padding: 0.95rem 1rem;
+      border-radius: 1rem;
+      background: rgba(255, 255, 255, 0.74);
+      border: 1px solid rgba(17, 17, 16, 0.08);
+      color: var(--ink2);
+      line-height: 1.65;
+    }
+
+    .analysis-list__item strong {
+      color: var(--ink);
+    }
+
+    .progress-track {
+      height: 0.8rem;
+      border-radius: 999px;
+      background: rgba(17, 17, 16, 0.08);
+      overflow: hidden;
+      box-shadow: inset 0 1px 2px rgba(17, 17, 16, 0.08);
+    }
+
+    .progress-track__bar {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--green), #7bd89f);
+    }
+
     .result-scroll-box {
       max-height: 28rem;
       overflow-y: auto;
       overscroll-behavior: contain;
-      padding-right: 1.1rem;
+      padding-right: 0.9rem;
     }
 
     .result-scroll-box::-webkit-scrollbar {
@@ -102,57 +1164,537 @@
     }
 
     .result-scroll-box::-webkit-scrollbar-track {
-      background: rgba(15, 23, 42, 0.04);
+      background: rgba(17, 17, 16, 0.05);
       border-radius: 999px;
     }
 
     .result-scroll-box::-webkit-scrollbar-thumb {
-      background: rgba(15, 23, 42, 0.2);
+      background: rgba(17, 17, 16, 0.18);
       border-radius: 999px;
     }
 
-    .skill-pill-row {
+    .table-card {
+      overflow: hidden;
+    }
+
+    .table-card--compact {
+      width: 100%;
+      justify-self: stretch;
+    }
+
+    .table-card--compact .overflow-x-auto {
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+
+    .table-card table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .table-card--compact table {
+      min-width: 100%;
+      width: max-content;
+    }
+
+    .table-card th,
+    .table-card td {
+      padding: 0.75rem 0.7rem;
+      vertical-align: top;
+    }
+
+    .table-card thead th {
+      font-family: "DM Mono", monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px solid rgba(17, 17, 16, 0.10);
+    }
+
+    .table-card tbody tr + tr td {
+      border-top: 1px solid rgba(17, 17, 16, 0.08);
+    }
+
+    .action-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-top: 0.5rem;
+      gap: 0.75rem;
+      align-items: center;
     }
 
-    .skill-pill {
+    .analysis-fallback {
+      padding: 1.2rem;
+      border-radius: 1rem;
+      background: rgba(255, 255, 255, 0.74);
+      border: 1px solid rgba(17, 17, 16, 0.08);
+      color: var(--ink2);
+    }
+
+    .resume-preview-toggle {
+      display: block;
+    }
+
+    .resume-preview-toggle > summary {
+      list-style: none;
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      padding: 0.38rem 0.9rem;
+      gap: 0.6rem;
+      padding: 0.7rem 1rem;
       border-radius: 999px;
-      border: 1.5px solid rgba(15, 23, 42, 0.16);
-      background: #f7fafc;
-      color: #0f172a;
-      font-weight: 700;
-      font-size: 0.95rem;
-      letter-spacing: 0.01em;
-      box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(246, 241, 233, 0.96));
+      border: 1px solid rgba(17, 17, 16, 0.12);
+      color: var(--ink);
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 10px 24px rgba(17, 17, 16, 0.08);
+      user-select: none;
+    }
+
+    .resume-preview-toggle > summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .resume-preview-toggle > summary::before {
+      content: "+";
+      width: 1.4rem;
+      height: 1.4rem;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 999px;
+      background: rgba(17, 17, 16, 0.08);
+      color: var(--ink2);
+      font-size: 1rem;
+      line-height: 1;
+      flex: 0 0 auto;
+    }
+
+    .resume-preview-toggle[open] > summary::before {
+      content: "-";
+    }
+
+    .resume-preview-toggle__panel {
+      margin-top: 1rem;
+    }
+
+    .resume-preview-toggle[open] > summary::before {
+      content: "-";
+    }
+
+    .resume-preview {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .resume-preview__frame {
+      padding: 0.9rem;
+      border-radius: 1.35rem;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(245, 240, 232, 0.96));
+      border: 1px solid rgba(17, 17, 16, 0.08);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    }
+
+    .resume-preview__chrome {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.85rem;
+      padding: 0.15rem 0.2rem 0.5rem;
+      color: var(--muted);
+    }
+
+    .resume-preview__chrome-left {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      min-width: 0;
+    }
+
+    .resume-preview__dots {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.32rem;
+      flex: 0 0 auto;
+    }
+
+    .resume-preview__dot {
+      width: 0.55rem;
+      height: 0.55rem;
+      border-radius: 999px;
+      background: rgba(17, 17, 16, 0.22);
+    }
+
+    .resume-preview__title {
+      font-family: "DM Mono", monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .skill-pill--match {
-      border-color: rgba(22, 163, 74, 0.25);
-      background: linear-gradient(180deg, #ecfdf3, #e0ffe9);
-      color: #0f5132;
+    .resume-preview__tag {
+      flex: 0 0 auto;
+      padding: 0.34rem 0.7rem;
+      border-radius: 999px;
+      background: rgba(17, 17, 16, 0.05);
+      border: 1px solid rgba(17, 17, 16, 0.08);
+      font-family: "DM Mono", monospace;
+      font-size: 0.67rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
     }
 
-    .skill-pill--missing {
-      border-color: rgba(244, 63, 94, 0.3);
-      background: linear-gradient(180deg, #fff1f2, #ffe5e8);
-      color: #7f1d1d;
+    .resume-preview__canvas {
+      display: grid;
+      place-items: center;
+      padding: 1rem;
+      border-radius: 1.1rem;
+      background:
+        radial-gradient(circle at top, rgba(255, 255, 255, 0.95), rgba(239, 241, 246, 0.98));
+      border: 1px solid rgba(17, 17, 16, 0.08);
+      min-height: 34rem;
+      overflow: hidden;
     }
 
-    .layout-compact {
-      padding: 0.6rem 0.85rem;
-      font-size: 0.95rem;
+    .resume-preview__canvas-inner {
+      width: min(100%, 46rem);
+      aspect-ratio: 8.5 / 11;
+      display: grid;
+      place-items: stretch;
+      border-radius: 1rem;
+      padding: 0.85rem;
+      background: linear-gradient(180deg, #fafaf9, #f3f4f6);
+      box-shadow:
+        0 28px 70px rgba(17, 17, 16, 0.18),
+        0 4px 12px rgba(17, 17, 16, 0.08);
+      position: relative;
     }
 
-    .layout-narrow {
-      max-width: 28rem;
+    .resume-preview__canvas-inner::before {
+      content: "";
+      position: absolute;
+      inset: 0.75rem 0.85rem auto 0.85rem;
+      height: 1.5rem;
+      border-radius: 0.8rem 0.8rem 0 0;
+      background: linear-gradient(90deg, rgba(17, 17, 16, 0.04), rgba(17, 17, 16, 0.01));
+      pointer-events: none;
+    }
+
+    .resume-preview__image-wrap {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border-radius: 0.85rem;
+      background: #fff;
+      border: 1px solid rgba(17, 17, 16, 0.08);
+      box-shadow: 0 10px 28px rgba(17, 17, 16, 0.08);
+    }
+
+    .resume-preview__image {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+      background: #fff;
+    }
+
+    .resume-preview__doc-card {
+      width: 100%;
+      min-height: 29rem;
+      display: grid;
+      place-items: center;
+      gap: 1rem;
+      padding: 2rem 1.2rem;
+      border-radius: 1rem;
+      background: linear-gradient(180deg, #fff, #f8f2e8);
+      border: 1px solid rgba(17, 17, 16, 0.08);
+      text-align: center;
+    }
+
+    .resume-preview__doc-icon {
+      width: 5.5rem;
+      height: 5.5rem;
+      border-radius: 1.4rem;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, #111110, #2d2c2a);
+      color: #fff;
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 2rem;
+      letter-spacing: 0.08em;
+      box-shadow: 0 14px 36px rgba(17, 17, 16, 0.18);
+    }
+
+    .resume-preview__doc-title {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 2rem;
+      letter-spacing: 0.06em;
+      line-height: 1;
+    }
+
+    .resume-preview__doc-copy {
+      max-width: 34rem;
+      color: var(--ink2);
+      line-height: 1.7;
+      font-size: 0.96rem;
+    }
+
+    .resume-preview__doc-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: center;
+    }
+
+    .resume-preview__meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      align-items: center;
+    }
+
+    .resume-preview__body {
+      padding: 1rem 1.1rem;
+      border-radius: 1rem;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(247, 242, 234, 0.92));
+      border: 1px solid rgba(17, 17, 16, 0.08);
+      color: var(--ink2);
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.75;
+    }
+
+    .bulk-summary-grid {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .leaderboard-list {
+      display: grid;
+      gap: 0.9rem;
+    }
+
+    .leaderboard-row {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 0.9rem;
+      align-items: center;
+      padding: 1rem 1.1rem;
+      border-radius: 1rem;
+      background: rgba(255, 255, 255, 0.76);
+      border: 1px solid rgba(17, 17, 16, 0.08);
+    }
+
+    .leaderboard-rank {
+      width: 2.8rem;
+      height: 2.8rem;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #111110, #2c2c29);
+      color: #fbf6ee;
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.04em;
+    }
+
+    .leaderboard-row__title {
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .leaderboard-row__meta {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 0.2rem;
+    }
+
+    .leaderboard-row__score {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 2.2rem;
+      color: var(--green);
+      letter-spacing: 0.05em;
+    }
+
+    .text-soft {
+      color: var(--ink2);
+    }
+
+    @media (max-width: 1080px) {
+      .result-hero,
+      .analysis-grid--single,
+      .score-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .result-workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .result-workspace__right {
+        position: static;
+        top: auto;
+        justify-self: stretch;
+        max-width: none;
+        margin-left: 0;
+        height: auto;
+      }
+
+      .result-workspace__sticky {
+        position: static;
+        max-height: none;
+      }
+
+      .result-workspace__scroll {
+        overflow: visible;
+        padding-right: 0;
+      }
+
+      .result-summary-card__body {
+        grid-template-columns: 1fr;
+        gap: 1.4rem;
+      }
+
+      .result-rings,
+      .result-bars {
+        grid-column: auto;
+        grid-row: auto;
+      }
+
+      .result-preview-side {
+        grid-column: auto;
+        grid-row: auto;
+      }
+
+      .result-score-panel__top,
+      .result-score-panel__facts,
+      .result-metrics-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .score-ring {
+        width: 190px;
+      }
+
+      .metric-grid,
+      .bulk-summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .result-score-card__top,
+      .result-score-card__metrics {
+        grid-template-columns: 1fr;
+      }
+
+      .resume-preview__canvas {
+        min-height: 28rem;
+      }
+    }
+
+    @media (max-width: 780px) {
+      .result-hero {
+        padding: 1rem;
+      }
+
+      .result-title {
+        font-size: clamp(2.2rem, 12vw, 3.5rem);
+      }
+
+      .analysis-card {
+        padding: 1rem !important;
+      }
+
+      .result-score-panel {
+        padding: 0.9rem;
+      }
+
+      .result-score-panel__title {
+        font-size: 1.5rem;
+      }
+
+      .result-workspace {
+        gap: 0.9rem;
+      }
+
+      .result-preview-scroll {
+        max-height: none;
+        overflow: visible;
+        padding-right: 0;
+      }
+
+      .result-summary-card {
+        padding: 1rem;
+        border-radius: 1.45rem;
+      }
+
+      .result-summary-card__top {
+        align-items: flex-start;
+      }
+
+      .result-file {
+        align-items: flex-start;
+      }
+
+      .result-file__icon {
+        width: 4rem;
+        height: 4rem;
+        border-radius: 1rem;
+      }
+
+      .result-score-badge {
+        text-align: left;
+        min-width: 0;
+      }
+
+      .result-rings {
+        justify-content: center;
+      }
+
+      .result-summary-card__top {
+        grid-template-columns: 1fr;
+      }
+
+      .result-bar__track {
+        height: 12px;
+      }
+
+      .result-metric-card--wide {
+        grid-column: auto;
+      }
+
+      .resume-preview__chrome {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .resume-preview-toggle > summary {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .resume-preview__canvas {
+        padding: 0.75rem;
+      }
+
+      .resume-preview__canvas-inner {
+        width: 100%;
+        aspect-ratio: 0.82;
+        padding: 0.6rem;
+      }
+
+      .leaderboard-row {
+        grid-template-columns: 1fr;
+        justify-items: start;
+      }
     }
   </style>
 </head>
@@ -163,298 +1705,633 @@
   {% set active_page = "" %}
   {% include "_app_topbar.html" %}
 
-  <div class="page-wrap page-wrap--content">
-    <div class="glass-panel p-6 md:p-10">
-      <div class="mb-7 text-center">
-        <h1 class="brand-title text-3xl font-bold">Resume Evaluation Summary</h1>
-        <p class="text-muted mt-2">Review score, match quality, and AI rewritten bullet points.</p>
-      </div>
-
-      
-
+  <div class="page-wrap page-wrap--content result-page-shell">
+    <div class="result-shell">
       {% if bulk %}
-      <div class="grid gap-6 md:grid-cols-3">
-        <div class="panel-soft p-5">
-          <p class="text-muted text-xs uppercase tracking-wide">Batch Processed</p>
-          <p class="metric-value mt-3 text-4xl font-bold text-cyan-200">{{ processed_count }}<span class="text-lg text-cyan-100">/{{ batch_total }}</span></p>
+        <div class="action-row" style="justify-content:flex-end;">
+          {% if batch_id %}
+          <a href="/export/bulk/{{ batch_id }}" class="btn-primary">Download CSV</a>
+          {% endif %}
         </div>
-        <div class="panel-soft p-5">
-          <p class="text-muted text-xs uppercase tracking-wide">Top Match</p>
-          <p class="metric-value mt-3 text-4xl font-bold text-emerald-300">{{ top_score }}<span class="text-lg text-emerald-100">/100</span></p>
-        </div>
-        <div class="panel-soft p-5">
-          <p class="text-muted text-xs uppercase tracking-wide">Average Score</p>
-          <p class="metric-value mt-3 text-4xl font-bold text-indigo-200">{{ avg_score }}<span class="text-lg text-indigo-100">/100</span></p>
-        </div>
-      </div>
 
-      <div class="panel-soft mt-6 p-4">
-        <p class="text-sm text-slate-100">
-          Processing complete: {{ processed_count }}/{{ batch_total }} resumes analyzed against {{ job_skill_count }} extracted job keywords.
-        </p>
-        {% if table_resume_count %}
-        <p class="mt-2 text-sm text-slate-100">
-          Tables detected in {{ table_resume_count }} resume(s) and included in scoring.
-        </p>
-        {% endif %}
+        <section class="result-hero">
+          <div class="result-kicker">Bulk Analysis Complete</div>
+          <div class="flex flex-col gap-3">
+            <h1 class="result-title">Candidate Ranking Snapshot</h1>
+            <p class="result-subtitle">
+              We analyzed {{ processed_count }}/{{ batch_total }} resumes against {{ job_skill_count }} extracted job skills and ranked the strongest matches first.
+            </p>
+            <div class="result-meta">
+              <span class="result-chip">Top score: {{ top_score }}/100</span>
+              <span class="result-chip">Average score: {{ avg_score }}/100</span>
+              <span class="result-chip">Matched profiles: {{ processed_count }}</span>
+              {% if table_resume_count %}
+              <span class="result-chip result-chip--soft">Tables detected in {{ table_resume_count }} resume(s)</span>
+              {% endif %}
+            </div>
+          </div>
+        </section>
+
+        <div class="bulk-summary-grid">
+          <div class="analysis-card p-5">
+            <div class="analysis-label">Batch Processed</div>
+            <div class="metric-tile__value metric-tile__value--green">{{ processed_count }} <span class="text-sm text-muted">/ {{ batch_total }}</span></div>
+            <p class="analysis-copy">Every supported resume in the upload was scored using the same ATS logic.</p>
+          </div>
+          <div class="analysis-card p-5">
+            <div class="analysis-label">Top Candidate</div>
+            <div class="metric-tile__value">{{ top_score }}%</div>
+            <p class="analysis-copy">The highest-ranked resume is surfaced first in the leaderboard below.</p>
+          </div>
+          <div class="analysis-card p-5">
+            <div class="analysis-label">Average Alignment</div>
+            <div class="metric-tile__value metric-tile__value--red">{{ avg_score }}%</div>
+            <p class="analysis-copy">Use the average score to gauge the overall strength of the candidate pool.</p>
+          </div>
+        </div>
+
         {% if skipped_count %}
-        <p class="mt-2 text-sm text-rose-200">
-          {{ skipped_count }} file(s) were skipped due to unsupported type or unreadable content.
-        </p>
-        {% if skipped_files %}
-        <p class="mt-2 text-xs text-rose-100">Examples: {{ skipped_files | join(", ") }}</p>
-        {% endif %}
-        {% endif %}
-      </div>
-
-      <div class="mt-6">
-        <h2 class="mb-3 text-xl font-semibold">Resume Leaderboard</h2>
-        <div class="space-y-3">
-          {% for row in leaderboard %}
-          <div class="panel-soft flex flex-wrap items-center justify-between gap-3 p-4">
-            <div class="min-w-0">
-              <p class="text-sm font-semibold text-slate-100">#{{ row.rank }} {{ row.filename }}</p>
-              <p class="text-muted text-xs">Matched {{ row.found_count }} skills, missing {{ row.missing_count }}</p>
-            </div>
-            <div class="flex items-center gap-3">
-              <p class="metric-value text-lg font-bold text-emerald-300">{{ row.score }}%</p>
-              <a href="/history/{{ row.history_id }}" class="btn-secondary">Open</a>
+        <div class="analysis-card p-5">
+          <div class="analysis-card__header">
+            <div>
+              <div class="analysis-label">Skipped Files</div>
+              <div class="analysis-heading">Unreadable or Unsupported</div>
             </div>
           </div>
-          {% else %}
-          <div class="panel-soft p-4 text-sm text-muted">No bulk analysis results available.</div>
-          {% endfor %}
-        </div>
-      </div>
-
-      <div class="mt-8">
-        <h2 class="mb-3 text-xl font-semibold">Leaderboard Table</h2>
-        <div class="panel-soft overflow-x-auto p-4">
-          <table class="min-w-full text-sm text-slate-900">
-            <thead>
-              <tr class="text-left text-xs uppercase tracking-wide text-slate-700">
-                <th class="px-2 py-2">Rank</th>
-                <th class="px-2 py-2">File</th>
-                <th class="px-2 py-2">Score</th>
-                <th class="px-2 py-2">Matched</th>
-                <th class="px-2 py-2">Missing</th>
-                <th class="px-2 py-2">Tables</th>
-                <th class="px-2 py-2">Open</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for row in leaderboard %}
-              <tr class="border-t border-slate-400/60">
-                <td class="px-2 py-2 text-slate-900 font-semibold">#{{ row.rank }}</td>
-                <td class="px-2 py-2">{{ row.filename }}</td>
-                <td class="px-2 py-2 text-slate-900 font-semibold">{{ row.score }}%</td>
-                <td class="px-2 py-2">{{ row.found_count }}</td>
-                <td class="px-2 py-2">{{ row.missing_count }}</td>
-                <td class="px-2 py-2">{{ row.table_count or 0 }}</td>
-                <td class="px-2 py-2"><a href="/history/{{ row.history_id }}" class="btn-secondary">Open</a></td>
-              </tr>
-              {% else %}
-              <tr>
-                <td class="px-2 py-3 text-muted" colspan="7">No bulk analysis results available.</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="mt-6 text-center">
-        {% if batch_id %}
-        <a href="/export/bulk/{{ batch_id }}" class="btn-primary">Download CSV</a>
-        {% endif %}
-        <a href="/" class="btn-secondary">&larr; Back to Analyzer</a>
-      </div>
-      {% elif resume %}
-      <div class="grid gap-6 lg:grid-cols-2">
-        <div class="space-y-6 lg:max-w-3xl lg:mx-auto result-metrics-col">
-          <div class="grid gap-6 md:grid-cols-2 result-metrics-grid">
-            <div class="panel-soft p-5 metric-card">
-              <p class="text-muted text-xs uppercase tracking-wide">ATS Score</p>
-              <p class="metric-value mt-3 text-5xl font-bold text-emerald-300">{{ score }}<span class="text-xl text-emerald-200">/100</span></p>
-            </div>
-            <div class="panel-soft p-5 metric-card">
-              <p class="text-muted text-xs uppercase tracking-wide">Optimization Focus</p>
-              <p class="mt-3 text-sm text-slate-100">Prioritize missing skills and measurable accomplishments in your experience bullets.</p>
-            </div>
-          </div>
-
-          <div class="grid gap-6 md:grid-cols-2 result-metrics-grid">
-            <div class="panel-soft p-5 metric-card">
-              <h2 class="mb-2 text-lg font-semibold text-cyan-200">Resume Skills</h2>
-              {% if resume_skills %}
-              <div class="skill-pill-row">
-                {% for skill in resume_skills %}
-                <span class="skill-pill">{{ skill }}</span>
-                {% endfor %}
-              </div>
-              {% else %}
-              <p class="text-sm leading-relaxed text-slate-100">No clear resume skills were extracted.</p>
-              {% endif %}
-            </div>
-            <div class="panel-soft p-5 metric-card">
-              <h2 class="mb-2 text-lg font-semibold text-amber-200">Job Skills</h2>
-              {% if job_skills %}
-              <div class="skill-pill-row">
-                {% for skill in job_skills.split(",") if skill.strip() %}
-                <span class="skill-pill">{{ skill.strip() }}</span>
-                {% endfor %}
-              </div>
-              {% else %}
-              <p class="text-sm leading-relaxed text-slate-100">No clear job skills were extracted.</p>
-              {% endif %}
-            </div>
-          </div>
-
-          <div class="grid gap-6 md:grid-cols-2 result-metrics-grid">
-            <div class="panel-soft p-5 metric-card">
-              <h2 class="mb-2 text-lg font-semibold text-emerald-200">Matched Skills</h2>
-              {% if found_display %}
-              <div class="skill-pill-row">
-                {% for skill in found_display %}
-                <span class="skill-pill skill-pill--match">{{ skill }}</span>
-                {% endfor %}
-              </div>
-              {% else %}
-              <div class="skill-pill-row">
-                {% for skill in ["Python","Java","JavaScript","SQL","C#"] %}
-                <span class="skill-pill skill-pill--match">{{ skill }}</span>
-                {% endfor %}
-              </div>
-              {% endif %}
-            </div>
-            <div class="panel-soft p-5 metric-card">
-              <h2 class="mb-2 text-lg font-semibold text-rose-200">Missing Skills</h2>
-              {% if missing_display %}
-              <div class="skill-pill-row">
-                {% for skill in missing_display %}
-                <span class="skill-pill skill-pill--missing">{{ skill }}</span>
-                {% endfor %}
-              </div>
-              {% else %}
-              <p class="text-sm leading-relaxed text-rose-100">No gaps detected.</p>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-
-        <div class="space-y-6">
-          {% if table_count %}
-          <div>
-            <h2 class="mb-3 text-xl font-semibold">Extracted Tables</h2>
-            <p class="text-xs text-slate-900">Table content was parsed from the resume and included in scoring.</p>
-            <div class="mt-3 space-y-4">
-              {% for table in table_preview %}
-              <div class="panel-soft overflow-x-auto p-4">
-                <table class="min-w-full text-xs text-slate-100">
-                  <tbody>
-                    {% for row in table %}
-                    <tr class="border-t border-slate-700/40">
-                      {% for cell in row %}
-                      <td class="px-2 py-1">{{ cell or "-" }}</td>
-                      {% endfor %}
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-              {% endfor %}
-            </div>
+          <p class="analysis-copy">
+            {{ skipped_count }} file(s) were skipped because they were unsupported or could not be read.
+          </p>
+          {% if skipped_files %}
+          <div class="mt-3 analysis-list">
+            {% for file in skipped_files %}
+            <div class="analysis-list__item">{{ file }}</div>
+            {% endfor %}
           </div>
           {% endif %}
+        </div>
+        {% endif %}
 
-          <div>
-            <h2 class="mb-3 text-xl font-semibold">AI-Improved Resume Points</h2>
-            {% if genai_enabled %}
-            <p class="mb-3 text-xs text-emerald-200">Gen AI status: {{ genai_status_message or "enabled" }}.</p>
-            {% else %}
-            <p class="mb-3 text-xs text-amber-200">Gen AI status: {{ genai_status_message or "unavailable" }}.</p>
-            {% endif %}
-            {% if rewritten %}
-            <div class="panel-soft p-4 text-sm leading-relaxed text-slate-100">
-              <ol style="margin:0;padding-left:1.25rem;list-style-type:decimal;list-style-position:inside;">
-                {% for r in rewritten %}
-                <li style="margin-bottom:5px;display:list-item;">{{ r }}</li>
-                {% endfor %}
-              </ol>
+        <div class="analysis-card p-5">
+          <div class="analysis-card__header">
+            <div>
+              <div class="analysis-label">Leaderboard</div>
+              <div class="analysis-heading">Best Matches First</div>
             </div>
-            {% else %}
-            <div class="panel-soft p-4 text-sm text-muted">No improved bullet points were saved for this analysis.</div>
-            {% endif %}
           </div>
-
-          <div class="grid gap-6 md:grid-cols-2">
-            <div class="panel-soft p-5">
-              <h2 class="mb-3 text-xl font-semibold">Places to Improve</h2>
-              {% if combined_points %}
-            <div class="panel-soft p-4 text-sm leading-relaxed text-slate-100 result-scroll-box">
-              <ol style="margin:0;padding-left:1.25rem;list-style-type:decimal;list-style-position:inside;">
-                {% for p in combined_points %}
-                <li style="margin-bottom:5px;display:list-item;">{{ p }}</li>
-                {% endfor %}
-              </ol>
+          <div class="leaderboard-list">
+            {% for row in leaderboard %}
+            <div class="leaderboard-row">
+              <div class="leaderboard-rank">#{{ row.rank }}</div>
+              <div>
+                <div class="leaderboard-row__title">{{ row.filename }}</div>
+                <div class="leaderboard-row__meta">
+                  Matched {{ row.found_count }} skills and missed {{ row.missing_count }}.
+                  {% if row.table_count %}Tables detected: {{ row.table_count }}.{% endif %}
+                </div>
               </div>
-              {% else %}
-              <p class="text-sm text-muted">No points available to combine.</p>
-              {% endif %}
+              <div class="flex items-center gap-3">
+                <div class="leaderboard-row__score">{{ row.score }}%</div>
+                <a href="/history/{{ row.history_id }}" class="btn-secondary">Open</a>
+              </div>
             </div>
-            <div class="panel-soft p-5">
-              <h2 class="mb-3 text-xl font-semibold">Suggestions</h2>
-              {% if suggestions %}
-              <ul class="space-y-2 text-sm leading-relaxed text-slate-100">
-                {% for s in suggestions %}
-                <li class="panel-soft p-3">{{ s }}</li>
-                {% endfor %}
-              </ul>
-              {% else %}
-              <p class="text-sm text-muted">No extra suggestions for this resume.</p>
-              {% endif %}
-            </div>
+            {% else %}
+            <div class="analysis-fallback">No bulk analysis results available.</div>
+            {% endfor %}
           </div>
         </div>
-      </div>
 
-      {% if not is_hr %}
-      <div class="mt-8 space-y-3 text-sm text-muted">
-        <p class="font-semibold text-ink">For: {{ history_filename or "Current Resume" }}{% if history_filetype %} ({{ history_filetype }}){% endif %}</p>
-        <div class="grid gap-3 md:grid-cols-3 items-stretch">
-          <form method="POST" action="/export" class="w-full flex flex-col gap-2 md:col-span-2" id="export-docx-form">
-            <label class="text-xs text-muted">Choose layout</label>
-            <select name="layout" class="input-field layout-compact layout-narrow">
-              <option value="classic">Classic</option>
-              <option value="modern">Modern</option>
-              <option value="minimal">Minimal</option>
-            </select>
-            <input type="hidden" name="history_id" value="{{ history_id or '' }}">
-            <input type="hidden" name="skills" value="{{ skills }}">
-            <input type="hidden" name="bullets" value="{{ rewritten | tojson | e }}">
-            <button type="submit" class="btn-primary w-full">Download Styled Resume (DOCX)</button>
-          </form>
-          <form method="POST" action="/export/points" class="w-full flex flex-col justify-end">
-            <input type="hidden" name="history_id" value="{{ history_id or '' }}">
-            <input type="hidden" name="bullets" value="{{ rewritten | tojson | e }}">
-            <button type="submit" class="btn-secondary w-full">Download AI-Improved Points (TXT)</button>
-          </form>
+        <div class="analysis-card p-5 table-card">
+          <div class="analysis-card__header">
+            <div>
+              <div class="analysis-label">Raw Table View</div>
+              <div class="analysis-heading">Leaderboard Table</div>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>File</th>
+                  <th>Score</th>
+                  <th>Matched</th>
+                  <th>Missing</th>
+                  <th>Tables</th>
+                  <th>Open</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in leaderboard %}
+                <tr>
+                  <td>#{{ row.rank }}</td>
+                  <td>{{ row.filename }}</td>
+                  <td>{{ row.score }}%</td>
+                  <td>{{ row.found_count }}</td>
+                  <td>{{ row.missing_count }}</td>
+                  <td>{{ row.table_count or 0 }}</td>
+                  <td><a href="/history/{{ row.history_id }}" class="btn-secondary">Open</a></td>
+                </tr>
+                {% else %}
+                <tr>
+                  <td colspan="7" class="text-soft">No bulk analysis results available.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
         </div>
-        <p class="text-xs text-muted">DOCX includes your resume with improvements and chosen layout; TXT includes only the AI-improved points.</p>
-      </div>
-      {% endif %}
 
-      <div class="mt-6 text-center">
-        <a href="/" class="btn-secondary">&larr; Back to Analyzer</a>
-      </div>
+        <div class="action-row">
+          <a href="/" class="btn-secondary">&larr; Back to Analyzer</a>
+        </div>
+
+      {% elif resume %}
+        {% set score_value = score|float %}
+        {% set score_state = "Excellent" if score_value >= 80 else "Strong" if score_value >= 65 else "Needs Improvement" if score_value >= 45 else "Needs Work" %}
+        {% set score_warn = score_value < 60 %}
+        {% set score_fit_class = "score-insight--warn" if score_value < 30 else "score-insight--ok" if score_value < 60 else "score-insight--good" if score_value < 80 else "score-insight--excellent" %}
+        {% set score_fit_title = "Needs a Rework" if score_value < 30 else "Needs Training" if score_value < 60 else "Ready With Guidance" if score_value < 80 else "Strongly Recommended" %}
+        {% set score_fit_text = "This resume needs major improvement before it is ready to send." if score_value < 30 else "This resume has some potential, but it still needs focused improvement." if score_value < 60 else "This resume is in good shape and only needs a few refinements." if score_value < 80 else "This resume is well presented and strongly recommended." %}
+        {% set readability_value = score_value if score_value is not none else (formatting_score if formatting_score is not none else None) %}
+        {% set readability_state = "ATS-friendly" if readability_value is not none and readability_value >= 75 else "Readable" if readability_value is not none and readability_value >= 50 else "Needs cleanup" if readability_value is not none else "Not scored" %}
+        {% set readability_fill = "linear-gradient(90deg, #d14d4d, #ef7a3a)" if readability_value is not none and readability_value < 50 else "linear-gradient(90deg, #c59b2d, #d6a03a)" if readability_value is not none and readability_value < 75 else "linear-gradient(90deg, #c59b2d, #1e6b45)" if readability_value is not none else "linear-gradient(90deg, #b9b9b9, #d6d6d6)" %}
+        {% set resume_skill_items = resume_skills or [] %}
+        {% set matched_count = found_display|length %}
+        {% set missing_count = missing_display|length %}
+        {% set resume_skill_count = resume_skill_items|length %}
+        {% set keyword_value = keyword_score if keyword_score is not none else ((matched_count / (matched_count + missing_count)) * 100 if (matched_count + missing_count) > 0 else score_value) %}
+        {% set skills_value = keyword_value %}
+        {% set performance_value = semantic_score if semantic_score is not none else score_value %}
+
+        <section class="result-workspace">
+          <div class="result-workspace__left">
+            <div class="analysis-card p-5 result-preview-card">
+              <div class="analysis-card__header">
+                <div>
+                  <div class="analysis-label">File Preview</div>
+                  <div class="analysis-heading">Resume Preview</div>
+                </div>
+              </div>
+
+              <div class="result-file result-preview-card__file">
+                <div class="result-file__icon" aria-hidden="true">
+                  {% if preview_image %}
+                  <img src="{{ preview_image }}" alt="Resume preview">
+                  {% else %}
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"></path>
+                    <path d="M14 2v5h5"></path>
+                    <path d="M9 13h6"></path>
+                    <path d="M9 17h6"></path>
+                    <path d="M9 9h2"></path>
+                  </svg>
+                  {% endif %}
+                </div>
+                <div>
+                  <div class="result-file__name">{{ history_filename or "Current Resume" }}</div>
+                  <div class="result-file__meta">
+                    <span class="result-file__chip">{{ history_filetype or "PDF" }}</span>
+                    {% if history_date %}
+                    <span>{{ history_date }}</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+
+              {% if preview_image or preview_source_url %}
+              <details class="resume-preview-toggle" open>
+                <summary>Hide Preview</summary>
+                <div class="resume-preview-toggle__panel">
+                  <div class="resume-preview result-preview-scroll">
+                    {% if (history_filetype or "")|upper == "DOCX" %}
+                    <div class="resume-preview__frame">
+                      <div class="resume-preview__chrome">
+                        <div class="resume-preview__chrome-left">
+                          <div class="resume-preview__dots" aria-hidden="true">
+                            <span class="resume-preview__dot"></span>
+                            <span class="resume-preview__dot"></span>
+                            <span class="resume-preview__dot"></span>
+                          </div>
+                          <div class="resume-preview__title">{{ history_filename or "Uploaded Resume" }}</div>
+                        </div>
+                        <div class="resume-preview__tag">{{ history_filetype or "DOCX" }} File</div>
+                      </div>
+                      <div class="resume-preview__doc-card">
+                        <div class="resume-preview__doc-icon">DOCX</div>
+                        <div class="resume-preview__doc-title">Original Word Resume</div>
+                        <div class="resume-preview__doc-copy">
+                          The uploaded DOCX file is preserved here. Use the buttons below to open or download it.
+                        </div>
+                        <div class="resume-preview__doc-actions">
+                          {% if preview_source_url %}
+                          <a class="btn-primary" href="{{ preview_source_url }}" target="_blank" rel="noopener">Open File</a>
+                          <a class="btn-secondary" href="{{ preview_source_url }}" download>Download</a>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                    {% elif preview_image or preview_source_url %}
+                    <div class="resume-preview__frame">
+                      <div class="resume-preview__chrome">
+                        <div class="resume-preview__chrome-left">
+                          <div class="resume-preview__dots" aria-hidden="true">
+                            <span class="resume-preview__dot"></span>
+                            <span class="resume-preview__dot"></span>
+                            <span class="resume-preview__dot"></span>
+                          </div>
+                          <div class="resume-preview__title">{{ history_filename or "Uploaded Resume" }}</div>
+                        </div>
+                        <div class="resume-preview__tag">{{ history_filetype or "PDF" }} Preview</div>
+                      </div>
+                      <div class="resume-preview__canvas">
+                        <div class="resume-preview__canvas-inner">
+                          <div class="resume-preview__image-wrap">
+                            {% if preview_image %}
+                            <img class="resume-preview__image" src="{{ preview_image }}" alt="Resume preview image">
+                            {% elif preview_source_url %}
+                            <iframe class="resume-preview__image" src="{{ preview_source_url }}" title="Resume preview"></iframe>
+                            {% endif %}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {% endif %}
+                    <div class="resume-preview__meta">
+                      <span class="result-chip">Original uploaded file</span>
+                      <span class="result-chip result-chip--soft">{{ history_filetype or "Document" }} preview</span>
+                    </div>
+                  </div>
+                </div>
+              </details>
+              {% else %}
+              <div class="analysis-fallback">No resume preview could be loaded for this file.</div>
+              {% endif %}
+            </div>
+
+            <div class="analysis-card p-5">
+              <div class="analysis-card__header">
+                <div>
+                  <div class="analysis-label">Overall Verdict</div>
+                  <div class="analysis-heading">What the ATS Suggests</div>
+                </div>
+              </div>
+              <div class="score-insight {{ score_fit_class }}">
+                <div class="score-insight__label">Overall Verdict</div>
+                <div class="score-insight__title">{{ score_fit_title }}</div>
+                <div class="score-insight__text">{{ score_fit_text }}</div>
+              </div>
+            </div>
+
+            <div class="analysis-card p-5">
+              <div class="analysis-card__header">
+                <div>
+                  <div class="analysis-label">ATS Reliability</div>
+                  <div class="analysis-heading">Formatting Quality</div>
+                </div>
+                <span class="score-state {% if readability_value is not none and readability_value < 50 %}score-state--warn{% endif %}">{{ readability_state }}</span>
+              </div>
+              <p class="analysis-copy mb-4">
+                {% if readability_value is not none %}
+                  This resume scored {{ readability_value }}% for structure, section clarity, and scan-friendly formatting.
+                {% else %}
+                  We could not calculate a readability score for this file.
+                {% endif %}
+              </p>
+              <div class="score-summary">
+                <div class="score-summary__line">
+                  <div>
+                    <div class="score-summary__label">Formatting signals</div>
+                    <div class="score-summary__value">Experience, education, skills, and length were checked.</div>
+                  </div>
+                </div>
+                <div class="score-summary__line">
+                  <div class="w-full">
+                    <div class="score-summary__label mb-2 flex items-center justify-between gap-3">
+                      <span>Reliability bar</span>
+                      <span class="score-summary__value">{{ readability_value|round(0)|int if readability_value is not none else 0 }}%</span>
+                    </div>
+                    <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ readability_value|round(0)|int if readability_value is not none else 0 }}" aria-label="Reliability score">
+                      <div class="progress-track__bar" style="width: {{ readability_value or 0 }}%; background: {{ readability_fill }};"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="analysis-grid">
+              <div class="analysis-card p-5">
+                <div class="analysis-card__header">
+                  <div>
+                    <div class="analysis-label">Matched Skills</div>
+                    <div class="analysis-heading">What the ATS Liked</div>
+                  </div>
+                </div>
+                {% if found_display %}
+                <div class="pill-cloud">
+                  {% for skill in found_display %}
+                  <span class="pill pill--match">{{ skill }}</span>
+                  {% endfor %}
+                </div>
+                {% else %}
+                <div class="analysis-fallback">No clear matches were extracted from the resume.</div>
+                {% endif %}
+              </div>
+
+              <div class="analysis-card p-5">
+                <div class="analysis-card__header">
+                  <div>
+                    <div class="analysis-label">Missing Skills</div>
+                    <div class="analysis-heading">What to Close</div>
+                  </div>
+                </div>
+                {% if missing_display %}
+                <div class="pill-cloud">
+                  {% for skill in missing_display %}
+                  <span class="pill pill--missing">{{ skill }}</span>
+                  {% endfor %}
+                </div>
+                {% else %}
+                <div class="analysis-fallback">No major gaps were detected in the extracted skills.</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="analysis-card p-5">
+              <div class="analysis-card__header">
+                <div>
+                  <div class="analysis-label">Extracted Metrics</div>
+                  <div class="analysis-heading">Skills and Coverage</div>
+                </div>
+              </div>
+              <div class="result-metrics-grid">
+                <div class="result-metric-card">
+                  <div class="result-metric-card__label">Resume skills extracted</div>
+                  <div class="result-metric-card__value">{{ resume_skill_count }}</div>
+                  <div class="result-metric-card__copy">Skills detected directly from the resume text.</div>
+                </div>
+                <div class="result-metric-card">
+                  <div class="result-metric-card__label">Matched skills</div>
+                  <div class="result-metric-card__value result-metric-card__value--green">{{ matched_count }}</div>
+                  <div class="result-metric-card__copy">Skills aligned with the target job description.</div>
+                </div>
+                <div class="result-metric-card">
+                  <div class="result-metric-card__label">Missing skills</div>
+                  <div class="result-metric-card__value result-metric-card__value--red">{{ missing_count }}</div>
+                  <div class="result-metric-card__copy">Gaps to review before sending the resume.</div>
+                </div>
+                <div class="result-metric-card result-metric-card--wide">
+                  <div class="result-metric-card__label">Extracted resume skills</div>
+                  {% if resume_skill_items %}
+                  <div class="result-metric-card__chips pill-cloud">
+                    {% for skill in resume_skill_items %}
+                    <span class="pill">{{ skill }}</span>
+                    {% endfor %}
+                  </div>
+                  {% else %}
+                  <div class="analysis-fallback">No clear resume skills were extracted.</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            {% if table_count %}
+            <div class="analysis-card p-5 table-card table-card--compact">
+              <div class="analysis-card__header">
+                <div>
+                  <div class="analysis-label">Extracted Tables</div>
+                  <div class="analysis-heading">Tables Included in Scoring</div>
+                </div>
+              </div>
+              <p class="analysis-copy mb-4">The following table previews were detected inside your resume.</p>
+              <div class="space-y-4">
+                {% for table in table_preview %}
+                <div class="analysis-card p-4">
+                  <div class="overflow-x-auto">
+                    <table>
+                      <tbody>
+                        {% for row in table %}
+                        <tr>
+                          {% for cell in row %}
+                          <td>{{ cell or "-" }}</td>
+                          {% endfor %}
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+
+            {% if not is_hr %}
+            <div class="analysis-grid analysis-grid--single" id="improve-resume">
+              <div class="analysis-card p-5">
+                <div class="analysis-card__header">
+                  <div>
+                    <div class="analysis-label">Improve Resume</div>
+                    <div class="analysis-heading">AI Rewrite</div>
+                  </div>
+                </div>
+                {% if genai_enabled %}
+                <p class="analysis-copy mb-3">Gen AI status: {{ genai_status_message or "enabled" }}.</p>
+                {% else %}
+                <p class="analysis-copy mb-3">Gen AI status: {{ genai_status_message or "unavailable" }}.</p>
+                {% endif %}
+                {% if rewritten %}
+                <div class="analysis-list result-scroll-box">
+                  <ol style="margin:0;padding-left:1.25rem;list-style:decimal inside;">
+                    {% for r in rewritten %}
+                    <li class="analysis-list__item">{{ r }}</li>
+                    {% endfor %}
+                  </ol>
+                </div>
+                {% else %}
+                <div class="analysis-fallback">No improved bullet points were saved for this analysis.</div>
+                {% endif %}
+              </div>
+
+              <div class="analysis-card p-5">
+                <div class="analysis-card__header">
+                  <div>
+                    <div class="analysis-label">Next Steps</div>
+                    <div class="analysis-heading">Suggested Fixes</div>
+                  </div>
+                </div>
+                {% if suggestions %}
+                <div class="analysis-list">
+                  {% for s in suggestions %}
+                  <div class="analysis-list__item"><strong>Tip.</strong> {{ s }}</div>
+                  {% endfor %}
+                </div>
+                {% else %}
+                <div class="analysis-fallback">No extra suggestions for this resume.</div>
+                {% endif %}
+              </div>
+            </div>
+            {% endif %}
+
+            {% if not is_hr %}
+            <div class="analysis-card p-5" id="download-report">
+              <div class="analysis-card__header">
+                <div>
+                  <div class="analysis-label">Download Report</div>
+                  <div class="analysis-heading">Export Your Updated Resume</div>
+                </div>
+              </div>
+              <p class="analysis-copy mb-4">Choose a layout for the DOCX export or download the improved bullet points as plain text.</p>
+              <div class="grid gap-3 md:grid-cols-3">
+                <form method="POST" action="/export" class="flex flex-col gap-2 md:col-span-2" id="export-docx-form">
+                  <label class="text-xs text-muted">Choose layout</label>
+                  <select name="layout" class="input-field layout-compact layout-narrow">
+                    <option value="classic">Classic</option>
+                    <option value="modern">Modern</option>
+                    <option value="minimal">Minimal</option>
+                  </select>
+                  <input type="hidden" name="history_id" value="{{ history_id or '' }}">
+                  <input type="hidden" name="skills" value="{{ skills }}">
+                  <input type="hidden" name="bullets" value="{{ rewritten | tojson | e }}">
+                  <button type="submit" class="btn-primary w-full">Download Styled Resume (DOCX)</button>
+                </form>
+                <form method="POST" action="/export/points" class="flex flex-col justify-end">
+                  <input type="hidden" name="history_id" value="{{ history_id or '' }}">
+                  <input type="hidden" name="bullets" value="{{ rewritten | tojson | e }}">
+                  <button type="submit" class="btn-secondary w-full">Download AI-Improved Points (TXT)</button>
+                </form>
+              </div>
+              <p class="mt-3 text-xs text-muted">DOCX includes your resume with improvements and chosen layout; TXT includes only the AI-improved points.</p>
+            </div>
+            {% endif %}
+          </div>
+
+          <aside class="result-workspace__right">
+            <div class="result-workspace__sticky">
+              <div class="result-workspace__scroll">
+                <div class="analysis-card p-5 result-score-card">
+                  <div class="analysis-card__header">
+                    <div>
+                      <div class="analysis-label">ATS Score</div>
+                      <div class="analysis-heading">Overall Performance</div>
+                    </div>
+                    <span class="score-state {% if score_warn %}score-state--warn{% endif %}">{{ score_state }}</span>
+                  </div>
+
+                  <div class="result-score-card__top">
+                    <div class="result-score-card__value-wrap">
+                      <div class="result-score-card__value-label">ATS Score</div>
+                      <div class="result-score-card__value" data-score-value data-score-target="{{ score_value }}">{{ score_value|round(0)|int }}<span>/100</span></div>
+                      <div class="result-score-card__value-note">
+                        {{ history_filename or "Current resume" }} is being evaluated against the job description using the ATS score, skills match, and readability signals.
+                      </div>
+                    </div>
+
+                    <div class="result-score-card__summary">
+                      <div class="result-score-card__meta">
+                        <span class="result-file__chip">{{ history_filetype or "PDF" }}</span>
+                        {% if history_date %}
+                        <span class="text-muted">{{ history_date }}</span>
+                        {% endif %}
+                      </div>
+                      <div class="result-score-card__copy">
+                        The score panel stays pinned while you scroll so the core ATS signals remain visible next to the resume preview.
+                      </div>
+                      <div class="result-score-card__bar">
+                        <div class="result-score-card__bar-label">
+                          <span>Overall score</span>
+                          <span>{{ score_value|round(0)|int }}%</span>
+                        </div>
+                        <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ score_value|round(0)|int }}" aria-label="ATS score">
+                          <div class="progress-track__bar" data-score-bar style="width: {{ score_value }}%;"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="result-score-card__metrics metric-grid">
+                    <div class="result-score-card__metric">
+                      <div class="result-score-card__metric-label">Overall score</div>
+                      <div class="result-score-card__metric-value result-score-card__metric-value--red">{{ score_value|round(0)|int }}%</div>
+                      <div class="result-score-card__metric-copy">Current ATS match against the job description.</div>
+                    </div>
+                    <div class="result-score-card__metric">
+                      <div class="result-score-card__metric-label">Skills match</div>
+                      <div class="result-score-card__metric-value result-score-card__metric-value--green">{{ skills_value|round(0)|int }}%</div>
+                      <div class="result-score-card__metric-copy">Keyword coverage and matching skill strength.</div>
+                    </div>
+                    <div class="result-score-card__metric">
+                      <div class="result-score-card__metric-label">Reliability</div>
+                      <div class="result-score-card__metric-value">{% if readability_value is not none %}{{ readability_value|round(0)|int }}%{% else %}N/A{% endif %}</div>
+                      <div class="result-score-card__metric-copy">{{ readability_state }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </section>
+
+        <div class="action-row">
+          <a href="/" class="btn-secondary">&larr; Back to Analyzer</a>
+        </div>
+
       {% else %}
-      <div class="panel-soft p-6">
-        <p class="text-muted mb-4">No analysis result found.</p>
-        <a href="/" class="btn-secondary">&larr; Back to Analyzer</a>
-      </div>
+        <div class="analysis-card p-6">
+          <div class="analysis-card__header">
+            <div>
+              <div class="analysis-label">No Result</div>
+              <div class="analysis-heading">Nothing to Show Yet</div>
+            </div>
+          </div>
+          <p class="analysis-copy mb-4">No analysis result found.</p>
+          <a href="/" class="btn-secondary">&larr; Back to Analyzer</a>
+        </div>
       {% endif %}
     </div>
   </div>
-{% include "_cookie.html" %}
+
+  {% include "_cookie.html" %}
+  <script>
+    (function () {
+      const valueEl = document.querySelector("[data-score-value]");
+      const barEl = document.querySelector("[data-score-bar]");
+      if (!valueEl || !barEl) return;
+
+      const target = Math.max(0, Math.min(100, Number(valueEl.dataset.scoreTarget || 0)));
+      const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const duration = reduceMotion ? 0 : 1200;
+      const start = performance.now();
+      const formatScore = (value) => Number(value).toFixed(1);
+      const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+
+      function render(value) {
+        const clamped = Math.max(0, Math.min(target, value));
+        valueEl.innerHTML = `${formatScore(clamped)}<span>/100</span>`;
+        barEl.style.width = `${clamped}%`;
+        valueEl.setAttribute("aria-label", `ATS score ${formatScore(clamped)} out of 100`);
+      }
+
+      if (!duration) {
+        render(target);
+        return;
+      }
+
+      render(0);
+
+      function tick(now) {
+        const elapsed = now - start;
+        const progress = Math.min(1, elapsed / duration);
+        const eased = easeOutCubic(progress);
+        render(target * eased);
+        if (progress < 1) {
+          window.requestAnimationFrame(tick);
+        } else {
+          render(target);
+        }
+      }
+
+      window.requestAnimationFrame(tick);
+    })();
+  </script>
 </body>
 </html>

@@ -1,3 +1,4 @@
+{% if show_cookie_banner %}
 <div class="cookie-scrim" id="cookie-scrim" aria-hidden="true">
   <div
     id="cookie-banner"
@@ -13,13 +14,13 @@
         <div>
           <h2 id="cookie-banner-title" class="cookie-banner__title">We use cookies</h2>
           <p id="cookie-banner-text" class="cookie-banner__text">
-            We rely on essential cookies to run the site and optional cookies to learn how it’s used.
+            We rely on essential cookies to run the site and optional cookies to learn how it's used.
             Choose what works for you.
           </p>
         </div>
       </div>
 
-      <button type="button" class="cookie-close" data-cookie-action="reject" aria-label="Close cookie banner">×</button>
+      <button type="button" class="cookie-close" data-cookie-action="reject" aria-label="Close cookie banner">Close</button>
 
       <div class="cookie-banner__actions">
         <button type="button" class="btn-secondary" data-cookie-action="reject">
@@ -100,3 +101,5 @@
     });
   })();
 </script>
+{% endif %}
+

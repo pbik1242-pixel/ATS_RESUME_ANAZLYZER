@@ -1,0 +1,1781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ATS Resume Analyzer compares resumes with job descriptions, surfaces ATS score, keyword match, missing skills, readability signals, and guided revision steps before login.">
+  <title>ATS Resume Analyzer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500;600&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>document.documentElement.classList.add("js-ready");</script>
+  <style>
+    {% include "_theme.css" %}
+    {% include "theme.css" %}
+
+    :root {
+      --land-bg: var(--bg);
+      --land-surface: var(--surface);
+      --land-surface-strong: var(--surface-strong);
+      --land-text: var(--ink);
+      --land-text-soft: var(--ink-soft);
+      --land-muted: var(--muted);
+      --land-border: var(--border);
+      --land-border-strong: var(--border-strong);
+      --land-accent: var(--red);
+      --land-accent-weak: var(--red-pale);
+      --land-shadow: var(--shadow-soft);
+      --land-shadow-strong: var(--shadow-lift);
+      --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-exit: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body.app-shell {
+      background: var(--land-bg);
+      color: var(--land-text);
+    }
+
+    .landing-page {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: none;
+      margin: 0 auto;
+      padding: clamp(0.55rem, 0.95vw, 0.95rem);
+      display: grid;
+      gap: 0.8rem;
+    }
+
+    .landing-page::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(217, 43, 43, 0.07), transparent 28%),
+        radial-gradient(circle at 82% 18%, rgba(217, 43, 43, 0.05), transparent 26%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 32%);
+    }
+
+    .landing-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.85rem 1rem;
+      border: 1px solid var(--land-border);
+      border-top: 3px solid var(--land-accent);
+      border-radius: 1.15rem;
+      background: linear-gradient(90deg, rgba(247, 243, 238, 0.96), rgba(243, 240, 236, 0.92) 56%, rgba(246, 236, 234, 0.95));
+      box-shadow: var(--land-shadow);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+
+    .landing-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.8rem;
+      text-decoration: none;
+      color: inherit;
+      min-width: 0;
+    }
+
+    .landing-brand__logo {
+      width: 2.05rem;
+      height: 2.05rem;
+      border-radius: 0.62rem;
+      background: var(--land-accent);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-family: "DM Mono", monospace;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+
+    .landing-brand__title {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(1.2rem, 1rem + 0.7vw, 1.75rem);
+      letter-spacing: 0.06em;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .landing-header__actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .header-note {
+      font-family: "DM Mono", monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--land-muted);
+      white-space: nowrap;
+    }
+
+    .hero-panel,
+    .section-panel,
+    .feature-card,
+    .trust-card,
+    .proof-card,
+    .metric-card,
+    .flow-step,
+    .cta-panel {
+      border: 1px solid var(--land-border);
+      border-radius: 1.25rem;
+      background: linear-gradient(180deg, var(--land-surface), var(--land-surface-strong));
+      box-shadow: var(--land-shadow);
+    }
+
+    .hero-panel {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1rem;
+      align-items: center;
+      padding: clamp(0.55rem, 1.05vw, 0.9rem) 0 0;
+      overflow: hidden;
+      position: relative;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .hero-copy {
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      gap: 1rem;
+      padding: 0;
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+
+    .hero-kicker {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+    }
+
+    .hero-title {
+      margin: 0;
+      max-width: 12ch;
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(4rem, 7.2vw, 7.5rem);
+      line-height: 0.88;
+      letter-spacing: 0.05em;
+      color: var(--land-text);
+      text-wrap: balance;
+    }
+
+    .hero-title span {
+      color: var(--land-accent);
+    }
+
+    .hero-copy p {
+      margin: 0;
+      max-width: 39rem;
+      color: var(--land-text-soft);
+      font-size: 1.05rem;
+      line-height: 1.8;
+      font-weight: 500;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.9rem;
+      flex-wrap: wrap;
+    }
+
+    .hero-link {
+      color: var(--land-text-soft);
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      padding-bottom: 0.1rem;
+      transition: color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+    }
+
+    .hero-link:hover {
+      color: var(--land-text);
+      border-color: var(--land-text);
+      transform: translateY(-1px);
+    }
+
+    .hero-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin-top: 0.3rem;
+      max-width: 36rem;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .mini-metric {
+      border: 1px solid var(--land-border);
+      border-radius: 1rem;
+      background: rgba(255, 255, 255, 0.72);
+      padding: 0.78rem 0.9rem;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+      text-align: left;
+    }
+
+    .mini-metric strong {
+      display: block;
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 1.7rem;
+      letter-spacing: 0.05em;
+      color: var(--land-text);
+      line-height: 1;
+      margin-bottom: 0.24rem;
+    }
+
+    .mini-metric span {
+      display: block;
+      color: var(--land-muted);
+      font-size: 0.84rem;
+      line-height: 1.45;
+    }
+
+    .section-panel {
+      padding: clamp(0.95rem, 1.25vw, 1.15rem);
+      display: grid;
+      gap: 1rem;
+    }
+
+    #what-it-does {
+      margin-top: 4rem;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .section-title {
+      margin: 0.25rem 0 0;
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(2.6rem, 4vw, 4.5rem);
+      line-height: 0.9;
+      letter-spacing: 0.05em;
+      color: var(--land-text);
+      max-width: 12ch;
+    }
+
+    .section-copy {
+      max-width: 50rem;
+      color: var(--land-text-soft);
+      line-height: 1.85;
+      font-size: 1rem;
+      font-weight: 500;
+    }
+
+    .story-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(18rem, 0.85fr);
+      gap: 1rem;
+    }
+
+    .story-card {
+      border: 1px solid var(--land-border);
+      border-radius: 1.1rem;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(251, 246, 238, 0.92));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+      padding: 1.1rem;
+    }
+
+    .story-card h3,
+    .trust-card h3,
+    .feature-card h3,
+    .flow-step h3,
+    .proof-card h3 {
+      margin: 0;
+      font-family: "Bebas Neue", sans-serif;
+      letter-spacing: 0.05em;
+      color: var(--land-text);
+    }
+
+    .story-card h3 {
+      font-size: 2.35rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .story-card p {
+      margin: 0 0 1rem;
+      color: var(--land-text-soft);
+      line-height: 1.8;
+    }
+
+    .story-checks {
+      display: grid;
+      gap: 0.55rem;
+      margin-top: 1rem;
+    }
+
+    .story-check {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.7rem;
+      padding: 0.72rem 0.8rem;
+      border: 1px solid var(--land-border);
+      border-radius: 0.95rem;
+      background: rgba(255, 255, 255, 0.82);
+    }
+
+    .story-check__dot {
+      width: 0.72rem;
+      height: 0.72rem;
+      border-radius: 50%;
+      margin-top: 0.34rem;
+      background: var(--land-accent);
+      flex: 0 0 auto;
+      box-shadow: 0 0 0 0.25rem rgba(217, 43, 43, 0.08);
+    }
+
+    .story-check strong {
+      display: block;
+      margin-bottom: 0.15rem;
+      color: var(--land-text);
+      font-size: 0.98rem;
+      font-weight: 700;
+    }
+
+    .story-check span {
+      color: var(--land-muted);
+      font-size: 0.92rem;
+      line-height: 1.55;
+    }
+
+    .story-aside {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .aside-block {
+      padding: 0.9rem 0.95rem;
+      border: 1px solid var(--land-border);
+      border-radius: 1rem;
+      background: rgba(255, 255, 255, 0.82);
+    }
+
+    .aside-block__label {
+      display: block;
+      margin-bottom: 0.35rem;
+      font-family: "DM Mono", monospace;
+      font-size: 0.68rem;
+      color: var(--land-muted);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .aside-block__value {
+      display: block;
+      color: var(--land-text);
+      font-size: 0.98rem;
+      font-weight: 700;
+      line-height: 1.55;
+    }
+
+    .process-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.85rem;
+      position: relative;
+      padding-top: 0.35rem;
+    }
+
+    .process-grid::before {
+      content: "";
+      position: absolute;
+      left: 1rem;
+      right: 1rem;
+      top: 2.45rem;
+      height: 2px;
+      border-radius: 999px;
+      background: rgba(217, 43, 43, 0.14);
+    }
+
+    .process-grid::after {
+      content: "";
+      position: absolute;
+      left: 1rem;
+      top: 2.45rem;
+      height: 2px;
+      width: var(--process-fill, 0%);
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--land-accent), var(--red-strong));
+      transition: width 1100ms var(--ease-enter);
+    }
+
+    .flow-step {
+      padding: 1rem;
+      position: relative;
+      z-index: 1;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(251, 246, 238, 0.96));
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+    }
+
+    .flow-step:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--land-shadow-strong);
+      border-color: rgba(217, 43, 43, 0.24);
+    }
+
+    .flow-step__num {
+      width: 2.3rem;
+      height: 2.3rem;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--land-text);
+      color: var(--land-bg);
+      font-family: "DM Mono", monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-bottom: 0.8rem;
+      box-shadow: 0 12px 22px rgba(17, 17, 16, 0.12);
+    }
+
+    .flow-step h3 {
+      font-size: 1.8rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .flow-step p {
+      margin: 0;
+      color: var(--land-text-soft);
+      line-height: 1.75;
+      font-size: 0.96rem;
+    }
+
+    .flow-step__foot {
+      margin-top: 0.8rem;
+      font-family: "DM Mono", monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--land-muted);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.92fr 0.92fr;
+      grid-template-areas:
+        "analysis workflow tracking"
+        "analysis export interface";
+      gap: 0.85rem;
+    }
+
+    .feature-card {
+      padding: 1rem;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(251, 246, 238, 0.95));
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+      overflow: hidden;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--land-shadow-strong);
+      border-color: rgba(217, 43, 43, 0.22);
+    }
+
+    .feature-card--analysis { grid-area: analysis; }
+    .feature-card--workflow { grid-area: workflow; }
+    .feature-card--tracking { grid-area: tracking; }
+    .feature-card--export { grid-area: export; }
+    .feature-card--interface { grid-area: interface; }
+
+    .feature-card__label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-bottom: 0.8rem;
+      font-family: "DM Mono", monospace;
+      font-size: 0.68rem;
+      color: var(--land-muted);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .feature-card__label::before {
+      content: "";
+      width: 0.38rem;
+      height: 0.38rem;
+      border-radius: 50%;
+      background: var(--land-accent);
+    }
+
+    .feature-card h3 {
+      font-size: 2rem;
+      margin-bottom: 0.45rem;
+    }
+
+    .feature-card p {
+      margin: 0;
+      color: var(--land-text-soft);
+      line-height: 1.75;
+      font-size: 0.95rem;
+    }
+
+    .feature-list {
+      display: grid;
+      gap: 0.55rem;
+      margin-top: 0.9rem;
+    }
+
+    .feature-list li {
+      list-style: none;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      color: var(--land-text-soft);
+      font-size: 0.92rem;
+      line-height: 1.65;
+    }
+
+    .feature-list li::before {
+      content: "";
+      width: 0.55rem;
+      height: 0.55rem;
+      border-radius: 50%;
+      background: var(--land-accent);
+      margin-top: 0.35rem;
+      flex: 0 0 auto;
+    }
+
+    .feature-visual {
+      margin-top: 0.9rem;
+      display: grid;
+      gap: 0.65rem;
+    }
+
+    .visual-strip {
+      border: 1px solid var(--land-border);
+      border-radius: 0.9rem;
+      background: rgba(255, 255, 255, 0.84);
+      padding: 0.8rem 0.85rem;
+      display: grid;
+      gap: 0.35rem;
+    }
+
+    .visual-strip__top {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      align-items: center;
+      color: var(--land-text-soft);
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .visual-strip__track {
+      height: 0.38rem;
+      border-radius: 999px;
+      background: rgba(17, 17, 16, 0.08);
+      overflow: hidden;
+    }
+
+    .visual-strip__fill {
+      display: block;
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--land-accent), var(--red-strong));
+      transition: width 850ms var(--ease-enter);
+    }
+
+    .tracking-timeline {
+      display: grid;
+      gap: 0.65rem;
+      margin-top: 0.85rem;
+    }
+
+    .tracking-row {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 0.7rem;
+      align-items: center;
+      border: 1px solid var(--land-border);
+      border-radius: 0.9rem;
+      background: rgba(255, 255, 255, 0.84);
+      padding: 0.65rem 0.75rem;
+    }
+
+    .tracking-row__index {
+      color: var(--land-muted);
+      font-family: "DM Mono", monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .tracking-row__copy {
+      color: var(--land-text);
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .tracking-row__value {
+      color: var(--land-accent);
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.05em;
+    }
+
+    .trust-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.85rem;
+    }
+
+    .trust-card {
+      padding: 1rem;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(251, 246, 238, 0.95));
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+    }
+
+    .trust-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--land-shadow-strong);
+      border-color: rgba(217, 43, 43, 0.22);
+    }
+
+    .trust-card__icon {
+      width: 2.45rem;
+      height: 2.45rem;
+      border-radius: 0.85rem;
+      display: grid;
+      place-items: center;
+      background: var(--land-accent-weak);
+      color: var(--land-accent);
+      font-family: "DM Mono", monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-bottom: 0.85rem;
+      border: 1px solid rgba(217, 43, 43, 0.16);
+    }
+
+    .trust-card h3 {
+      font-size: 2rem;
+      margin-bottom: 0.45rem;
+    }
+
+    .trust-card p {
+      margin: 0;
+      color: var(--land-text-soft);
+      line-height: 1.75;
+      font-size: 0.95rem;
+    }
+
+    .trust-card .trust-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-top: 0.9rem;
+    }
+
+    .trust-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.45rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid var(--land-border);
+      background: rgba(255, 255, 255, 0.82);
+      color: var(--land-text-soft);
+      font-size: 0.76rem;
+      font-weight: 600;
+    }
+
+    .trust-chip::before {
+      content: "";
+      width: 0.36rem;
+      height: 0.36rem;
+      border-radius: 50%;
+      background: var(--land-accent);
+    }
+
+    .proof-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(18rem, 0.85fr);
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .proof-card {
+      padding: 1rem;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(251, 246, 238, 0.95));
+    }
+
+    .proof-card__head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .proof-card__head h3 {
+      font-size: 2.1rem;
+    }
+
+    .proof-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+    }
+
+    .proof-badge {
+      padding: 0.33rem 0.58rem;
+      border-radius: 999px;
+      border: 1px solid rgba(217, 43, 43, 0.16);
+      background: var(--land-accent-weak);
+      color: var(--land-accent);
+      font-family: "DM Mono", monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .donut-row {
+      display: grid;
+      grid-template-columns: minmax(10rem, 0.76fr) minmax(0, 1.24fr);
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .donut {
+      width: 13rem;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at center, #fff 0 54%, transparent 55%),
+        conic-gradient(var(--land-accent) var(--progress, 74%), rgba(217, 43, 43, 0.12) 0);
+      border: 1px solid rgba(217, 43, 43, 0.16);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+      margin: 0 auto;
+    }
+
+    .donut__inner {
+      text-align: center;
+      display: grid;
+      gap: 0.2rem;
+    }
+
+    .donut__value {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 3.7rem;
+      letter-spacing: 0.06em;
+      color: var(--land-text);
+      line-height: 0.9;
+    }
+
+    .donut__inner small {
+      color: var(--land-muted);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .sparklines {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .sparkline {
+      display: grid;
+      gap: 0.35rem;
+    }
+
+    .sparkline__meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      color: var(--land-text-soft);
+      font-size: 0.84rem;
+      font-weight: 600;
+    }
+
+    .sparkline__meta strong {
+      color: var(--land-text);
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 1.2rem;
+      letter-spacing: 0.04em;
+    }
+
+    .sparkline__track {
+      height: 0.42rem;
+      border-radius: 999px;
+      background: rgba(17, 17, 16, 0.08);
+      overflow: hidden;
+    }
+
+    .sparkline__fill {
+      display: block;
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--land-accent), var(--red-strong));
+      transition: width 850ms var(--ease-enter);
+    }
+
+    .proof-grid {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .metric-card {
+      padding: 1rem;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(251, 246, 238, 0.95));
+    }
+
+    .metric-card strong {
+      display: block;
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 3rem;
+      line-height: 0.95;
+      letter-spacing: 0.06em;
+      color: var(--land-text);
+      margin-bottom: 0.3rem;
+    }
+
+    .metric-card p {
+      margin: 0;
+      color: var(--land-text-soft);
+      font-size: 0.94rem;
+      line-height: 1.7;
+    }
+
+    .cta-panel {
+      padding: 1.1rem;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 1rem;
+      background: linear-gradient(135deg, rgba(217, 43, 43, 0.06), rgba(255, 255, 255, 0.94) 55%, rgba(217, 43, 43, 0.04));
+    }
+
+    .cta-panel h2 {
+      margin: 0.2rem 0 0.35rem;
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(2.7rem, 4vw, 4.6rem);
+      line-height: 0.9;
+      letter-spacing: 0.05em;
+      color: var(--land-text);
+    }
+
+    .cta-panel p {
+      margin: 0;
+      max-width: 50rem;
+      color: var(--land-text-soft);
+      line-height: 1.8;
+      font-size: 1rem;
+      font-weight: 500;
+    }
+
+    .cta-panel__actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .landing-footer {
+      margin-top: 1rem;
+      padding: 1.9rem 0 1.25rem;
+      color: var(--land-text-soft);
+      width: 100%;
+    }
+
+    .landing-footer__grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: clamp(0.85rem, 1.25vw, 1.45rem);
+      align-items: start;
+    }
+
+    .landing-footer__brand {
+      display: grid;
+      gap: 0.85rem;
+      align-content: start;
+      max-width: none;
+      grid-column: span 4;
+    }
+
+    .landing-footer__brand-name {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 1.75rem;
+      letter-spacing: 0.08em;
+      color: var(--land-text);
+    }
+
+    .landing-footer__brand-mark {
+      display: inline-grid;
+      place-items: center;
+      width: 1.65rem;
+      height: 1.65rem;
+      border-radius: 0.5rem;
+      background: var(--land-accent);
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+    }
+
+    .landing-footer__brand p {
+      margin: 0;
+      line-height: 1.8;
+      font-size: 0.97rem;
+    }
+
+    .landing-footer__column {
+      display: grid;
+      gap: 0.8rem;
+      min-width: 0;
+      grid-column: span 2;
+    }
+
+    .landing-footer__title {
+      margin: 0;
+      font-size: 0.92rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--land-accent);
+    }
+
+    .landing-footer__links {
+      display: grid;
+      gap: 0.7rem;
+    }
+
+    .landing-footer__links a {
+      width: fit-content;
+      color: var(--land-muted);
+      text-decoration: none;
+      transition: color 0.18s ease, transform 0.18s ease;
+      font-weight: 500;
+    }
+
+    .landing-footer__links span {
+      width: fit-content;
+      color: var(--land-muted);
+      font-weight: 500;
+    }
+
+    .landing-footer__links a:hover {
+      color: var(--land-text);
+      transform: translateX(2px);
+    }
+
+    .landing-footer__bottom {
+      margin-top: 2rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--land-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      color: var(--land-muted);
+      font-size: 0.92rem;
+    }
+
+    .landing-footer__meta {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      flex-wrap: wrap;
+    }
+
+    .landing-footer__chips {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      flex-wrap: wrap;
+    }
+
+    .landing-footer__chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.42rem 0.72rem;
+      border: 1px solid var(--land-border);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.65);
+      color: var(--land-text);
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+      transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease, border-color 180ms ease, color 180ms ease;
+    }
+
+    .btn-primary {
+      border: 1px solid var(--land-text);
+      background: var(--land-text);
+      color: var(--land-bg);
+      box-shadow: 0 12px 35px rgba(17, 17, 16, 0.14);
+    }
+
+    .btn-primary:hover {
+      background: var(--land-accent);
+      border-color: var(--land-accent);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      border: 1.5px solid var(--land-border-strong);
+      background: transparent;
+      color: var(--land-text);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--land-text);
+      background: var(--land-surface);
+      transform: translateY(-1px);
+    }
+
+    .reveal {
+      opacity: 1;
+      transform: none;
+      clip-path: inset(0 0 0 0);
+      filter: none;
+    }
+
+    html.js-ready .reveal {
+      opacity: 0;
+      transform: translateY(10px);
+      clip-path: inset(0 0 10% 0);
+      filter: blur(4px);
+      transition:
+        opacity 420ms var(--ease-enter),
+        transform 420ms var(--ease-enter),
+        clip-path 420ms var(--ease-enter),
+        filter 420ms var(--ease-enter);
+      transition-delay: var(--delay, 0ms);
+    }
+
+    html.js-ready .reveal.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+      clip-path: inset(0 0 0 0);
+      filter: blur(0);
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      .btn-primary[data-magnetic],
+      .btn-secondary[data-magnetic] {
+        will-change: transform, box-shadow;
+      }
+    }
+
+    @media (max-width: 1220px) {
+      .story-grid,
+      .proof-layout,
+      .cta-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas:
+          "analysis analysis"
+          "workflow tracking"
+          "export interface";
+      }
+
+      .process-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      .landing-page {
+        width: 100%;
+        padding: 0.55rem;
+      }
+
+      .landing-header {
+        padding: 0.9rem 0.95rem;
+      }
+
+      .header-note {
+        display: none;
+      }
+
+      .hero-panel,
+      .section-panel,
+      .cta-panel {
+        padding: 0.95rem;
+      }
+
+      .hero-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-copy {
+        justify-items: start;
+        text-align: left;
+      }
+
+      .hero-title {
+        max-width: none;
+        font-size: clamp(3.9rem, 18vw, 5.2rem);
+      }
+
+      .hero-copy p,
+      .section-copy,
+      .cta-panel p {
+        font-size: 0.98rem;
+      }
+
+      .hero-metrics {
+        grid-template-columns: 1fr;
+      }
+
+      .score-ring-wrap,
+      .donut-row {
+        grid-template-columns: 1fr;
+      }
+
+      .version-stack,
+      .trust-grid,
+      .process-grid,
+      .features-grid {
+        grid-template-columns: 1fr;
+        grid-template-areas: none;
+      }
+
+      .feature-card--analysis,
+      .feature-card--workflow,
+      .feature-card--tracking,
+      .feature-card--export,
+      .feature-card--interface {
+        grid-area: auto;
+      }
+
+      .process-grid::before,
+      .process-grid::after {
+        left: 1.18rem;
+        right: auto;
+        top: 1.6rem;
+        bottom: 1.6rem;
+        width: 2px;
+        height: auto;
+      }
+
+      .process-grid::after {
+        width: 2px;
+        height: var(--process-fill, 0%);
+      }
+
+      .cta-panel__actions,
+      .landing-header__actions {
+        justify-content: flex-start;
+      }
+
+      .landing-footer__grid {
+        grid-template-columns: 1fr;
+      }
+
+      .landing-footer__brand,
+      .landing-footer__column {
+        grid-column: auto;
+      }
+
+      .landing-footer__bottom {
+        align-items: flex-start;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .reveal,
+      .sparkline__fill,
+      .visual-strip__fill,
+      .signal-fill,
+      .btn-primary,
+      .btn-secondary,
+      .feature-card,
+      .trust-card,
+      .flow-step {
+        transition: none !important;
+      }
+
+    }
+
+  </style>
+</head>
+<body class="app-shell">
+  <div class="scroll-bar" id="scrollBar"></div>
+  <div class="floaters" id="floaters"></div>
+  <div class="landing-page">
+    <header class="landing-header reveal" data-reveal style="--delay: 20ms;">
+      <a href="/" class="landing-brand" aria-label="ATS Resume Analyzer home">
+        <div class="landing-brand__logo">IQ</div>
+        <span class="landing-brand__title">ATS RESUME ANALYZER</span>
+      </a>
+      <div class="landing-header__actions">
+        <a class="btn-primary" href="/login" data-magnetic>Login to Start</a>
+      </div>
+    </header>
+
+    <section class="hero-panel reveal" data-reveal style="--delay: 60ms;">
+      <div class="hero-copy">
+        <span class="badge-pill hero-kicker">Resume Match Intelligence</span>
+        <h1 class="hero-title">Turn resume guesses into <span>ATS-ready</span> improvements</h1>
+        <p>
+          Compare a resume with a job description and see the ATS score, keyword coverage, missing skills, readability signals,
+          and a guided revision path you can act on quickly.
+        </p>
+        <div class="hero-actions">
+          <a class="btn-primary" href="/login" data-magnetic>Login to Start</a>
+          <a class="hero-link" href="#how-it-works">See how it works</a>
+        </div>
+        <div class="hero-metrics">
+          <div class="mini-metric">
+            <strong data-count-to="1250" data-count-suffix="+">0+</strong>
+            <span>Resumes analyzed through the workflow</span>
+          </div>
+          <div class="mini-metric">
+            <strong data-count-to="860" data-count-suffix="+">0+</strong>
+            <span>Job descriptions processed and compared</span>
+          </div>
+          <div class="mini-metric">
+            <strong data-count-to="98" data-count-suffix="%">0%</strong>
+            <span>Users preferring a simple guided workflow</span>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <section class="section-panel reveal" data-reveal style="--delay: 100ms;" id="what-it-does">
+      <div class="section-head">
+        <div>
+          <span class="badge-pill">What this website is about</span>
+          <h2 class="section-title">Clear feedback for resume-to-job fit</h2>
+        </div>
+        <p class="section-copy">
+          ATS Resume Analyzer helps job seekers understand how well a resume matches a job description, which keywords are missing,
+          how readable the resume is for screening, and what to improve before applying again.
+        </p>
+      </div>
+
+      <div class="story-grid">
+        <article class="story-card">
+          <h3>What users see</h3>
+          <p>
+            Upload a resume, paste a job description, and get a practical breakdown instead of a vague pass or fail. The page
+            shows the ATS score, keyword match, missing terms, readability signals, and the revision path that matters next.
+          </p>
+          <div class="story-checks">
+            <div class="story-check">
+              <span class="story-check__dot"></span>
+              <div>
+                <strong>Clarity first</strong>
+                <span>Everything is explained in plain language so the next step is obvious.</span>
+              </div>
+            </div>
+            <div class="story-check">
+              <span class="story-check__dot"></span>
+              <div>
+                <strong>Proof in the score</strong>
+                <span>Users can compare progress across revisions instead of guessing what improved.</span>
+              </div>
+            </div>
+            <div class="story-check">
+              <span class="story-check__dot"></span>
+              <div>
+                <strong>Guided improvement</strong>
+                <span>The feedback points to the missing keywords, skills, and readability issues first.</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <aside class="story-aside">
+          <div class="aside-block">
+            <span class="aside-block__label">Outputs</span>
+            <span class="aside-block__value">ATS score, keyword coverage, missing skills, readability signals, and a revision path you can use immediately.</span>
+          </div>
+          <div class="aside-block">
+            <span class="aside-block__label">Outcome</span>
+            <span class="aside-block__value">A faster, more focused resume review process that helps users move from uncertainty to action.</span>
+          </div>
+          <div class="aside-block">
+            <span class="aside-block__label">Tone</span>
+            <span class="aside-block__value">Professional, practical, and centered on clear improvements instead of generic marketing language.</span>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section-panel reveal" data-reveal id="how-it-works" style="--delay: 140ms;">
+      <div class="section-head">
+        <div>
+          <span class="badge-pill">How it works</span>
+          <h2 class="section-title">A short guided flow from input to improvement</h2>
+        </div>
+        <p class="section-copy">
+          The workflow stays simple: add the job description, upload the resume, analyze the match, review the score and signals,
+          then improve and retry with a clearer version.
+        </p>
+      </div>
+
+      <div class="process-grid" data-process-line>
+        <article class="flow-step">
+          <div class="flow-step__num">01</div>
+          <h3>Add</h3>
+          <p>Paste or write the job description so the analyzer knows what skills, phrases, and responsibilities matter most.</p>
+          <div class="flow-step__foot">Add the job description</div>
+        </article>
+        <article class="flow-step">
+          <div class="flow-step__num">02</div>
+          <h3>Upload</h3>
+          <p>Upload the resume file you want to review. The product is designed to keep this step quick and friction-free.</p>
+          <div class="flow-step__foot">Upload the resume</div>
+        </article>
+        <article class="flow-step">
+          <div class="flow-step__num">03</div>
+          <h3>Analyze</h3>
+          <p>Review ATS score, keyword match, missing skills, and readability signals in one pass instead of checking them separately.</p>
+          <div class="flow-step__foot">Analyze the match</div>
+        </article>
+        <article class="flow-step">
+          <div class="flow-step__num">04</div>
+          <h3>Improve</h3>
+          <p>Use the guidance to revise, then run the next pass to compare revision history and see the score move in the right direction.</p>
+          <div class="flow-step__foot">Review and improve</div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section-panel reveal" data-reveal id="core-features" style="--delay: 180ms;">
+      <div class="section-head">
+        <div>
+          <span class="badge-pill">Core features</span>
+          <h2 class="section-title">Built around analysis, revision, and tracking</h2>
+        </div>
+        <p class="section-copy">
+          The feature set stays focused on what helps users move faster: understand the match, revise with confidence, and keep
+          a simple record of changes over time.
+        </p>
+      </div>
+
+      <div class="features-grid">
+        <article class="feature-card feature-card--analysis">
+          <span class="feature-card__label">Analysis</span>
+          <h3>ATS scoring & keyword matching</h3>
+          <p>Surface the score, keyword coverage, and missing term signals that matter most during screening.</p>
+          <div class="feature-visual">
+            <div class="visual-strip">
+              <div class="visual-strip__top"><span>ATS match</span><strong data-count-to="92" data-count-suffix="%">0%</strong></div>
+              <div class="visual-strip__track"><span class="visual-strip__fill" data-bar-target="92"></span></div>
+            </div>
+            <div class="visual-strip">
+              <div class="visual-strip__top"><span>Keyword coverage</span><strong data-count-to="76" data-count-suffix="%">0%</strong></div>
+              <div class="visual-strip__track"><span class="visual-strip__fill" data-bar-target="76"></span></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="feature-card feature-card--workflow">
+          <span class="feature-card__label">Workflow</span>
+          <h3>Guided improvement</h3>
+          <p>Keep the next step obvious with practical feedback that points to skills, wording, and readability first.</p>
+          <ul class="feature-list">
+            <li>Focused revision guidance</li>
+            <li>Faster second pass after edits</li>
+            <li>Clearer action items for each review</li>
+          </ul>
+        </article>
+
+        <article class="feature-card feature-card--tracking">
+          <span class="feature-card__label">Tracking</span>
+          <h3>History & review tracking</h3>
+          <p>Save revisions, compare progress, and see how the score changes across versions without losing context.</p>
+          <div class="tracking-timeline">
+            <div class="tracking-row">
+              <span class="tracking-row__index">V01</span>
+              <span class="tracking-row__copy">Baseline upload</span>
+              <span class="tracking-row__value">68%</span>
+            </div>
+            <div class="tracking-row">
+              <span class="tracking-row__index">V02</span>
+              <span class="tracking-row__copy">Keyword pass</span>
+              <span class="tracking-row__value">86%</span>
+            </div>
+            <div class="tracking-row">
+              <span class="tracking-row__index">V03</span>
+              <span class="tracking-row__copy">Polished revision</span>
+              <span class="tracking-row__value">96%</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="feature-card feature-card--export">
+          <span class="feature-card__label">Output</span>
+          <h3>Resume export options</h3>
+          <p>Keep the workflow practical by supporting export-friendly revisions and easy follow-up versions.</p>
+          <ul class="feature-list">
+            <li>Ready for a revised resend</li>
+            <li>Helpful for internal review</li>
+          </ul>
+        </article>
+
+        <article class="feature-card feature-card--interface">
+          <span class="feature-card__label">Experience</span>
+          <h3>User-friendly interface</h3>
+          <p>Simple, readable screens keep the product fast to understand for first-time users and repeat reviewers alike.</p>
+          <ul class="feature-list">
+            <li>Clean product-style layout</li>
+            <li>Responsive across desktop and mobile</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="section-panel reveal" data-reveal id="trust" style="--delay: 220ms;">
+      <div class="section-head">
+        <div>
+          <span class="badge-pill">Why users trust it</span>
+          <h2 class="section-title">Practical feedback that feels easy to rely on</h2>
+        </div>
+        <p class="section-copy">
+          The product is designed to feel dependable because it shows what changed, why it matters, and how to act on it next.
+        </p>
+      </div>
+
+      <div class="trust-grid">
+        <article class="trust-card">
+          <div class="trust-card__icon">01</div>
+          <h3>Smart resume-job matching</h3>
+          <p>The comparison is centered on the role, so users can quickly see where the resume fits and where it misses the mark.</p>
+          <div class="trust-chip-row">
+            <span class="trust-chip">Match-first analysis</span>
+            <span class="trust-chip">Role-specific signals</span>
+          </div>
+        </article>
+        <article class="trust-card">
+          <div class="trust-card__icon">02</div>
+          <h3>Clear and readable feedback</h3>
+          <p>Feedback is written to be direct and easy to scan, which helps users make confident edits without extra interpretation.</p>
+          <div class="trust-chip-row">
+            <span class="trust-chip">Readable guidance</span>
+            <span class="trust-chip">Simple next steps</span>
+          </div>
+        </article>
+        <article class="trust-card">
+          <div class="trust-card__icon">03</div>
+          <h3>Organized progress history</h3>
+          <p>Users can compare revisions over time, so improvement stays visible and the workflow feels structured instead of random.</p>
+          <div class="trust-chip-row">
+            <span class="trust-chip">Version tracking</span>
+            <span class="trust-chip">Review history</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section-panel reveal" data-reveal id="by-the-numbers" style="--delay: 260ms;">
+      <div class="section-head">
+        <div>
+          <span class="badge-pill">Proof and stats</span>
+          <h2 class="section-title">Signals that make the workflow feel credible</h2>
+        </div>
+        <p class="section-copy">
+          The same product signals from the About page are used here as proof: stronger match scores, clearer keyword coverage,
+          more readable revisions, and a workflow users prefer because it stays simple.
+        </p>
+      </div>
+
+      <div class="proof-layout">
+        <article class="proof-card">
+          <div class="proof-card__head">
+            <div>
+              <span class="badge-pill" style="margin-bottom: 0.4rem;">Average lift</span>
+              <h3>What better guidance can unlock</h3>
+            </div>
+            <div class="proof-badges">
+              <span class="proof-badge">ATS match</span>
+              <span class="proof-badge">Keyword coverage</span>
+              <span class="proof-badge">Readability</span>
+            </div>
+          </div>
+          <div class="donut-row">
+            <div class="donut" style="--progress:74%;">
+              <div class="donut__inner">
+                <div class="donut__value" data-count-to="74" data-count-suffix="%">0%</div>
+                <small>demo trend</small>
+              </div>
+            </div>
+            <div class="sparklines">
+              <div class="sparkline">
+                <div class="sparkline__meta"><span>ATS match</span><strong data-count-to="88" data-count-suffix="%">0%</strong></div>
+                <div class="sparkline__track"><span class="sparkline__fill" data-bar-target="88"></span></div>
+              </div>
+              <div class="sparkline">
+                <div class="sparkline__meta"><span>Keyword coverage</span><strong data-count-to="76" data-count-suffix="%">0%</strong></div>
+                <div class="sparkline__track"><span class="sparkline__fill" data-bar-target="76"></span></div>
+              </div>
+              <div class="sparkline">
+                <div class="sparkline__meta"><span>Readability</span><strong data-count-to="91" data-count-suffix="%">0%</strong></div>
+                <div class="sparkline__track"><span class="sparkline__fill" data-bar-target="91"></span></div>
+              </div>
+            </div>
+          </div>
+          <p style="margin: 0.95rem 0 0; color: var(--land-text-soft); line-height: 1.8;">
+            The signals stay concrete from one revision to the next, which helps users understand exactly what improved.
+          </p>
+        </article>
+
+        <div class="proof-grid">
+          <article class="metric-card">
+            <strong data-count-to="1250" data-count-suffix="+">0+</strong>
+            <p>Resumes analyzed through the workflow.</p>
+          </article>
+          <article class="metric-card">
+            <strong data-count-to="860" data-count-suffix="+">0+</strong>
+            <p>Job descriptions processed and compared.</p>
+          </article>
+          <article class="metric-card">
+            <strong data-count-to="98" data-count-suffix="%">0%</strong>
+            <p>Users preferring a simple guided workflow.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-panel reveal" data-reveal id="final-cta" style="--delay: 300ms;">
+      <div>
+        <span class="badge-pill">Final CTA</span>
+        <h2>See the ATS match, then improve the resume with clear next steps</h2>
+        <p>
+          Start the login flow to compare your resume with a job description, review the score, and get practical guidance on
+          what to improve next.
+        </p>
+      </div>
+      <div class="cta-panel__actions">
+        <a class="btn-primary" href="/login" data-magnetic>Login to Start</a>
+      </div>
+    </section>
+
+    <footer class="landing-footer reveal" data-reveal style="--delay: 340ms;">
+      <div class="landing-footer__grid">
+        <div class="landing-footer__brand">
+          <div class="landing-footer__brand-name">
+            <span class="landing-footer__brand-mark">IQ</span>
+            ATS RESUME ANALYZER
+          </div>
+          <p>
+            Clear resume-to-job feedback with ATS score, keyword coverage, missing skills, readability signals, and a guided
+            path to improvement.
+          </p>
+        </div>
+
+        <div class="landing-footer__column">
+          <h3 class="landing-footer__title">Platform</h3>
+          <div class="landing-footer__links">
+            <a href="/login">Login to Start</a>
+            <a href="#how-it-works">How it works</a>
+            <a href="#core-features">Core features</a>
+            <a href="#final-cta">Final CTA</a>
+          </div>
+        </div>
+
+        <div class="landing-footer__column">
+          <h3 class="landing-footer__title">ATS Resume</h3>
+          <div class="landing-footer__links">
+            <a href="#what-it-does">What this website is about</a>
+            <a href="#trust">Why users trust it</a>
+            <a href="#by-the-numbers">Proof and stats</a>
+            <span>ATS score overview</span>
+            <span>Keyword match and missing skills</span>
+            <span>Readability signals</span>
+          </div>
+        </div>
+
+        <div class="landing-footer__column">
+          <h3 class="landing-footer__title">Support</h3>
+          <div class="landing-footer__links">
+            <a href="/about">About</a>
+            <span>Privacy</span>
+            <span>Terms</span>
+            <span>Cookie Policy</span>
+            <span>Help</span>
+          </div>
+        </div>
+
+        <div class="landing-footer__column">
+          <h3 class="landing-footer__title">Company</h3>
+          <div class="landing-footer__links">
+            <a href="/login">Login to Start</a>
+            <a href="#what-it-does">What this website is about</a>
+            <a href="#trust">Why users trust it</a>
+            <a href="#by-the-numbers">Proof and stats</a>
+            <span>ATS Resume Analyzer</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="landing-footer__bottom">
+        <div class="landing-footer__meta">
+          <span>ATS Resume Analyzer</span>
+          <span>Resume Match Intelligence</span>
+        </div>
+        <div class="landing-footer__chips">
+          <span class="landing-footer__chip">Clear feedback</span>
+          <span class="landing-footer__chip">Guided workflow</span>
+          <span class="landing-footer__chip">Fast review</span>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const supportsHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+      const revealItems = document.querySelectorAll("[data-reveal]");
+      const magnetic = document.querySelectorAll("[data-magnetic]");
+      const processGrid = document.querySelector("[data-process-line]");
+
+      document.documentElement.classList.add("js-ready");
+
+      window.addEventListener("scroll", () => {
+        const scrollBar = document.getElementById("scrollBar");
+        if (!scrollBar) return;
+        const full = document.body.scrollHeight - window.innerHeight;
+        const progress = full > 0 ? (window.scrollY / full) * 100 : 0;
+        scrollBar.style.width = progress + "%";
+      });
+
+      (function () {
+        const container = document.getElementById("floaters");
+        if (!container || reduceMotion) return;
+        const points = [[8,18],[88,12],[14,65],[92,55],[45,80],[72,30],[25,90],[60,10],[80,75],[35,45]];
+        points.forEach(([x, y], i) => {
+          const el = document.createElement("div");
+          el.className = "floater";
+          const size = [8,6,10,5,12,4,8,6,10,5][i];
+          el.style.cssText = `left:${x}%;top:${y}%;width:${size}px;height:${size}px;animation-duration:${4 + i * 0.7}s;animation-delay:${i * -0.8}s;`;
+          container.appendChild(el);
+        });
+      })();
+
+      const revealObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
+        });
+      }, { threshold: 0.18, rootMargin: "0px 0px -6% 0px" });
+
+      revealItems.forEach(item => revealObserver.observe(item));
+
+      const animateCount = (el) => {
+        if (!el || el.dataset.countDone === "1") return;
+        el.dataset.countDone = "1";
+        const target = Number(el.getAttribute("data-count-to") || "0");
+        const suffix = el.getAttribute("data-count-suffix") || "";
+        const duration = Number(el.getAttribute("data-count-duration") || "1100");
+        const start = performance.now();
+        const from = 0;
+
+        const tick = (now) => {
+          const progress = Math.min(1, (now - start) / duration);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          const value = Math.round(from + (target - from) * eased);
+          el.textContent = String(value) + suffix;
+          if (progress < 1) requestAnimationFrame(tick);
+        };
+
+        requestAnimationFrame(tick);
+      };
+
+      const animateBar = (bar) => {
+        if (!bar || bar.dataset.barDone === "1") return;
+        bar.dataset.barDone = "1";
+        const target = Math.max(0, Math.min(100, Number(bar.getAttribute("data-bar-target") || "0")));
+        requestAnimationFrame(() => {
+          bar.style.width = target + "%";
+        });
+      };
+
+      const valueObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          const root = entry.target;
+          root.querySelectorAll("[data-count-to]").forEach(animateCount);
+          root.querySelectorAll("[data-bar-target]").forEach(animateBar);
+          observer.unobserve(root);
+        });
+      }, { threshold: 0.22, rootMargin: "0px 0px -8% 0px" });
+
+      document.querySelectorAll(".hero-panel, .section-panel").forEach(section => valueObserver.observe(section));
+
+      if (processGrid && !reduceMotion) {
+        const processObserver = new IntersectionObserver((entries, observer) => {
+          entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+            processGrid.style.setProperty("--process-fill", "100%");
+            observer.unobserve(entry.target);
+          });
+        }, { threshold: 0.35 });
+        processObserver.observe(processGrid);
+      } else if (processGrid) {
+        processGrid.style.setProperty("--process-fill", "100%");
+      }
+
+      if (supportsHover && magnetic.length && !reduceMotion) {
+        magnetic.forEach(button => {
+          let raf = 0;
+          const reset = () => {
+            button.style.transform = "";
+          };
+          const move = (event) => {
+            const rect = button.getBoundingClientRect();
+            const dx = (event.clientX - rect.left - rect.width / 2) / rect.width;
+            const dy = (event.clientY - rect.top - rect.height / 2) / rect.height;
+            cancelAnimationFrame(raf);
+            raf = requestAnimationFrame(() => {
+              button.style.transform = `translate3d(${(dx * 4).toFixed(2)}px, ${(dy * 3).toFixed(2)}px, 0)`;
+            });
+          };
+          button.addEventListener("pointermove", move);
+          button.addEventListener("pointerleave", reset);
+          button.addEventListener("blur", reset);
+        });
+      }
+    })();
+  </script>
+{% include "_cookie.html" %}
+</body>
+</html>

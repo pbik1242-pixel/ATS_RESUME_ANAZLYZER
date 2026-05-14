@@ -69,11 +69,11 @@ def _verify_recaptcha(token: str | None, remote_ip: str | None = None) -> tuple[
 
 
 def _google_redirect_uri(request: Request) -> str:
+    if GOOGLE_REDIRECT_URI:
+        return GOOGLE_REDIRECT_URI
     host = (request.url.hostname or "").lower()
     if host in {"localhost", "127.0.0.1", "0.0.0.0"}:
         return str(request.url_for("google_oauth_callback"))
-    if GOOGLE_REDIRECT_URI:
-        return GOOGLE_REDIRECT_URI
     return str(request.url_for("google_oauth_callback"))
 
 
