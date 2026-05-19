@@ -26,6 +26,9 @@
       --land-accent-weak: var(--red-pale);
       --land-shadow: var(--shadow-soft);
       --land-shadow-strong: var(--shadow-lift);
+      --land-radius-xl: var(--radius-xl);
+      --land-radius-lg: var(--radius-lg);
+      --land-radius-md: var(--radius-md);
       --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
       --ease-exit: cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -66,7 +69,7 @@
       padding: 0.85rem 1rem;
       border: 1px solid var(--land-border);
       border-top: 3px solid var(--land-accent);
-      border-radius: 1.15rem;
+      border-radius: var(--land-radius-xl);
       background: linear-gradient(90deg, rgba(247, 243, 238, 0.96), rgba(243, 240, 236, 0.92) 56%, rgba(246, 236, 234, 0.95));
       box-shadow: var(--land-shadow);
       backdrop-filter: none;
@@ -130,7 +133,7 @@
     .flow-step,
     .cta-panel {
       border: 1px solid var(--land-border);
-      border-radius: 1.25rem;
+      border-radius: var(--land-radius-xl);
       background: linear-gradient(180deg, var(--land-surface), var(--land-surface-strong));
       box-shadow: var(--land-shadow);
     }
@@ -168,7 +171,7 @@
 
     .hero-title {
       margin: 0;
-      max-width: 12ch;
+      max-width: 14ch;
       font-family: "Bebas Neue", sans-serif;
       font-size: clamp(4rem, 7.2vw, 7.5rem);
       line-height: 0.88;
@@ -188,6 +191,45 @@
       font-size: 1.05rem;
       line-height: 1.8;
       font-weight: 500;
+    }
+
+    .hero-journey {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.7rem;
+      width: min(100%, 57rem);
+      margin-top: 0.35rem;
+    }
+
+    .hero-journey__step {
+      display: grid;
+      gap: 0.3rem;
+      padding: 0.85rem 0.9rem;
+      border-radius: var(--land-radius-md);
+      border: 1px solid var(--land-border);
+      background: rgba(255, 255, 255, 0.78);
+      text-align: left;
+    }
+
+    .hero-journey__step strong {
+      font-family: "DM Mono", monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--land-accent);
+    }
+
+    .hero-journey__step span {
+      color: var(--land-text);
+      font-size: 0.92rem;
+      font-weight: 600;
+      line-height: 1.45;
+    }
+
+    .hero-journey__step small {
+      color: var(--land-muted);
+      font-size: 0.83rem;
+      line-height: 1.35;
     }
 
     .hero-actions {
@@ -226,7 +268,7 @@
 
     .mini-metric {
       border: 1px solid var(--land-border);
-      border-radius: 1rem;
+      border-radius: var(--land-radius-md);
       background: rgba(255, 255, 255, 0.72);
       padding: 0.78rem 0.9rem;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
@@ -251,7 +293,7 @@
     }
 
     .section-panel {
-      padding: clamp(0.95rem, 1.25vw, 1.15rem);
+      padding: clamp(1rem, 1.35vw, 1.3rem);
       display: grid;
       gap: 1rem;
     }
@@ -275,7 +317,7 @@
       line-height: 0.9;
       letter-spacing: 0.05em;
       color: var(--land-text);
-      max-width: 12ch;
+      max-width: 13ch;
     }
 
     .section-copy {
@@ -294,7 +336,7 @@
 
     .story-card {
       border: 1px solid var(--land-border);
-      border-radius: 1.1rem;
+      border-radius: var(--land-radius-lg);
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(251, 246, 238, 0.92));
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
       padding: 1.1rem;
@@ -334,7 +376,7 @@
       gap: 0.7rem;
       padding: 0.72rem 0.8rem;
       border: 1px solid var(--land-border);
-      border-radius: 0.95rem;
+      border-radius: var(--land-radius-md);
       background: rgba(255, 255, 255, 0.82);
     }
 
@@ -370,7 +412,7 @@
     .aside-block {
       padding: 0.9rem 0.95rem;
       border: 1px solid var(--land-border);
-      border-radius: 1rem;
+      border-radius: var(--land-radius-md);
       background: rgba(255, 255, 255, 0.82);
     }
 
@@ -1160,6 +1202,10 @@
         grid-template-columns: 1fr;
       }
 
+      .hero-journey {
+        grid-template-columns: 1fr 1fr;
+      }
+
       .score-ring-wrap,
       .donut-row {
         grid-template-columns: 1fr;
@@ -1215,6 +1261,12 @@
       }
     }
 
+    @media (max-width: 560px) {
+      .hero-journey {
+        grid-template-columns: 1fr;
+      }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       .reveal,
       .sparkline__fill,
@@ -1249,14 +1301,35 @@
     <section class="hero-panel reveal" data-reveal style="--delay: 60ms;">
       <div class="hero-copy">
         <span class="badge-pill hero-kicker">Resume Match Intelligence</span>
-        <h1 class="hero-title">Turn resume guesses into <span>ATS-ready</span> improvements</h1>
+        <h1 class="hero-title">Know exactly what to fix before you apply</h1>
         <p>
-          Compare a resume with a job description and see the ATS score, keyword coverage, missing skills, readability signals,
-          and a guided revision path you can act on quickly.
+          Upload a resume, paste a job description, and get a clear score, missing skills, and export-ready improvements in one guided flow.
         </p>
         <div class="hero-actions">
           <a class="btn-primary" href="/login" data-magnetic>Login to Start</a>
           <a class="hero-link" href="#how-it-works">See how it works</a>
+        </div>
+        <div class="hero-journey" aria-label="Product journey">
+          <div class="hero-journey__step">
+            <strong>01 Upload</strong>
+            <span>Add a resume</span>
+            <small>PDF, DOCX, or TXT</small>
+          </div>
+          <div class="hero-journey__step">
+            <strong>02 Analyze</strong>
+            <span>Score the match</span>
+            <small>ATS, keywords, and readability</small>
+          </div>
+          <div class="hero-journey__step">
+            <strong>03 Improve</strong>
+            <span>Rewrite the bullets</span>
+            <small>Practical fixes, not vague advice</small>
+          </div>
+          <div class="hero-journey__step">
+            <strong>04 Export</strong>
+            <span>Download the revision</span>
+            <small>Finish with a cleaner version</small>
+          </div>
         </div>
         <div class="hero-metrics">
           <div class="mini-metric">
@@ -1280,11 +1353,10 @@
       <div class="section-head">
         <div>
           <span class="badge-pill">What this website is about</span>
-          <h2 class="section-title">Clear feedback for resume-to-job fit</h2>
+          <h2 class="section-title">One guided path from upload to export</h2>
         </div>
         <p class="section-copy">
-          ATS Resume Analyzer helps job seekers understand how well a resume matches a job description, which keywords are missing,
-          how readable the resume is for screening, and what to improve before applying again.
+          ATS Resume Analyzer helps job seekers understand how well a resume matches a job description, what is missing, and how to turn that feedback into a cleaner final version.
         </p>
       </div>
 
@@ -1293,7 +1365,7 @@
           <h3>What users see</h3>
           <p>
             Upload a resume, paste a job description, and get a practical breakdown instead of a vague pass or fail. The page
-            shows the ATS score, keyword match, missing terms, readability signals, and the revision path that matters next.
+            shows the ATS score, keyword match, missing terms, readability signals, and the next fix to make.
           </p>
           <div class="story-checks">
             <div class="story-check">
@@ -1341,38 +1413,37 @@
       <div class="section-head">
         <div>
           <span class="badge-pill">How it works</span>
-          <h2 class="section-title">A short guided flow from input to improvement</h2>
+          <h2 class="section-title">Upload, analyze, improve, export</h2>
         </div>
         <p class="section-copy">
-          The workflow stays simple: add the job description, upload the resume, analyze the match, review the score and signals,
-          then improve and retry with a clearer version.
+          The workflow stays simple: upload the resume, paste the job description, review the match, improve the weak spots, and export the cleaner version.
         </p>
       </div>
 
       <div class="process-grid" data-process-line>
         <article class="flow-step">
           <div class="flow-step__num">01</div>
-          <h3>Add</h3>
-          <p>Paste or write the job description so the analyzer knows what skills, phrases, and responsibilities matter most.</p>
-          <div class="flow-step__foot">Add the job description</div>
+          <h3>Upload</h3>
+          <p>Add the resume you want to review and paste the job description so the analyzer knows what to compare.</p>
+          <div class="flow-step__foot">Start with the resume</div>
         </article>
         <article class="flow-step">
           <div class="flow-step__num">02</div>
-          <h3>Upload</h3>
-          <p>Upload the resume file you want to review. The product is designed to keep this step quick and friction-free.</p>
-          <div class="flow-step__foot">Upload the resume</div>
+          <h3>Analyze</h3>
+          <p>Review the ATS score, keyword match, missing skills, and readability signals in one pass.</p>
+          <div class="flow-step__foot">Read the match</div>
         </article>
         <article class="flow-step">
           <div class="flow-step__num">03</div>
-          <h3>Analyze</h3>
-          <p>Review ATS score, keyword match, missing skills, and readability signals in one pass instead of checking them separately.</p>
-          <div class="flow-step__foot">Analyze the match</div>
+          <h3>Improve</h3>
+          <p>Use the rewrite guidance and skill gaps to tighten the resume before sending the next version.</p>
+          <div class="flow-step__foot">Fix the weak spots</div>
         </article>
         <article class="flow-step">
           <div class="flow-step__num">04</div>
-          <h3>Improve</h3>
-          <p>Use the guidance to revise, then run the next pass to compare revision history and see the score move in the right direction.</p>
-          <div class="flow-step__foot">Review and improve</div>
+          <h3>Export</h3>
+          <p>Download the improved version and keep the revision history so the next pass starts from a stronger baseline.</p>
+          <div class="flow-step__foot">Export the revision</div>
         </article>
       </div>
     </section>

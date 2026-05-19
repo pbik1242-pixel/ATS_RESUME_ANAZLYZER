@@ -693,7 +693,11 @@ def render_error(request: Request, code: int, message: str, status_code: int | N
 
 def recent_history_for(user_id: int, limit: int = 6) -> list[sqlite3.Row]:
     with db_mod.db() as conn:
-        return conn.execute("SELECT id,filename,score,date FROM resume_history WHERE user_id=? ORDER BY id DESC LIMIT ?", (user_id, limit)).fetchall()
+        rows = conn.execute(
+            "SELECT id,filename,score,date FROM resume_history WHERE user_id=? ORDER BY id DESC LIMIT ?",
+            (user_id, limit),
+        ).fetchall()
+    return rows
 
 
 def get_visible_pages(current_page: int, total_pages: int, window: int = 2) -> list[int]:
