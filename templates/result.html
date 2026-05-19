@@ -8,6 +8,12 @@
   <style>
     {% include "_theme.css" %}
 
+    :root {
+      --land-radius-xl: var(--radius-xl);
+      --land-radius-lg: var(--radius-lg);
+      --land-radius-md: var(--radius-md);
+    }
+
     body.result-page {
       position: relative;
       background:
@@ -50,7 +56,7 @@
       gap: 1rem;
       padding: 1.2rem;
       border: 1px solid rgba(17, 17, 16, 0.09);
-      border-radius: 1.4rem;
+      border-radius: var(--land-radius-xl);
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(247, 240, 228, 0.94));
       box-shadow: 0 24px 80px rgba(17, 17, 16, 0.10);
     }
@@ -69,7 +75,7 @@
       display: grid;
       gap: 0.8rem;
       padding: 1rem 1.05rem;
-      border-radius: 1.2rem;
+      border-radius: var(--land-radius-lg);
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(247, 242, 234, 0.94));
       border: 1px solid rgba(17, 17, 16, 0.08);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
@@ -99,6 +105,70 @@
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 0.65rem;
+    }
+
+    .result-summary-strip {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1rem;
+      padding: 1rem;
+      border: 1px solid rgba(17, 17, 16, 0.09);
+      border-radius: var(--land-radius-xl);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(247, 240, 228, 0.96));
+      box-shadow: 0 20px 58px rgba(17, 17, 16, 0.09);
+      margin-bottom: 1rem;
+    }
+
+    .result-summary-strip__lead {
+      display: grid;
+      gap: 0.75rem;
+      align-content: start;
+    }
+
+    .result-score-card__comparison {
+      display: grid;
+      gap: 0.75rem;
+      margin-top: 0.35rem;
+    }
+
+    .result-score-card__comparison-row {
+      display: grid;
+      gap: 0.35rem;
+    }
+
+    .result-score-card__comparison-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      font-family: "DM Mono", monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .result-score-card__comparison-track {
+      height: 0.7rem;
+      border-radius: 999px;
+      background: rgba(17, 17, 16, 0.08);
+      overflow: hidden;
+    }
+
+    .result-score-card__comparison-fill {
+      display: block;
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--red), var(--red-strong));
+    }
+
+    .result-score-card__comparison-fill--green {
+      background: linear-gradient(90deg, var(--green), #37a66f);
+    }
+
+    .result-score-card__comparison-fill--gold {
+      background: linear-gradient(90deg, var(--gold), #d6a03a);
     }
 
     .result-score-panel__fact {
@@ -387,7 +457,7 @@
       flex-direction: column;
       gap: 0.3rem;
       padding: 0.85rem;
-      border-radius: 1rem;
+      border-radius: var(--land-radius-md);
       background: rgba(255, 255, 255, 0.76);
       border: 1px solid rgba(17, 17, 16, 0.08);
       min-width: 0;
@@ -444,7 +514,7 @@
     }
 
     .analysis-card {
-      border-radius: 1.2rem;
+      border-radius: var(--land-radius-lg);
       border: 1px solid rgba(17, 17, 16, 0.10);
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.93), rgba(251, 246, 238, 0.94));
       box-shadow: 0 18px 50px rgba(17, 17, 16, 0.08);
@@ -458,6 +528,102 @@
 
     .result-page .analysis-card.p-5 {
       padding: 1.15rem;
+    }
+
+    .result-fold {
+      border: 1px solid rgba(17, 17, 16, 0.10);
+      border-radius: var(--land-radius-lg);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(249, 245, 237, 0.96));
+      box-shadow: 0 16px 46px rgba(17, 17, 16, 0.08);
+      overflow: hidden;
+    }
+
+    .result-fold > summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 1rem 1.15rem;
+      cursor: pointer;
+      list-style: none;
+      user-select: none;
+    }
+
+    .result-fold > summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .result-fold > summary::after {
+      content: "Open";
+      font-family: "DM Mono", monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .result-fold[open] > summary::after {
+      content: "Close";
+    }
+
+    .result-fold__body {
+      display: grid;
+      gap: 1rem;
+      padding: 0 1.15rem 1.15rem;
+    }
+
+    .result-rewrite-comparison {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.85rem;
+    }
+
+    .result-rewrite-comparison__pane {
+      display: grid;
+      gap: 0.6rem;
+      padding: 0.9rem;
+      border-radius: var(--land-radius-md);
+      border: 1px solid rgba(17, 17, 16, 0.08);
+      background: rgba(255, 255, 255, 0.78);
+    }
+
+    .result-rewrite-comparison__pane--before {
+      background: rgba(217, 43, 43, 0.05);
+      border-color: rgba(217, 43, 43, 0.16);
+    }
+
+    .result-rewrite-comparison__pane--after {
+      background: rgba(30, 107, 69, 0.05);
+      border-color: rgba(30, 107, 69, 0.16);
+    }
+
+    .result-rewrite-comparison__label {
+      font-family: "DM Mono", monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .result-rewrite-comparison__title {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 1.65rem;
+      letter-spacing: 0.06em;
+      line-height: 0.98;
+    }
+
+    .result-rewrite-comparison__list {
+      display: grid;
+      gap: 0.5rem;
+      margin: 0;
+      padding-left: 1.05rem;
+      color: var(--ink-soft);
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+
+    .result-rewrite-comparison__list li::marker {
+      color: var(--land-accent);
     }
 
     .analysis-card__header {
@@ -1530,6 +1696,7 @@
     }
 
     @media (max-width: 1080px) {
+      .result-summary-strip,
       .result-hero,
       .analysis-grid--single,
       .score-layout {
@@ -1577,6 +1744,7 @@
 
       .result-score-panel__top,
       .result-score-panel__facts,
+      .result-score-card__comparison,
       .result-metrics-grid {
         grid-template-columns: 1fr;
       }
@@ -1694,6 +1862,14 @@
       .leaderboard-row {
         grid-template-columns: 1fr;
         justify-items: start;
+      }
+
+      .result-rewrite-comparison {
+        grid-template-columns: 1fr;
+      }
+
+      .result-fold > summary {
+        align-items: flex-start;
       }
     }
   </style>
@@ -1862,6 +2038,16 @@
         {% set keyword_value = keyword_score if keyword_score is not none else ((matched_count / (matched_count + missing_count)) * 100 if (matched_count + missing_count) > 0 else score_value) %}
         {% set skills_value = keyword_value %}
         {% set performance_value = semantic_score if semantic_score is not none else score_value %}
+
+        <section class="result-summary-strip">
+          <div class="result-summary-strip__lead">
+            <div class="result-kicker">Single Resume Review</div>
+            <h1 class="result-title">Your ATS score and missing skills</h1>
+            <p class="result-subtitle">
+              We compared {{ history_filename or "the uploaded resume" }} against the job description, then surfaced the score and keyword coverage in a cleaner summary.
+            </p>
+          </div>
+        </section>
 
         <section class="result-workspace">
           <div class="result-workspace__left">
@@ -2056,78 +2242,8 @@
               </div>
             </div>
 
-            <div class="analysis-card p-5">
-              <div class="analysis-card__header">
-                <div>
-                  <div class="analysis-label">Extracted Metrics</div>
-                  <div class="analysis-heading">Skills and Coverage</div>
-                </div>
-              </div>
-              <div class="result-metrics-grid">
-                <div class="result-metric-card">
-                  <div class="result-metric-card__label">Resume skills extracted</div>
-                  <div class="result-metric-card__value">{{ resume_skill_count }}</div>
-                  <div class="result-metric-card__copy">Skills detected directly from the resume text.</div>
-                </div>
-                <div class="result-metric-card">
-                  <div class="result-metric-card__label">Matched skills</div>
-                  <div class="result-metric-card__value result-metric-card__value--green">{{ matched_count }}</div>
-                  <div class="result-metric-card__copy">Skills aligned with the target job description.</div>
-                </div>
-                <div class="result-metric-card">
-                  <div class="result-metric-card__label">Missing skills</div>
-                  <div class="result-metric-card__value result-metric-card__value--red">{{ missing_count }}</div>
-                  <div class="result-metric-card__copy">Gaps to review before sending the resume.</div>
-                </div>
-                <div class="result-metric-card result-metric-card--wide">
-                  <div class="result-metric-card__label">Extracted resume skills</div>
-                  {% if resume_skill_items %}
-                  <div class="result-metric-card__chips pill-cloud">
-                    {% for skill in resume_skill_items %}
-                    <span class="pill">{{ skill }}</span>
-                    {% endfor %}
-                  </div>
-                  {% else %}
-                  <div class="analysis-fallback">No clear resume skills were extracted.</div>
-                  {% endif %}
-                </div>
-              </div>
-            </div>
-
-            {% if table_count %}
-            <div class="analysis-card p-5 table-card table-card--compact">
-              <div class="analysis-card__header">
-                <div>
-                  <div class="analysis-label">Extracted Tables</div>
-                  <div class="analysis-heading">Tables Included in Scoring</div>
-                </div>
-              </div>
-              <p class="analysis-copy mb-4">The following table previews were detected inside your resume.</p>
-              <div class="space-y-4">
-                {% for table in table_preview %}
-                <div class="analysis-card p-4">
-                  <div class="overflow-x-auto">
-                    <table>
-                      <tbody>
-                        {% for row in table %}
-                        <tr>
-                          {% for cell in row %}
-                          <td>{{ cell or "-" }}</td>
-                          {% endfor %}
-                        </tr>
-                        {% endfor %}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-                {% endfor %}
-              </div>
-            </div>
-            {% endif %}
-
             {% if not is_hr %}
-            <div class="analysis-grid analysis-grid--single" id="improve-resume">
-              <div class="analysis-card p-5">
+            <div class="analysis-card p-5" id="improve-resume">
                 <div class="analysis-card__header">
                   <div>
                     <div class="analysis-label">Improve Resume</div>
@@ -2139,69 +2255,149 @@
                 {% else %}
                 <p class="analysis-copy mb-3">Gen AI status: {{ genai_status_message or "unavailable" }}.</p>
                 {% endif %}
-                {% if rewritten %}
-                <div class="analysis-list result-scroll-box">
-                  <ol style="margin:0;padding-left:1.25rem;list-style:decimal inside;">
-                    {% for r in rewritten %}
-                    <li class="analysis-list__item">{{ r }}</li>
-                    {% endfor %}
-                  </ol>
-                </div>
-                {% else %}
-                <div class="analysis-fallback">No improved bullet points were saved for this analysis.</div>
-                {% endif %}
-              </div>
-
-              <div class="analysis-card p-5">
-                <div class="analysis-card__header">
-                  <div>
-                    <div class="analysis-label">Next Steps</div>
-                    <div class="analysis-heading">Suggested Fixes</div>
+                <div class="result-rewrite-comparison">
+                  <div class="result-rewrite-comparison__pane result-rewrite-comparison__pane--before">
+                    <div class="result-rewrite-comparison__label">Before</div>
+                    <div class="result-rewrite-comparison__title">What needed work</div>
+                    {% if suggestions %}
+                    <ul class="result-rewrite-comparison__list">
+                      {% for s in suggestions[:3] %}
+                      <li>{{ s }}</li>
+                      {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div class="analysis-fallback">No extra suggestions for this resume.</div>
+                    {% endif %}
+                  </div>
+                  <div class="result-rewrite-comparison__pane result-rewrite-comparison__pane--after">
+                    <div class="result-rewrite-comparison__label">After</div>
+                    <div class="result-rewrite-comparison__title">Rewritten bullets</div>
+                    {% if rewritten %}
+                    <div class="analysis-list result-scroll-box">
+                      <ol style="margin:0;padding-left:1.25rem;list-style:decimal inside;">
+                        {% for r in rewritten %}
+                        <li class="analysis-list__item">{{ r }}</li>
+                        {% endfor %}
+                      </ol>
+                    </div>
+                    {% else %}
+                    <div class="analysis-fallback">No improved bullet points were saved for this analysis.</div>
+                    {% endif %}
                   </div>
                 </div>
-                {% if suggestions %}
-                <div class="analysis-list">
-                  {% for s in suggestions %}
-                  <div class="analysis-list__item"><strong>Tip.</strong> {{ s }}</div>
-                  {% endfor %}
-                </div>
-                {% else %}
-                <div class="analysis-fallback">No extra suggestions for this resume.</div>
-                {% endif %}
-              </div>
             </div>
             {% endif %}
 
             {% if not is_hr %}
-            <div class="analysis-card p-5" id="download-report">
-              <div class="analysis-card__header">
+            <details class="result-fold">
+              <summary>
                 <div>
-                  <div class="analysis-label">Download Report</div>
-                  <div class="analysis-heading">Export Your Updated Resume</div>
+                  <div class="analysis-label">More Analysis</div>
+                  <div class="analysis-heading">Metrics, tables, and export</div>
+                </div>
+                <div class="score-state">Optional</div>
+              </summary>
+              <div class="result-fold__body">
+                <div class="analysis-card p-5">
+                  <div class="analysis-card__header">
+                    <div>
+                      <div class="analysis-label">Extracted Metrics</div>
+                      <div class="analysis-heading">Skills and Coverage</div>
+                    </div>
+                  </div>
+                  <div class="result-metrics-grid">
+                    <div class="result-metric-card">
+                      <div class="result-metric-card__label">Resume skills extracted</div>
+                      <div class="result-metric-card__value">{{ resume_skill_count }}</div>
+                      <div class="result-metric-card__copy">Skills detected directly from the resume text.</div>
+                    </div>
+                    <div class="result-metric-card">
+                      <div class="result-metric-card__label">Matched skills</div>
+                      <div class="result-metric-card__value result-metric-card__value--green">{{ matched_count }}</div>
+                      <div class="result-metric-card__copy">Skills aligned with the target job description.</div>
+                    </div>
+                    <div class="result-metric-card">
+                      <div class="result-metric-card__label">Missing skills</div>
+                      <div class="result-metric-card__value result-metric-card__value--red">{{ missing_count }}</div>
+                      <div class="result-metric-card__copy">Gaps to review before sending the resume.</div>
+                    </div>
+                    <div class="result-metric-card result-metric-card--wide">
+                      <div class="result-metric-card__label">Extracted resume skills</div>
+                      {% if resume_skill_items %}
+                      <div class="result-metric-card__chips pill-cloud">
+                        {% for skill in resume_skill_items %}
+                        <span class="pill">{{ skill }}</span>
+                        {% endfor %}
+                      </div>
+                      {% else %}
+                      <div class="analysis-fallback">No clear resume skills were extracted.</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+
+                {% if table_count %}
+                <div class="analysis-card p-5 table-card table-card--compact">
+                  <div class="analysis-card__header">
+                    <div>
+                      <div class="analysis-label">Extracted Tables</div>
+                      <div class="analysis-heading">Tables Included in Scoring</div>
+                    </div>
+                  </div>
+                  <p class="analysis-copy mb-4">The following table previews were detected inside your resume.</p>
+                  <div class="space-y-4">
+                    {% for table in table_preview %}
+                    <div class="analysis-card p-4">
+                      <div class="overflow-x-auto">
+                        <table>
+                          <tbody>
+                            {% for row in table %}
+                            <tr>
+                              {% for cell in row %}
+                              <td>{{ cell or "-" }}</td>
+                              {% endfor %}
+                            </tr>
+                            {% endfor %}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    {% endfor %}
+                  </div>
+                </div>
+                {% endif %}
+
+                <div class="analysis-card p-5" id="download-report">
+                  <div class="analysis-card__header">
+                    <div>
+                      <div class="analysis-label">Download Report</div>
+                      <div class="analysis-heading">Export Your Updated Resume</div>
+                    </div>
+                  </div>
+                  <p class="analysis-copy mb-4">Choose a layout for the DOCX export or download the improved bullet points as plain text.</p>
+                  <div class="grid gap-3 md:grid-cols-3">
+                    <form method="POST" action="/export" class="flex flex-col gap-2 md:col-span-2" id="export-docx-form">
+                      <label class="text-xs text-muted">Choose layout</label>
+                      <select name="layout" class="input-field layout-compact layout-narrow">
+                        <option value="classic">Classic</option>
+                        <option value="modern">Modern</option>
+                        <option value="minimal">Minimal</option>
+                      </select>
+                      <input type="hidden" name="history_id" value="{{ history_id or '' }}">
+                      <input type="hidden" name="skills" value="{{ skills }}">
+                      <input type="hidden" name="bullets" value="{{ rewritten | tojson | e }}">
+                      <button type="submit" class="btn-primary w-full">Download Styled Resume (DOCX)</button>
+                    </form>
+                    <form method="POST" action="/export/points" class="flex flex-col justify-end">
+                      <input type="hidden" name="history_id" value="{{ history_id or '' }}">
+                      <input type="hidden" name="bullets" value="{{ rewritten | tojson | e }}">
+                      <button type="submit" class="btn-secondary w-full">Download AI-Improved Points (TXT)</button>
+                    </form>
+                  </div>
+                  <p class="mt-3 text-xs text-muted">DOCX includes your resume with improvements and chosen layout; TXT includes only the AI-improved points.</p>
                 </div>
               </div>
-              <p class="analysis-copy mb-4">Choose a layout for the DOCX export or download the improved bullet points as plain text.</p>
-              <div class="grid gap-3 md:grid-cols-3">
-                <form method="POST" action="/export" class="flex flex-col gap-2 md:col-span-2" id="export-docx-form">
-                  <label class="text-xs text-muted">Choose layout</label>
-                  <select name="layout" class="input-field layout-compact layout-narrow">
-                    <option value="classic">Classic</option>
-                    <option value="modern">Modern</option>
-                    <option value="minimal">Minimal</option>
-                  </select>
-                  <input type="hidden" name="history_id" value="{{ history_id or '' }}">
-                  <input type="hidden" name="skills" value="{{ skills }}">
-                  <input type="hidden" name="bullets" value="{{ rewritten | tojson | e }}">
-                  <button type="submit" class="btn-primary w-full">Download Styled Resume (DOCX)</button>
-                </form>
-                <form method="POST" action="/export/points" class="flex flex-col justify-end">
-                  <input type="hidden" name="history_id" value="{{ history_id or '' }}">
-                  <input type="hidden" name="bullets" value="{{ rewritten | tojson | e }}">
-                  <button type="submit" class="btn-secondary w-full">Download AI-Improved Points (TXT)</button>
-                </form>
-              </div>
-              <p class="mt-3 text-xs text-muted">DOCX includes your resume with improvements and chosen layout; TXT includes only the AI-improved points.</p>
-            </div>
+            </details>
             {% endif %}
           </div>
 
@@ -2263,6 +2459,36 @@
                       <div class="result-score-card__metric-label">Reliability</div>
                       <div class="result-score-card__metric-value">{% if readability_value is not none %}{{ readability_value|round(0)|int }}%{% else %}N/A{% endif %}</div>
                       <div class="result-score-card__metric-copy">{{ readability_state }}</div>
+                    </div>
+                  </div>
+
+                  <div class="result-score-card__comparison" aria-label="Score comparison">
+                    <div class="result-score-card__comparison-row">
+                      <div class="result-score-card__comparison-label">
+                        <span>ATS match</span>
+                        <span>{{ score_value|round(0)|int }}%</span>
+                      </div>
+                      <div class="result-score-card__comparison-track">
+                        <span class="result-score-card__comparison-fill" style="width: {{ score_value }}%;"></span>
+                      </div>
+                    </div>
+                    <div class="result-score-card__comparison-row">
+                      <div class="result-score-card__comparison-label">
+                        <span>Keyword coverage</span>
+                        <span>{{ skills_value|round(0)|int }}%</span>
+                      </div>
+                      <div class="result-score-card__comparison-track">
+                        <span class="result-score-card__comparison-fill result-score-card__comparison-fill--green" style="width: {{ skills_value }}%;"></span>
+                      </div>
+                    </div>
+                    <div class="result-score-card__comparison-row">
+                      <div class="result-score-card__comparison-label">
+                        <span>Readability</span>
+                        <span>{% if readability_value is not none %}{{ readability_value|round(0)|int }}%{% else %}N/A{% endif %}</span>
+                      </div>
+                      <div class="result-score-card__comparison-track">
+                        <span class="result-score-card__comparison-fill result-score-card__comparison-fill--gold" style="width: {{ readability_value or 0 }}%;"></span>
+                      </div>
                     </div>
                   </div>
                 </div>

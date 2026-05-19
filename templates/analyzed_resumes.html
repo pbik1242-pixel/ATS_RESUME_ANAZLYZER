@@ -6,6 +6,30 @@
   <title>Analyzed Resumes - ATS RESUME ANALYZER</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>{% include "_theme.css" %}</style>
+  <style>
+    .analyzed-resume-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .analyzed-resume-actions__button {
+      min-height: 3rem;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 640px) {
+      .analyzed-resume-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .analyzed-resume-actions__button {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
 <body class="app-shell">
   {% set page_badge = "Analyzed Resumes" %}
@@ -81,9 +105,9 @@
             <span class="text-xs text-muted">Notes</span>
             <textarea name="notes" rows="2" class="w-full rounded-lg border border-slate-200 px-3 py-2 focus:border-slate-500 focus:outline-none">{{ r.selection_reason }}</textarea>
           </label>
-          <div class="flex flex-wrap gap-3 md:col-span-2">
-            <button type="submit" class="app-cta">Send to Interview List</button>
-            <a class="btn-secondary" href="/history/{{ r.id }}">Open Analysis</a>
+          <div class="analyzed-resume-actions md:col-span-2">
+            <button type="submit" class="btn-primary btn-primary--cta analyzed-resume-actions__button">Send to Interview List</button>
+            <a class="btn-secondary analyzed-resume-actions__button" href="/history/{{ r.id }}">Open Analysis</a>
           </div>
         </form>
       </div>

@@ -32,6 +32,13 @@ def test_tables_to_text_renders_rows() -> None:
     assert "Python | Advanced" in text
 
 
+def test_tables_to_text_collapses_split_words() -> None:
+    tables = [[["Locati on", "Hydera bad"], ["Compan y", "20 26"]]]
+    text = tables_to_text(tables)
+    assert "Location | Hyderabad" in text
+    assert "Company | 2026" in text
+
+
 def test_extract_text_docx_includes_paragraphs(tmp_path: Path) -> None:
     docx_path = tmp_path / "resume.docx"
     doc = Document()
