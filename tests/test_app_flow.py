@@ -4,6 +4,7 @@ from pathlib import Path
 
 import app
 import database
+import auth
 
 
 def _configure_temp_db(monkeypatch, tmp_path: Path) -> None:
@@ -114,3 +115,39 @@ def test_interview_entry_lifecycle_updates_resume_status(monkeypatch, tmp_path) 
 
     assert status == "new"
     assert interview_row is None
+
+
+def test_local_captcha_mode_accepts_checkbox_token(monkeypatch) -> None:
+    monkeypatch.setattr(auth, "RECAPTCHA_MODE", "local")
+    monkeypatch.setattr(auth, "RECAPTCHA_SITE_KEY", "site-key")
+    monkeypatch.setattr(auth, "RECAPTCHA_SECRET_KEY", "secret-key")
+
+    ok, error = auth._verify_recaptcha("on")
+
+    assert ok is True
+    assert error is None
+
+
+def test_google_captcha_mode_still_verifies_token(monkeypatch) -> None:
+    class _Response:
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> dict[str, bool]:
+            return {"success": True}
+
+    def _post(url, data, timeout):
+        assert url == auth.RECAPTCHA_VERIFY_URL
+        assert data["secret"] == "secret-key"
+        assert data["response"] == "token-value"
+        return _Response()
+
+    monkeypatch.setattr(auth, "RECAPTCHA_MODE", "google")
+    monkeypatch.setattr(auth, "RECAPTCHA_SITE_KEY", "site-key")
+    monkeypatch.setattr(auth, "RECAPTCHA_SECRET_KEY", "secret-key")
+    monkeypatch.setattr(auth.requests, "post", _post)
+
+    ok, error = auth._verify_recaptcha("token-value", "127.0.0.1")
+
+    assert ok is True
+    assert error is None

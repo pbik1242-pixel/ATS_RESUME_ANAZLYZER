@@ -1016,7 +1016,7 @@ async def home(request: Request) -> Response:
         return templates.TemplateResponse(
             request,
             "landing.html",
-            base_context(request, show_cookie_banner=False),
+            base_context(request, show_cookie_banner=True),
         )
     enabled, status_message = get_genai_status()
     return templates.TemplateResponse(

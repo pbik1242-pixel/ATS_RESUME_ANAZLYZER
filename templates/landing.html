@@ -56,9 +56,10 @@
       pointer-events: none;
       z-index: -1;
       background:
-        radial-gradient(circle at 20% 10%, rgba(217, 43, 43, 0.07), transparent 28%),
-        radial-gradient(circle at 82% 18%, rgba(217, 43, 43, 0.05), transparent 26%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 32%);
+        radial-gradient(circle at 16% 8%, rgba(217, 43, 43, 0.08), transparent 24%),
+        radial-gradient(circle at 86% 12%, rgba(30, 107, 69, 0.06), transparent 22%),
+        radial-gradient(circle at 72% 80%, rgba(176, 125, 42, 0.06), transparent 20%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0) 34%);
     }
 
     .landing-header {
@@ -292,10 +293,788 @@
       line-height: 1.45;
     }
 
+    .checklist-panel {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(20rem, 0.95fr) minmax(0, 1.35fr);
+      gap: 1rem;
+      margin-top: 1rem;
+      padding: 1.2rem;
+      border: 1px solid rgba(190, 185, 176, 0.78);
+      border-radius: 1.5rem;
+      background:
+        radial-gradient(circle at 16% 16%, rgba(217, 43, 43, 0.08), transparent 28%),
+        radial-gradient(circle at 85% 18%, rgba(30, 107, 69, 0.05), transparent 24%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 243, 235, 0.96));
+      box-shadow: 0 24px 64px rgba(17, 17, 16, 0.12);
+      overflow: hidden;
+      color: var(--land-text);
+    }
+
+    .checklist-panel::before,
+    .checklist-panel::after {
+      content: "";
+      position: absolute;
+      inset: auto auto -20% -14%;
+      width: 38%;
+      height: 100%;
+      border-radius: 999px;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at center, transparent 62%, rgba(217, 43, 43, 0.16) 63%, transparent 64%),
+        radial-gradient(circle at center, transparent 70%, rgba(30, 107, 69, 0.12) 71%, transparent 72%);
+      opacity: 0.35;
+      transform: rotate(-16deg);
+    }
+
+    .checklist-panel::after {
+      inset: -10% -12% auto auto;
+      width: 30%;
+      height: 80%;
+      opacity: 0.18;
+      transform: rotate(14deg);
+    }
+
+    .checklist-panel__copy {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      align-content: start;
+      gap: 0.95rem;
+      padding: 1rem 0.75rem 1rem 0.3rem;
+      color: var(--land-text);
+    }
+
+    .checklist-panel__kicker {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      padding: 0.45rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid rgba(217, 43, 43, 0.16);
+      background: rgba(217, 43, 43, 0.06);
+      color: var(--land-accent);
+      font-family: "DM Mono", monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .checklist-panel__title {
+      margin: 0;
+      max-width: 11ch;
+      font-family: "Poppins", sans-serif;
+      font-size: clamp(2.4rem, 4.9vw, 4.8rem);
+      line-height: 0.98;
+      letter-spacing: -0.04em;
+      font-weight: 700;
+      color: var(--land-text);
+    }
+
+    .checklist-panel__text {
+      margin: 0;
+      max-width: 33rem;
+      font-size: 1rem;
+      line-height: 1.85;
+      color: var(--land-text-soft);
+    }
+
+    .checklist-panel__stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 0.2rem;
+    }
+
+    .checklist-panel__stat {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.52rem 0.8rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(190, 185, 176, 0.72);
+      color: var(--land-text);
+      font-size: 0.84rem;
+      font-weight: 600;
+    }
+
+    .checklist-panel__stat::before {
+      content: "";
+      width: 0.55rem;
+      height: 0.55rem;
+      border-radius: 999px;
+      background: var(--green);
+      box-shadow: 0 0 0 0.25rem rgba(30, 107, 69, 0.16);
+      flex: 0 0 auto;
+    }
+
+    .checklist-grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: minmax(20rem, 0.95fr) repeat(2, minmax(0, 1fr));
+      grid-template-areas:
+        "lead format sections"
+        "lead content skills"
+        "lead style style";
+      gap: 0.9rem;
+      align-content: start;
+    }
+
+    .checklist-card {
+      padding: 1rem 1rem 0.95rem;
+      border-radius: 1.1rem;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(250, 247, 242, 0.97));
+      border: 1px solid rgba(190, 185, 176, 0.84);
+      box-shadow: 0 18px 48px rgba(17, 17, 16, 0.1);
+      color: var(--land-text);
+    }
+
+    .checklist-card--lead {
+      grid-area: lead;
+      min-height: 100%;
+      padding: 1.2rem 1.15rem;
+      display: grid;
+      align-content: start;
+      gap: 0.85rem;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 243, 235, 0.98));
+      border: 1px solid rgba(190, 185, 176, 0.6);
+      box-shadow: none;
+    }
+
+    .checklist-card--format { grid-area: format; }
+    .checklist-card--sections { grid-area: sections; }
+    .checklist-card--content { grid-area: content; }
+    .checklist-card--skills { grid-area: skills; }
+    .checklist-card--style { grid-area: style; }
+
+    .checklist-card__badge {
+      width: 4rem;
+      height: 4rem;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(30, 107, 69, 0.12);
+      color: var(--green);
+      font-family: "DM Mono", monospace;
+      font-size: 1rem;
+      font-weight: 800;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    }
+
+    .checklist-card__title {
+      margin: 0;
+      font-family: "Poppins", sans-serif;
+      font-size: 1.35rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: #30333a;
+    }
+
+    .checklist-card__lead-title {
+      max-width: 11ch;
+      font-size: clamp(1.8rem, 2.8vw, 3rem);
+      line-height: 1.05;
+      color: var(--land-text);
+    }
+
+    .checklist-card__lead-copy {
+      margin: 0;
+      color: var(--land-text-soft);
+      font-size: 0.96rem;
+      line-height: 1.8;
+    }
+
+    .checklist-card__list {
+      display: grid;
+      gap: 0.6rem;
+      margin: 0.9rem 0 0;
+      padding: 0;
+    }
+
+    .checklist-card__list li {
+      list-style: none;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      color: var(--land-text-soft);
+      font-size: 0.95rem;
+      line-height: 1.65;
+    }
+
+    .checklist-card__list li::before {
+      content: "✓";
+      width: 1.15rem;
+      height: 1.15rem;
+      border-radius: 0.35rem;
+      display: inline-grid;
+      place-items: center;
+      flex: 0 0 auto;
+      margin-top: 0.12rem;
+      background: var(--green);
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: 800;
+      line-height: 1;
+      box-shadow: 0 0 0 0.18rem rgba(30, 107, 69, 0.12);
+    }
+
+    .checklist-card__foot {
+      margin-top: 0.75rem;
+      color: var(--land-muted);
+      font-family: "DM Mono", monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .showcase-section {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(20rem, 0.95fr);
+      gap: 1rem;
+      align-items: center;
+      padding: 1.1rem;
+      border: 1px solid rgba(190, 185, 176, 0.72);
+      border-radius: 1.5rem;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 243, 235, 0.96));
+      box-shadow: 0 24px 64px rgba(17, 17, 16, 0.08);
+      overflow: hidden;
+    }
+
+    .showcase-section--reverse {
+      grid-template-columns: minmax(20rem, 0.95fr) minmax(0, 1.05fr);
+    }
+
+    .showcase-art {
+      position: relative;
+      min-height: 34rem;
+      display: grid;
+      place-items: center;
+      border-radius: 1.3rem;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(217, 43, 43, 0.08), transparent 22%),
+        radial-gradient(circle at 80% 30%, rgba(30, 107, 69, 0.08), transparent 22%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(248, 243, 235, 0.45));
+      overflow: hidden;
+    }
+
+    .showcase-art::before,
+    .showcase-art::after {
+      content: "";
+      position: absolute;
+      inset: auto;
+      border-radius: 999px;
+      pointer-events: none;
+    }
+
+    .showcase-art::before {
+      inset: 2.8rem auto auto 4rem;
+      width: 9rem;
+      height: 9rem;
+      border: 2px dashed rgba(105, 119, 210, 0.35);
+      border-right-color: transparent;
+      border-bottom-color: transparent;
+      transform: rotate(-12deg);
+      animation: arc-drift 8s ease-in-out infinite;
+    }
+
+    .showcase-art::after {
+      inset: auto 1.6rem 1.5rem auto;
+      width: 8rem;
+      height: 8rem;
+      background: radial-gradient(circle at center, rgba(176, 125, 42, 0.16), rgba(176, 125, 42, 0.04) 58%, transparent 60%);
+      animation: pulse-glow 5.2s ease-in-out infinite;
+    }
+
+    .mockup-stack {
+      position: relative;
+      width: min(100%, 32rem);
+      aspect-ratio: 0.88;
+      display: grid;
+      place-items: center;
+      filter: drop-shadow(0 24px 40px rgba(17, 17, 16, 0.14));
+    }
+
+    .mockup-sheet,
+    .mockup-sheet--rear,
+    .mockup-sheet--front {
+      position: absolute;
+      border-radius: 1rem;
+      background: linear-gradient(180deg, #fffefc, #f5f0e8);
+      border: 1px solid rgba(190, 185, 176, 0.8);
+      overflow: hidden;
+      transform-origin: center;
+    }
+
+    .mockup-sheet--rear {
+      width: 72%;
+      height: 82%;
+      left: 18%;
+      top: 8%;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 243, 235, 0.94)),
+        repeating-linear-gradient(135deg, rgba(190, 185, 176, 0.2) 0 1px, transparent 1px 18px);
+      animation: sheet-back 6.5s ease-in-out infinite;
+    }
+
+    .mockup-sheet {
+      width: 76%;
+      height: 86%;
+      left: 10%;
+      top: 14%;
+      transform: translateY(0) rotate(-0.8deg);
+      animation: sheet-float 5.8s ease-in-out infinite;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    }
+
+    .mockup-sheet--front {
+      width: 61%;
+      height: 70%;
+      left: 38%;
+      top: 0;
+      transform: translateY(0) rotate(0.3deg);
+      animation: sheet-float-alt 6.2s ease-in-out infinite;
+    }
+
+    .mockup-sheet__bar {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 0.5rem;
+      background: linear-gradient(90deg, rgba(217, 43, 43, 0.86), rgba(30, 107, 69, 0.82));
+    }
+
+    .mockup-sheet__heading {
+      position: absolute;
+      top: 1.25rem;
+      left: 1.25rem;
+      right: 1.25rem;
+      display: grid;
+      gap: 0.25rem;
+    }
+
+    .mockup-sheet__heading strong {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 1.85rem;
+      letter-spacing: 0.06em;
+      color: #2f3439;
+      line-height: 0.95;
+    }
+
+    .mockup-sheet__heading span {
+      color: var(--land-muted);
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-family: "DM Mono", monospace;
+    }
+
+    .mockup-sheet__section {
+      position: absolute;
+      left: 1.25rem;
+      right: 1.25rem;
+      border-top: 1px solid rgba(190, 185, 176, 0.7);
+      padding-top: 0.45rem;
+    }
+
+    .mockup-sheet__section strong {
+      display: block;
+      color: #2f3439;
+      font-family: "Poppins", sans-serif;
+      font-weight: 700;
+      font-size: 0.84rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .mockup-sheet__section ul {
+      margin: 0.38rem 0 0;
+      padding: 0;
+      display: grid;
+      gap: 0.32rem;
+    }
+
+    .mockup-sheet__section li {
+      list-style: none;
+      color: var(--land-text-soft);
+      font-size: 0.72rem;
+      line-height: 1.4;
+    }
+
+    .mockup-sheet__tag {
+      position: absolute;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.7rem 1rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.76);
+      border: 1px solid rgba(190, 185, 176, 0.7);
+      box-shadow: 0 12px 28px rgba(17, 17, 16, 0.08);
+      color: var(--land-text);
+      font-family: "Poppins", sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      animation: tag-bob 4.5s ease-in-out infinite;
+    }
+
+    .mockup-sheet__tag--keywords {
+      top: 0.75rem;
+      left: 2rem;
+      background: rgba(30, 107, 69, 0.14);
+      border-color: rgba(30, 107, 69, 0.16);
+      color: var(--green);
+      animation-delay: 0.1s;
+    }
+
+    .mockup-sheet__tag--contact {
+      left: 0.3rem;
+      bottom: 2.7rem;
+      background: rgba(176, 125, 42, 0.16);
+      border-color: rgba(176, 125, 42, 0.16);
+      animation-delay: 0.5s;
+    }
+
+    .mockup-sheet__tag--skills {
+      right: 2rem;
+      bottom: 1.2rem;
+      background: rgba(217, 43, 43, 0.12);
+      border-color: rgba(217, 43, 43, 0.16);
+      animation-delay: 0.3s;
+    }
+
+    .showcase-copy {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 0.9rem;
+      align-content: center;
+    }
+
+    .showcase-copy__eyebrow {
+      display: inline-flex;
+      width: fit-content;
+      padding: 0.45rem 0.75rem;
+      border-radius: 999px;
+      background: rgba(217, 43, 43, 0.06);
+      border: 1px solid rgba(217, 43, 43, 0.16);
+      color: var(--land-accent);
+      font-family: "DM Mono", monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .showcase-copy h2 {
+      margin: 0;
+      max-width: 14ch;
+      font-family: "Poppins", sans-serif;
+      font-size: clamp(2.2rem, 4vw, 4.5rem);
+      line-height: 1;
+      letter-spacing: -0.04em;
+      color: var(--land-text);
+    }
+
+    .showcase-copy p {
+      margin: 0;
+      max-width: 40rem;
+      color: var(--land-text-soft);
+      font-size: 1rem;
+      line-height: 1.85;
+      font-weight: 500;
+    }
+
+    .showcase-list {
+      display: grid;
+      gap: 0.6rem;
+      margin: 0.35rem 0 0;
+      padding: 0;
+    }
+
+    .showcase-list li {
+      list-style: none;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.7rem;
+      color: var(--land-text-soft);
+      font-size: 0.95rem;
+      line-height: 1.65;
+    }
+
+    .showcase-list li::before {
+      content: "";
+      width: 0.7rem;
+      height: 0.7rem;
+      margin-top: 0.34rem;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 0.2rem rgba(30, 107, 69, 0.12);
+      flex: 0 0 auto;
+    }
+
+    .showcase-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      margin-top: 0.35rem;
+    }
+
+    .showcase-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.48rem 0.8rem;
+      border-radius: 999px;
+      border: 1px solid var(--land-border);
+      background: rgba(255, 255, 255, 0.88);
+      color: var(--land-text);
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .showcase-strip {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(20rem, 0.9fr);
+      gap: 1rem;
+      align-items: center;
+      padding: 1.1rem;
+      border: 1px solid rgba(190, 185, 176, 0.72);
+      border-radius: 1.5rem;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 243, 235, 0.96));
+      box-shadow: 0 24px 64px rgba(17, 17, 16, 0.08);
+      overflow: hidden;
+    }
+
+    .showcase-strip__copy {
+      display: grid;
+      gap: 0.9rem;
+    }
+
+    .editor-mockup {
+      position: relative;
+      min-height: 28rem;
+      border-radius: 1.3rem;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 243, 235, 0.98));
+      border: 1px solid rgba(190, 185, 176, 0.72);
+      overflow: hidden;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
+    }
+
+    .editor-mockup__topbar {
+      height: 2.3rem;
+      background: linear-gradient(90deg, rgba(30, 107, 69, 0.1), rgba(217, 43, 43, 0.06));
+      border-bottom: 1px solid rgba(190, 185, 176, 0.72);
+    }
+
+    .editor-mockup__canvas {
+      position: absolute;
+      inset: 3.5rem 1rem 1rem 1rem;
+      display: grid;
+      grid-template-columns: 0.82fr 1.18fr;
+      gap: 0.85rem;
+    }
+
+    .editor-mockup__sidebar,
+    .editor-mockup__preview {
+      border-radius: 1rem;
+      border: 1px solid rgba(190, 185, 176, 0.72);
+      background: rgba(255, 255, 255, 0.92);
+      overflow: hidden;
+    }
+
+    .editor-mockup__sidebar {
+      padding: 0.9rem;
+      display: grid;
+      gap: 0.55rem;
+    }
+
+    .editor-mockup__tool {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.5rem;
+      align-items: center;
+      padding: 0.55rem 0.6rem;
+      border-radius: 0.75rem;
+      background: rgba(248, 243, 235, 0.9);
+      border: 1px solid rgba(190, 185, 176, 0.55);
+      animation: item-pop 5.8s ease-in-out infinite;
+    }
+
+    .editor-mockup__tool:nth-child(2) { animation-delay: 0.2s; }
+    .editor-mockup__tool:nth-child(3) { animation-delay: 0.4s; }
+    .editor-mockup__tool:nth-child(4) { animation-delay: 0.6s; }
+
+    .editor-mockup__tool-icon {
+      width: 1.8rem;
+      height: 1.8rem;
+      border-radius: 0.55rem;
+      display: grid;
+      place-items: center;
+      background: rgba(217, 43, 43, 0.1);
+      color: var(--land-accent);
+      font-family: "DM Mono", monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .editor-mockup__tool-text {
+      color: var(--land-text-soft);
+      font-size: 0.82rem;
+      line-height: 1.35;
+      font-weight: 600;
+    }
+
+    .editor-mockup__preview {
+      position: relative;
+      padding: 1rem;
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 0.85rem;
+    }
+
+    .editor-mockup__profile {
+      border-radius: 1rem;
+      background: linear-gradient(180deg, rgba(30, 107, 69, 0.1), rgba(30, 107, 69, 0.05));
+      border: 1px solid rgba(30, 107, 69, 0.16);
+      padding: 0.9rem;
+      display: grid;
+      gap: 0.75rem;
+      align-content: start;
+    }
+
+    .editor-mockup__avatar {
+      width: 4.5rem;
+      height: 4.5rem;
+      border-radius: 1rem;
+      background: linear-gradient(135deg, rgba(217, 43, 43, 0.18), rgba(30, 107, 69, 0.18));
+      border: 1px solid rgba(190, 185, 176, 0.72);
+      box-shadow: 0 14px 24px rgba(17, 17, 16, 0.12);
+    }
+
+    .editor-mockup__profile h4 {
+      margin: 0;
+      font-family: "Poppins", sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--land-text);
+    }
+
+    .editor-mockup__profile p {
+      margin: 0;
+      color: var(--land-text-soft);
+      font-size: 0.82rem;
+      line-height: 1.55;
+    }
+
+    .editor-mockup__panel {
+      border-radius: 1rem;
+      border: 1px solid rgba(190, 185, 176, 0.72);
+      background: rgba(255, 255, 255, 0.95);
+      padding: 0.9rem;
+      display: grid;
+      gap: 0.7rem;
+      align-content: start;
+    }
+
+    .editor-mockup__panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .editor-mockup__panel-header strong {
+      font-family: "DM Mono", monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--land-muted);
+    }
+
+    .editor-mockup__score {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.38rem 0.62rem;
+      border-radius: 999px;
+      background: var(--land-accent-weak);
+      color: var(--land-accent);
+      font-family: "DM Mono", monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      animation: pulse-glow 3.8s ease-in-out infinite;
+    }
+
+    .editor-mockup__field {
+      display: grid;
+      gap: 0.3rem;
+      padding: 0.65rem 0.7rem;
+      border-radius: 0.8rem;
+      background: rgba(248, 243, 235, 0.92);
+      border: 1px solid rgba(190, 185, 176, 0.55);
+      animation: item-pop 5.6s ease-in-out infinite;
+    }
+
+    .editor-mockup__field:nth-child(2) { animation-delay: 0.15s; }
+    .editor-mockup__field:nth-child(3) { animation-delay: 0.3s; }
+    .editor-mockup__field:nth-child(4) { animation-delay: 0.45s; }
+
+    .editor-mockup__field span {
+      font-family: "DM Mono", monospace;
+      font-size: 0.66rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--land-muted);
+    }
+
+    .editor-mockup__field strong {
+      color: var(--land-text);
+      font-size: 0.84rem;
+      line-height: 1.55;
+    }
+
+    @keyframes sheet-float {
+      0%, 100% { transform: translateY(0) rotate(-0.8deg); }
+      50% { transform: translateY(-10px) rotate(-0.3deg); }
+    }
+
+    @keyframes sheet-float-alt {
+      0%, 100% { transform: translateY(0) rotate(0.3deg); }
+      50% { transform: translateY(-14px) rotate(1deg); }
+    }
+
+    @keyframes sheet-back {
+      0%, 100% { transform: translateY(0) rotate(-1.8deg); }
+      50% { transform: translateY(-8px) rotate(-0.8deg); }
+    }
+
+    @keyframes tag-bob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    @keyframes arc-drift {
+      0%, 100% { transform: rotate(-12deg) translateY(0); }
+      50% { transform: rotate(-10deg) translateY(-10px); }
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { transform: scale(1); opacity: 0.7; }
+      50% { transform: scale(1.04); opacity: 1; }
+    }
+
+    @keyframes item-pop {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+
     .section-panel {
       padding: clamp(1rem, 1.35vw, 1.3rem);
       display: grid;
       gap: 1rem;
+      border: 1px solid rgba(190, 185, 176, 0.72);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(248, 243, 235, 0.95));
+      box-shadow: 0 24px 64px rgba(17, 17, 16, 0.08);
     }
 
     #what-it-does {
@@ -337,7 +1116,7 @@
     .story-card {
       border: 1px solid var(--land-border);
       border-radius: var(--land-radius-lg);
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(251, 246, 238, 0.92));
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(249, 246, 240, 0.98));
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
       padding: 1.1rem;
     }
@@ -413,7 +1192,7 @@
       padding: 0.9rem 0.95rem;
       border: 1px solid var(--land-border);
       border-radius: var(--land-radius-md);
-      background: rgba(255, 255, 255, 0.82);
+      background: rgba(255, 255, 255, 0.94);
     }
 
     .aside-block__label {
@@ -469,7 +1248,7 @@
       padding: 1rem;
       position: relative;
       z-index: 1;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(251, 246, 238, 0.96));
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(249, 246, 240, 0.98));
       transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
     }
 
@@ -526,7 +1305,7 @@
 
     .feature-card {
       padding: 1rem;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(251, 246, 238, 0.95));
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(249, 246, 240, 0.98));
       transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
       overflow: hidden;
     }
@@ -610,7 +1389,7 @@
     .visual-strip {
       border: 1px solid var(--land-border);
       border-radius: 0.9rem;
-      background: rgba(255, 255, 255, 0.84);
+      background: rgba(255, 255, 255, 0.95);
       padding: 0.8rem 0.85rem;
       display: grid;
       gap: 0.35rem;
@@ -655,7 +1434,7 @@
       align-items: center;
       border: 1px solid var(--land-border);
       border-radius: 0.9rem;
-      background: rgba(255, 255, 255, 0.84);
+      background: rgba(255, 255, 255, 0.95);
       padding: 0.65rem 0.75rem;
     }
 
@@ -688,7 +1467,7 @@
 
     .trust-card {
       padding: 1rem;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(251, 246, 238, 0.95));
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(249, 246, 240, 0.98));
       transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
     }
 
@@ -762,7 +1541,7 @@
 
     .proof-card {
       padding: 1rem;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(251, 246, 238, 0.95));
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(249, 246, 240, 0.98));
     }
 
     .proof-card__head {
@@ -888,7 +1667,7 @@
 
     .metric-card {
       padding: 1rem;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(251, 246, 238, 0.95));
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(249, 246, 240, 0.98));
     }
 
     .metric-card strong {
@@ -914,7 +1693,7 @@
       grid-template-columns: minmax(0, 1fr) auto;
       align-items: center;
       gap: 1rem;
-      background: linear-gradient(135deg, rgba(217, 43, 43, 0.06), rgba(255, 255, 255, 0.94) 55%, rgba(217, 43, 43, 0.04));
+      background: linear-gradient(135deg, rgba(217, 43, 43, 0.05), rgba(255, 255, 255, 0.97) 55%, rgba(217, 43, 43, 0.04));
     }
 
     .cta-panel h2 {
@@ -955,6 +1734,11 @@
       grid-template-columns: repeat(12, minmax(0, 1fr));
       gap: clamp(0.85rem, 1.25vw, 1.45rem);
       align-items: start;
+      border: 1px solid rgba(190, 185, 176, 0.72);
+      border-radius: 1.4rem;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 243, 235, 0.96));
+      padding: 1.2rem;
+      box-shadow: 0 24px 64px rgba(17, 17, 16, 0.08);
     }
 
     .landing-footer__brand {
@@ -1145,6 +1929,24 @@
         grid-template-columns: 1fr;
       }
 
+      .checklist-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .checklist-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-areas:
+          "lead lead"
+          "format sections"
+          "content skills"
+          "style style";
+      }
+
+      .showcase-section,
+      .showcase-strip {
+        grid-template-columns: 1fr;
+      }
+
       .features-grid {
         grid-template-columns: 1fr 1fr;
         grid-template-areas:
@@ -1178,6 +1980,20 @@
         padding: 0.95rem;
       }
 
+      .checklist-panel {
+        padding: 0.95rem;
+      }
+
+      .showcase-section,
+      .showcase-strip {
+        padding: 0.95rem;
+      }
+
+      .checklist-panel::before,
+      .checklist-panel::after {
+        opacity: 0.16;
+      }
+
       .hero-panel {
         grid-template-columns: 1fr;
       }
@@ -1199,6 +2015,52 @@
       }
 
       .hero-metrics {
+        grid-template-columns: 1fr;
+      }
+
+      .checklist-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .checklist-panel__copy {
+        padding: 0.2rem 0.1rem 0.3rem;
+      }
+
+      .checklist-panel__title {
+        max-width: none;
+      }
+
+      .checklist-grid {
+        grid-template-columns: 1fr;
+        grid-template-areas: none;
+      }
+
+      .checklist-card--lead,
+      .checklist-card--format,
+      .checklist-card--sections,
+      .checklist-card--content,
+      .checklist-card--skills,
+      .checklist-card--style {
+        grid-area: auto;
+      }
+
+      .showcase-art {
+        min-height: 24rem;
+      }
+
+      .mockup-stack {
+        width: min(100%, 24rem);
+      }
+
+      .editor-mockup {
+        min-height: 24rem;
+      }
+
+      .editor-mockup__canvas {
+        inset: 3.3rem 0.75rem 0.75rem 0.75rem;
+      }
+
+      .editor-mockup__preview {
         grid-template-columns: 1fr;
       }
 
@@ -1265,6 +2127,29 @@
       .hero-journey {
         grid-template-columns: 1fr;
       }
+
+      .checklist-panel__title {
+        font-size: clamp(2rem, 11vw, 2.8rem);
+      }
+
+      .checklist-card__badge {
+        width: 3.5rem;
+        height: 3.5rem;
+      }
+
+      .showcase-art {
+        min-height: 20rem;
+      }
+
+      .mockup-sheet__tag,
+      .showcase-chip {
+        font-size: 0.78rem;
+      }
+
+      .editor-mockup__tool-text,
+      .editor-mockup__field strong {
+        font-size: 0.78rem;
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -1276,8 +2161,18 @@
       .btn-secondary,
       .feature-card,
       .trust-card,
-      .flow-step {
+      .flow-step,
+      .mockup-sheet,
+      .mockup-sheet--rear,
+      .mockup-sheet--front,
+      .mockup-sheet__tag,
+      .editor-mockup__tool,
+      .editor-mockup__field,
+      .showcase-art::before,
+      .showcase-art::after,
+      .editor-mockup__score {
         transition: none !important;
+        animation: none !important;
       }
 
     }
@@ -1347,6 +2242,238 @@
         </div>
       </div>
 
+    </section>
+
+    <section class="checklist-panel reveal" data-reveal id="checklist" style="--delay: 88ms;">
+      <div class="checklist-panel__copy">
+        <span class="checklist-panel__kicker">Resume optimization checklist</span>
+        <h2 class="checklist-panel__title">Optimize the resume in focused passes</h2>
+        <p class="checklist-panel__text">
+          We check the resume across the most important areas so users can see what to fix first: formatting, structure,
+          content quality, skills, and the overall presentation before they apply.
+        </p>
+        <div class="checklist-panel__stats" aria-label="Checklist highlights">
+          <span class="checklist-panel__stat">ATS-friendly</span>
+          <span class="checklist-panel__stat">Clear structure</span>
+          <span class="checklist-panel__stat">Better readability</span>
+        </div>
+      </div>
+
+      <div class="checklist-grid" aria-label="Resume checklist cards">
+        <article class="checklist-card checklist-card--lead">
+          <div class="checklist-card__badge">IQ</div>
+          <h3 class="checklist-card__title checklist-card__lead-title">Resume optimization checklist</h3>
+          <p class="checklist-card__lead-copy">
+            A clean overview of the most valuable checks so the landing page feels like a guided product experience,
+            not just a generic homepage.
+          </p>
+          <p class="checklist-card__lead-copy">
+            The visual style stays aligned with the app palette: warm surfaces, red accents, green checks, and strong
+            contrast on the cards so the content is easy to scan.
+          </p>
+        </article>
+
+        <article class="checklist-card checklist-card--format">
+          <h3 class="checklist-card__title">Format</h3>
+          <ul class="checklist-card__list">
+            <li>File format and size</li>
+            <li>Resume length</li>
+            <li>Clean section headings</li>
+          </ul>
+          <div class="checklist-card__foot">Start with the basics</div>
+        </article>
+
+        <article class="checklist-card checklist-card--sections">
+          <h3 class="checklist-card__title">Resume sections</h3>
+          <ul class="checklist-card__list">
+            <li>Contact information</li>
+            <li>Essential sections</li>
+            <li>Personality with practical detail</li>
+          </ul>
+          <div class="checklist-card__foot">Make the structure obvious</div>
+        </article>
+
+        <article class="checklist-card checklist-card--content">
+          <h3 class="checklist-card__title">Content</h3>
+          <ul class="checklist-card__list">
+            <li>ATS parse rate</li>
+            <li>Repetition of words and phrases</li>
+            <li>Spelling and grammar</li>
+            <li>Quantifying impact in experience bullets</li>
+          </ul>
+          <div class="checklist-card__foot">Check the writing quality</div>
+        </article>
+
+        <article class="checklist-card checklist-card--skills">
+          <h3 class="checklist-card__title">Skills suggestion</h3>
+          <ul class="checklist-card__list">
+            <li>Hard skills</li>
+            <li>Soft skills</li>
+            <li>Keywords tied to the job description</li>
+          </ul>
+          <div class="checklist-card__foot">Close the keyword gaps</div>
+        </article>
+
+        <article class="checklist-card checklist-card--style">
+          <h3 class="checklist-card__title">Style</h3>
+          <ul class="checklist-card__list">
+            <li>Resume design</li>
+            <li>Email address and contact details</li>
+            <li>Usage of active voice</li>
+            <li>Usage of buzzwords and clichés</li>
+          </ul>
+          <div class="checklist-card__foot">Finish with polish</div>
+        </article>
+      </div>
+    </section>
+
+    <section class="showcase-section reveal" data-reveal id="ats-check" style="--delay: 116ms;">
+      <div class="showcase-art" aria-hidden="true">
+        <div class="mockup-stack">
+          <div class="mockup-sheet--rear"></div>
+          <div class="mockup-sheet">
+            <div class="mockup-sheet__bar"></div>
+            <div class="mockup-sheet__heading">
+              <strong>JASMINE BELL</strong>
+              <span>Video Editor</span>
+            </div>
+            <div class="mockup-sheet__section" style="top: 6rem;">
+              <strong>Portfolio</strong>
+              <ul>
+                <li>Creative work samples</li>
+                <li>Clean resume structure</li>
+                <li>Clear impact statements</li>
+              </ul>
+            </div>
+            <div class="mockup-sheet__section" style="top: 12.4rem;">
+              <strong>Experience</strong>
+              <ul>
+                <li>Keyword match review</li>
+                <li>Readable contact details</li>
+                <li>Better formatting signals</li>
+              </ul>
+            </div>
+            <div class="mockup-sheet__section" style="top: 18.6rem;">
+              <strong>Education</strong>
+              <ul>
+                <li>Skills framing</li>
+                <li>ATS-friendly layout</li>
+                <li>Tailored improvements</li>
+              </ul>
+            </div>
+            <div class="mockup-sheet__tag mockup-sheet__tag--contact">Contact information</div>
+          </div>
+          <div class="mockup-sheet--front">
+            <div class="mockup-sheet__bar"></div>
+            <div class="mockup-sheet__heading">
+              <strong>JASMINE BELL</strong>
+              <span>Resume score</span>
+            </div>
+            <div class="mockup-sheet__section" style="top: 5.8rem;">
+              <strong>Keywords</strong>
+              <ul>
+                <li>Job description match</li>
+                <li>Skill coverage</li>
+                <li>Missing terms</li>
+              </ul>
+            </div>
+            <div class="mockup-sheet__section" style="top: 11.8rem;">
+              <strong>Skills</strong>
+              <ul>
+                <li>Hard skills</li>
+                <li>Soft skills</li>
+                <li>Contextual suggestions</li>
+              </ul>
+            </div>
+            <div class="mockup-sheet__tag mockup-sheet__tag--keywords">Keywords</div>
+            <div class="mockup-sheet__tag mockup-sheet__tag--skills">Skills</div>
+          </div>
+        </div>
+      </div>
+      <div class="showcase-copy">
+        <span class="showcase-copy__eyebrow">ATS understanding check</span>
+        <h2>Get an ATS understanding check</h2>
+        <p>
+          Part of the score we assign comes from how readable and searchable the resume is. We look at whether the content
+          matches the role, whether the structure is easy to parse, and whether the file is ready for applicant tracking systems.
+        </p>
+        <p>
+          Then we highlight the keywords, contact information, and skill signals that matter most so the user sees exactly what
+          to improve before applying.
+        </p>
+        <div class="showcase-chips" aria-label="ATS highlights">
+          <span class="showcase-chip">Keywords</span>
+          <span class="showcase-chip">Contact information</span>
+          <span class="showcase-chip">Skills</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="showcase-strip reveal" data-reveal id="builder-check" style="--delay: 144ms;">
+      <div class="showcase-strip__copy">
+        <span class="showcase-copy__eyebrow">Resume builder flow</span>
+        <h2 class="section-title" style="max-width: 11ch;">Use the best resume builder in the industry</h2>
+        <p class="section-copy" style="max-width: 40rem;">
+          After you get the score, you can keep improving the resume in a guided workflow. The interface keeps the editing
+          path visible, so each improvement feels intentional instead of guesswork.
+        </p>
+        <ul class="showcase-list">
+          <li>Continue editing after the analysis result</li>
+          <li>Review the strongest and weakest sections side by side</li>
+          <li>Move from score to improvement without leaving the page</li>
+        </ul>
+      </div>
+
+      <div class="editor-mockup" aria-hidden="true">
+        <div class="editor-mockup__topbar"></div>
+        <div class="editor-mockup__canvas">
+          <aside class="editor-mockup__sidebar">
+            <div class="editor-mockup__tool">
+              <span class="editor-mockup__tool-icon">+</span>
+              <span class="editor-mockup__tool-text">Add section</span>
+            </div>
+            <div class="editor-mockup__tool">
+              <span class="editor-mockup__tool-icon">↔</span>
+              <span class="editor-mockup__tool-text">Rearrange sections</span>
+            </div>
+            <div class="editor-mockup__tool">
+              <span class="editor-mockup__tool-icon">T</span>
+              <span class="editor-mockup__tool-text">Templates and fonts</span>
+            </div>
+            <div class="editor-mockup__tool">
+              <span class="editor-mockup__tool-icon">✓</span>
+              <span class="editor-mockup__tool-text">Tailoring checks</span>
+            </div>
+          </aside>
+
+          <section class="editor-mockup__preview">
+            <div class="editor-mockup__profile">
+              <div class="editor-mockup__avatar"></div>
+              <h4>ISABELLE TODD</h4>
+              <p>Resume editor preview with a clear workspace, smart guidance, and visible next steps.</p>
+            </div>
+
+            <div class="editor-mockup__panel">
+              <div class="editor-mockup__panel-header">
+                <strong>Editor status</strong>
+                <span class="editor-mockup__score">92%</span>
+              </div>
+              <div class="editor-mockup__field">
+                <span>Headline</span>
+                <strong>Improve your score by tightening the wording</strong>
+              </div>
+              <div class="editor-mockup__field">
+                <span>Experience</span>
+                <strong>Turn responsibilities into measurable results</strong>
+              </div>
+              <div class="editor-mockup__field">
+                <span>Skills</span>
+                <strong>Add missing role-specific keywords and tools</strong>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
     </section>
 
     <section class="section-panel reveal" data-reveal style="--delay: 100ms;" id="what-it-does">
@@ -1575,75 +2702,6 @@
       </div>
     </section>
 
-    <section class="section-panel reveal" data-reveal id="by-the-numbers" style="--delay: 260ms;">
-      <div class="section-head">
-        <div>
-          <span class="badge-pill">Proof and stats</span>
-          <h2 class="section-title">Signals that make the workflow feel credible</h2>
-        </div>
-        <p class="section-copy">
-          The same product signals from the About page are used here as proof: stronger match scores, clearer keyword coverage,
-          more readable revisions, and a workflow users prefer because it stays simple.
-        </p>
-      </div>
-
-      <div class="proof-layout">
-        <article class="proof-card">
-          <div class="proof-card__head">
-            <div>
-              <span class="badge-pill" style="margin-bottom: 0.4rem;">Average lift</span>
-              <h3>What better guidance can unlock</h3>
-            </div>
-            <div class="proof-badges">
-              <span class="proof-badge">ATS match</span>
-              <span class="proof-badge">Keyword coverage</span>
-              <span class="proof-badge">Readability</span>
-            </div>
-          </div>
-          <div class="donut-row">
-            <div class="donut" style="--progress:74%;">
-              <div class="donut__inner">
-                <div class="donut__value" data-count-to="74" data-count-suffix="%">0%</div>
-                <small>demo trend</small>
-              </div>
-            </div>
-            <div class="sparklines">
-              <div class="sparkline">
-                <div class="sparkline__meta"><span>ATS match</span><strong data-count-to="88" data-count-suffix="%">0%</strong></div>
-                <div class="sparkline__track"><span class="sparkline__fill" data-bar-target="88"></span></div>
-              </div>
-              <div class="sparkline">
-                <div class="sparkline__meta"><span>Keyword coverage</span><strong data-count-to="76" data-count-suffix="%">0%</strong></div>
-                <div class="sparkline__track"><span class="sparkline__fill" data-bar-target="76"></span></div>
-              </div>
-              <div class="sparkline">
-                <div class="sparkline__meta"><span>Readability</span><strong data-count-to="91" data-count-suffix="%">0%</strong></div>
-                <div class="sparkline__track"><span class="sparkline__fill" data-bar-target="91"></span></div>
-              </div>
-            </div>
-          </div>
-          <p style="margin: 0.95rem 0 0; color: var(--land-text-soft); line-height: 1.8;">
-            The signals stay concrete from one revision to the next, which helps users understand exactly what improved.
-          </p>
-        </article>
-
-        <div class="proof-grid">
-          <article class="metric-card">
-            <strong data-count-to="1250" data-count-suffix="+">0+</strong>
-            <p>Resumes analyzed through the workflow.</p>
-          </article>
-          <article class="metric-card">
-            <strong data-count-to="860" data-count-suffix="+">0+</strong>
-            <p>Job descriptions processed and compared.</p>
-          </article>
-          <article class="metric-card">
-            <strong data-count-to="98" data-count-suffix="%">0%</strong>
-            <p>Users preferring a simple guided workflow.</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
     <section class="cta-panel reveal" data-reveal id="final-cta" style="--delay: 300ms;">
       <div>
         <span class="badge-pill">Final CTA</span>
@@ -1686,7 +2744,6 @@
           <div class="landing-footer__links">
             <a href="#what-it-does">What this website is about</a>
             <a href="#trust">Why users trust it</a>
-            <a href="#by-the-numbers">Proof and stats</a>
             <span>ATS score overview</span>
             <span>Keyword match and missing skills</span>
             <span>Readability signals</span>
@@ -1710,7 +2767,6 @@
             <a href="/login">Login to Start</a>
             <a href="#what-it-does">What this website is about</a>
             <a href="#trust">Why users trust it</a>
-            <a href="#by-the-numbers">Proof and stats</a>
             <span>ATS Resume Analyzer</span>
           </div>
         </div>

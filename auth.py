@@ -46,7 +46,8 @@ def _verify_recaptcha(token: str | None, remote_ip: str | None = None) -> tuple[
     if not token:
         return False, "Captcha required"
 
-    if not (RECAPTCHA_SITE_KEY and RECAPTCHA_SECRET_KEY):
+    recaptcha_enabled = RECAPTCHA_MODE == "google" and bool(RECAPTCHA_SITE_KEY and RECAPTCHA_SECRET_KEY)
+    if not recaptcha_enabled:
         return True, None
 
     payload: dict[str, str] = {
